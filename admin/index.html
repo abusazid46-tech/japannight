@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard | Khanapara Teer Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link href="../assets/css/style.css" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="admin-sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="d-flex align-items-center gap-2">
+      <div class="brand-icon" style="width:38px;height:38px;font-size:18px;">🎯</div>
+      <div>
+        <div class="brand-name" style="font-size:16px;">KHANAPARA</div>
+        <div style="font-size:10px;color:var(--text-muted);">Admin Panel</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text-muted);padding:4px 14px 8px;margin-top:8px;">MAIN</div>
+    <a href="index.html" class="sidebar-link active"><i class="bi bi-speedometer2"></i>Dashboard</a>
+    <a href="results.html" class="sidebar-link"><i class="bi bi-table"></i>Manage Results</a>
+    <a href="add-result.html" class="sidebar-link"><i class="bi bi-plus-circle"></i>Add Result</a>
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text-muted);padding:4px 14px 8px;margin-top:12px;">CONTENT</div>
+    <a href="common-numbers.html" class="sidebar-link"><i class="bi bi-star"></i>Common Numbers</a>
+    <a href="dream-numbers.html" class="sidebar-link"><i class="bi bi-moon-stars"></i>Dream Numbers</a>
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text-muted);padding:4px 14px 8px;margin-top:12px;">SYSTEM</div>
+    <a href="../index.html" class="sidebar-link" target="_blank"><i class="bi bi-box-arrow-up-right"></i>View Website</a>
+    <a href="#" class="sidebar-link text-danger" onclick="adminLogout()"><i class="bi bi-box-arrow-left"></i>Logout</a>
+  </nav>
+  <div class="p-3 text-center" style="border-top:1px solid var(--border);">
+    <div style="font-size:11px;color:var(--text-muted);">Logged in as <span class="text-warning">admin</span></div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="admin-content">
+  <div class="admin-topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-outline-secondary btn-sm d-lg-none" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <i class="bi bi-list"></i>
+      </button>
+      <h5 class="mb-0 fw-700">Dashboard</h5>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <span class="text-muted small" id="dashClock"></span>
+      <a href="add-result.html" class="btn btn-warning btn-sm fw-600">
+        <i class="bi bi-plus me-1"></i>Add Result
+      </a>
+    </div>
+  </div>
+
+  <div class="p-4">
+
+    <!-- STAT CARDS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon icon-gold">📊</div>
+          <div class="admin-stat-num" id="statTotal">—</div>
+          <div class="admin-stat-label">Total Results</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon icon-blue">📅</div>
+          <div class="admin-stat-num" id="statThisMonth">—</div>
+          <div class="admin-stat-label">This Month</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon icon-green">✅</div>
+          <div class="admin-stat-num" id="statPublished">—</div>
+          <div class="admin-stat-label">Published</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon icon-red">⏳</div>
+          <div class="admin-stat-num" id="statDraft">—</div>
+          <div class="admin-stat-label">Draft</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TODAY'S RESULT QUICK VIEW -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-5">
+        <div class="table-card">
+          <div class="p-3" style="border-bottom:1px solid var(--border);">
+            <div class="d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-700">Today's Result</h6>
+              <a href="add-result.html" class="btn btn-warning btn-sm fw-600 py-1">
+                <i class="bi bi-pencil me-1"></i>Edit
+              </a>
+            </div>
+          </div>
+          <div class="p-4" id="todayWidget"></div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="table-card">
+          <div class="p-3" style="border-bottom:1px solid var(--border);">
+            <div class="d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-700">Recent Results</h6>
+              <a href="results.html" class="btn btn-sm btn-dark-outline py-1">View All</a>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table result-table mb-0 small">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>FR</th>
+                  <th>SR</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recentAdminRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ADD FORM -->
+    <div class="table-card p-4">
+      <h6 class="fw-700 mb-4"><i class="bi bi-lightning-fill text-warning me-2"></i>Quick Add Today's Result</h6>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label-dark">Date</label>
+          <input type="date" id="quickDate" class="form-control-dark"/>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label-dark">First Round (FR)</label>
+          <input type="text" id="quickFR" class="form-control-dark" placeholder="e.g. 45" maxlength="2"/>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label-dark">Second Round (SR)</label>
+          <input type="text" id="quickSR" class="form-control-dark" placeholder="e.g. 82" maxlength="2"/>
+        </div>
+        <div class="col-md-3">
+          <button class="btn-gold w-100 py-2" onclick="quickSave()">
+            <i class="bi bi-check-circle me-2"></i>Publish Result
+          </button>
+        </div>
+      </div>
+      <div id="quickMsg" class="mt-3"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+  if (!isAdminLoggedIn()) window.location.href = 'login.html';
+
+  // Clock
+  setInterval(() => {
+    document.getElementById('dashClock').textContent = new Date().toLocaleTimeString('en-IN');
+  }, 1000);
+
+  // Stats
+  function loadStats() {
+    const all = getAllResults();
+    const pub = all.filter(r => r.status === 'published');
+    const draft = all.filter(r => r.status === 'draft');
+    const ym = new Date().toISOString().substring(0,7);
+    const thisMonth = pub.filter(r => r.date.startsWith(ym));
+
+    document.getElementById('statTotal').textContent = all.length;
+    document.getElementById('statThisMonth').textContent = thisMonth.length;
+    document.getElementById('statPublished').textContent = pub.length;
+    document.getElementById('statDraft').textContent = draft.length;
+  }
+
+  // Today widget
+  function loadTodayWidget() {
+    const el = document.getElementById('todayWidget');
+    const r = getTodayResult();
+    if (r) {
+      el.innerHTML = `
+        <div class="d-flex gap-4 justify-content-center text-center">
+          <div>
+            <div class="text-muted small mb-1">FIRST ROUND</div>
+            <div style="font-family:'Bebas Neue';font-size:64px;color:var(--gold);letter-spacing:3px;line-height:1;">${r.fr}</div>
+          </div>
+          <div style="width:1px;background:var(--border);"></div>
+          <div>
+            <div class="text-muted small mb-1">SECOND ROUND</div>
+            <div style="font-family:'Bebas Neue';font-size:64px;color:#3498DB;letter-spacing:3px;line-height:1;">${r.sr}</div>
+          </div>
+        </div>
+        <div class="text-center mt-3">
+          <span class="status-live">Published</span>
+        </div>
+      `;
+    } else {
+      el.innerHTML = `
+        <div class="text-center py-3">
+          <div style="font-size:40px;color:var(--text-muted);font-family:'Bebas Neue';">-- | --</div>
+          <div class="mt-2"><span class="status-pending">Not Published Yet</span></div>
+          <div class="text-muted small mt-2">Use quick add below to publish today's result</div>
+        </div>
+      `;
+    }
+  }
+
+  // Recent rows
+  function loadRecentRows() {
+    const tbody = document.getElementById('recentAdminRows');
+    const results = getAllResults().slice(0, 6);
+    tbody.innerHTML = results.map(r => `
+      <tr>
+        <td class="fw-600 small">${formatDate(r.date)}</td>
+        <td><span class="fr-badge" style="font-size:16px;">${r.fr}</span></td>
+        <td><span class="sr-badge" style="font-size:16px;">${r.sr}</span></td>
+        <td>${r.status === 'published'
+          ? '<span class="status-live">Live</span>'
+          : '<span class="status-pending">Draft</span>'}</td>
+        <td>
+          <a href="add-result.html?date=${r.date}" class="btn btn-sm btn-dark-outline py-0 px-2 me-1" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <button class="btn btn-sm py-0 px-2" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#E74C3C;"
+            onclick="if(confirm('Delete this result?')){deleteResult('${r.date}');loadAll();showToast('Deleted','error');}" title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Quick save
+  function quickSave() {
+    const date = document.getElementById('quickDate').value;
+    const fr = document.getElementById('quickFR').value.trim().padStart(2,'0');
+    const sr = document.getElementById('quickSR').value.trim().padStart(2,'0');
+    const msg = document.getElementById('quickMsg');
+
+    if (!date || !fr || !sr) {
+      msg.innerHTML = '<div class="alert-dark-error">Please fill all fields.</div>';
+      return;
+    }
+    if (!/^\d{2}$/.test(fr) || !/^\d{2}$/.test(sr)) {
+      msg.innerHTML = '<div class="alert-dark-error">Enter valid 2-digit numbers (00–99).</div>';
+      return;
+    }
+
+    saveResult({ date, fr, sr, status: 'published' });
+    msg.innerHTML = '<div class="alert-dark-success"><i class="bi bi-check-circle me-2"></i>Result published successfully!</div>';
+    document.getElementById('quickFR').value = '';
+    document.getElementById('quickSR').value = '';
+    loadAll();
+    setTimeout(() => msg.innerHTML = '', 4000);
+  }
+
+  // Set default date to today
+  document.getElementById('quickDate').value = new Date().toISOString().split('T')[0];
+
+  function loadAll() {
+    loadStats();
+    loadTodayWidget();
+    loadRecentRows();
+  }
+  loadAll();
+</script>
+</body>
+</html>
