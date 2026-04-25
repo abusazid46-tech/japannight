@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Common Numbers</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Common Numbers</h1>
+        <div class="card">
+            <div class="card-body text-center">
+                <h4>Direct Numbers</h4>
+                <div id="directNumbers" class="display-4 mb-4"></div>
+                
+                <h4>House Numbers</h4>
+                <div id="houseNumbers" class="display-4 mb-4"></div>
+                
+                <h4>Ending Numbers</h4>
+                <div id="endingNumbers" class="display-4"></div>
+            </div>
+        </div>
+        <div class="alert alert-warning mt-3">
+            ⚠️ Disclaimer: These numbers are based on calculations and have no guarantee.
+        </div>
+    </div>
+
+    <script>
+        fetch('/api/common-numbers')
+            .then(res => res.json())
+            .then(data => {
+                if (data.data) {
+                    document.getElementById('directNumbers').innerHTML = data.data.direct.join(', ');
+                    document.getElementById('houseNumbers').innerHTML = data.data.house.join(', ');
+                    document.getElementById('endingNumbers').innerHTML = data.data.ending.join(', ');
+                }
+            });
+    </script>
+</body>
+</html>
