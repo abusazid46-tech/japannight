@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dream Numbers | Khanapara Morning Teer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link href="assets/css/style.css" rel="stylesheet"/>
+  <style>
+    .category-pill { background:rgba(245,166,35,0.12); color:var(--gold); font-size:11px; padding:2px 10px; border-radius:50px; font-weight:600; }
+    .dream-hero { background:linear-gradient(135deg,#0D0F20 0%,#1A0D2E 100%); padding:50px 0 40px; border-bottom:1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span><i class="bi bi-geo-alt-fill text-warning me-1"></i>Khanapara, Guwahati, Assam</span>
+      <div class="d-flex gap-3">
+        <span id="liveClock"></span>
+        <a href="admin/login.html" class="btn btn-warning btn-sm fw-600"><i class="bi bi-shield-lock me-1"></i>Admin</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="brand-wrap">
+        <div class="brand-icon">🎯</div>
+        <div>
+          <div class="brand-name">KHANAPARA TEER</div>
+          <div class="brand-sub">Morning Result — Official Platform</div>
+        </div>
+      </div>
+      <nav class="header-nav d-none d-lg-flex gap-1">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="results.html" class="nav-link">Previous Results</a>
+        <a href="common.html" class="nav-link">Common Numbers</a>
+        <a href="dream.html" class="nav-link active">Dream Numbers</a>
+      </nav>
+      <button class="btn btn-outline-warning d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
+        <i class="bi bi-list fs-4"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="offcanvas offcanvas-start offcanvas-dark" tabindex="-1" id="mobileMenu">
+  <div class="offcanvas-header border-bottom border-secondary">
+    <h5 class="offcanvas-title text-warning fw-700">🎯 Khanapara Teer</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <nav class="d-flex flex-column gap-1">
+      <a href="index.html" class="mobile-nav-link"><i class="bi bi-house-fill me-2"></i>Home</a>
+      <a href="results.html" class="mobile-nav-link"><i class="bi bi-table me-2"></i>Previous Results</a>
+      <a href="common.html" class="mobile-nav-link"><i class="bi bi-star-fill me-2"></i>Common Numbers</a>
+      <a href="dream.html" class="mobile-nav-link active"><i class="bi bi-moon-stars-fill me-2"></i>Dream Numbers</a>
+    </nav>
+  </div>
+</div>
+
+<section class="dream-hero">
+  <div class="container text-center">
+    <div style="font-size:60px;margin-bottom:16px;">🌙</div>
+    <span class="section-tag">Dream Dictionary</span>
+    <h2 class="section-title mt-2">Teer Dream Numbers</h2>
+    <p class="text-muted mt-2 mx-auto" style="max-width:500px;">Search what you dreamt last night and find the associated teer numbers</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="mb-4">
+      <input type="text" id="dreamSearch" class="dream-search" placeholder="🔍 Search dream… e.g. tiger, water, fire, snake"/>
+    </div>
+
+    <div class="mb-4" id="categoryFilter"></div>
+
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="table result-table dream-table mb-0">
+          <thead>
+            <tr>
+              <th>Dream / Symbol</th>
+              <th>Category</th>
+              <th class="text-warning">Teer Numbers</th>
+            </tr>
+          </thead>
+          <tbody id="dreamTableBody">
+            <tr><td colspan="3" class="text-center py-4 text-muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-4 p-4" style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);">
+      <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1 text-warning"></i>Dream numbers are traditional folklore associations and are purely for entertainment. They do not guarantee any lottery outcome. Please gamble responsibly and follow your local laws.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom py-3">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span class="text-muted small">&copy; 2025 Khanapara Morning Teer.</span>
+        <a href="index.html" class="text-warning text-decoration-none small">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/main.js"></script>
+<script>initDreamPage();</script>
+</body>
+</html>
