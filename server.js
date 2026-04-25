@@ -1,18 +1,31 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const path = require('path');
 require('dotenv').config();
 
 const app = express();
+
+// Middleware
 app.use(express.json());
 app.use(express.static('public'));
-app.use(cors());
+app.use(express.urlencoded({ extended: true }));
+
+// CORS for development
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+});
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ MongoDB connected'))
-    .catch(err => console.log('❌ MongoDB error:', err));
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/teer';
+
+mongoose.connect(MONGODB_URI)
+    .then(() => console.log('✅ MongoDB connected successfully'))
+    .catch(err => {
+        console.error('❌ MongoDB connection error:', err.message);
+        console.log('⚠️  Continuing without database...');
+    });
 
 // Schema
 const teerDataSchema = new mongoose.Schema({
@@ -27,46 +40,38 @@ const teerDataSchema = new mongoose.Schema({
 
 const TeerData = mongoose.model('TeerData', teerDataSchema);
 
-// ============ SEED INITIAL DREAM DATA ============
-async function seedInitialData() {
-    const dreamCount = await TeerData.countDocuments({ type: 'dream' });
-    if (dreamCount === 0) {
-        const initialDreams = [
-            { slNo: 1, dream: "Quarrel between husband and wife", direct: "03,08,13,37,40,73", house: "3", ending: "" },
-            { slNo: 2, dream: "Erotic dream", direct: "17,40,53,59,60,83", house: "", ending: "" },
-            { slNo: 3, dream: "Bathing in the open", direct: "08,18,28,48,78,98", house: "8", ending: "" },
-            { slNo: 4, dream: "Travelling", direct: "08,14,18,52,64,68,74,78,98", house: "8", ending: "" },
-            { slNo: 5, dream: "Snake or fish", direct: "09,17,37,57,77,99", house: "7", ending: "" },
-            { slNo: 6, dream: "Money", direct: "00,14,15,20,25,35,50", house: "0,5", ending: "0" },
-            { slNo: 7, dream: "Tiger", direct: "", house: "9", ending: "" },
-            { slNo: 8, dream: "Elephant", direct: "", house: "9", ending: "" },
-            { slNo: 9, dream: "Dog", direct: "4,5,6", house: "4", ending: "" },
-            { slNo: 10, dream: "Fire", direct: "0", house: "", ending: "" }
-        ];
-        
-        for (const dream of initialDreams) {
-            await TeerData.create({
-                type: 'dream',
-                data: dream
-            });
-        }
-        console.log('✅ Initial dream data seeded');
-    }
-}
-
-// ============ PUBLIC API ROUTES ============
+// ============ API ROUTES ============
 
 // Get today's result
 app.get('/api/today-result', async (req, res) => {
     try {
         const today = new Date().toLocaleDateString('en-GB');
+        console.log(`Fetching result for date: ${today}`);
+        
         const result = await TeerData.findOne({ 
             type: 'result', 
             date: today 
         });
-        res.json(result || { success: false, message: 'No result for today' });
+        
+        if (result) {
+            res.json({
+                success: true,
+                date: result.date,
+                data: result.data
+            });
+        } else {
+            res.json({
+                success: false,
+                message: 'No result for today',
+                data: { firstRound: '--', secondRound: '--' }
+            });
+        }
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching today result:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
@@ -74,13 +79,32 @@ app.get('/api/today-result', async (req, res) => {
 app.get('/api/common-numbers', async (req, res) => {
     try {
         const today = new Date().toLocaleDateString('en-GB');
+        console.log(`Fetching common numbers for date: ${today}`);
+        
         const common = await TeerData.findOne({ 
             type: 'common', 
             date: today 
         });
-        res.json(common || { success: false, message: 'No common numbers for today' });
+        
+        if (common) {
+            res.json({
+                success: true,
+                date: common.date,
+                data: common.data
+            });
+        } else {
+            res.json({
+                success: false,
+                message: 'No common numbers for today',
+                data: { direct: [], house: [], ending: [] }
+            });
+        }
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching common numbers:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
@@ -90,9 +114,18 @@ app.get('/api/results', async (req, res) => {
         const results = await TeerData.find({ type: 'result' })
             .sort({ date: -1 })
             .limit(50);
-        res.json(results);
+        
+        res.json({
+            success: true,
+            count: results.length,
+            data: results
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching results:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
@@ -100,19 +133,29 @@ app.get('/api/results', async (req, res) => {
 app.get('/api/search-dream', async (req, res) => {
     try {
         const keyword = req.query.q;
-        if (!keyword) {
-            const dreams = await TeerData.find({ type: 'dream' })
+        let dreams;
+        
+        if (keyword && keyword.trim()) {
+            dreams = await TeerData.find({ 
+                type: 'dream',
+                'data.dream': { $regex: keyword, $options: 'i' }
+            });
+        } else {
+            dreams = await TeerData.find({ type: 'dream' })
                 .sort({ 'data.slNo': 1 });
-            return res.json(dreams);
         }
         
-        const dreams = await TeerData.find({ 
-            type: 'dream',
-            'data.dream': { $regex: keyword, $options: 'i' }
+        res.json({
+            success: true,
+            count: dreams.length,
+            data: dreams
         });
-        res.json(dreams);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error searching dreams:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
@@ -121,19 +164,33 @@ app.get('/api/dreams', async (req, res) => {
     try {
         const dreams = await TeerData.find({ type: 'dream' })
             .sort({ 'data.slNo': 1 });
-        res.json(dreams);
+        
+        res.json({
+            success: true,
+            count: dreams.length,
+            data: dreams
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching dreams:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
 // ============ ADMIN API ROUTES ============
 
 // Admin login check
-app.post('/api/admin/login', async (req, res) => {
+app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
-    const isValid = password === process.env.ADMIN_PASSWORD;
-    res.json({ success: isValid });
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const isValid = password === adminPassword;
+    
+    res.json({ 
+        success: isValid,
+        message: isValid ? 'Login successful' : 'Invalid password'
+    });
 });
 
 // Update today's result
@@ -142,18 +199,34 @@ app.post('/api/admin/update-result', async (req, res) => {
         const { firstRound, secondRound } = req.body;
         const today = new Date().toLocaleDateString('en-GB');
         
-        await TeerData.findOneAndUpdate(
+        if (!firstRound || !secondRound) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Both rounds are required' 
+            });
+        }
+        
+        const result = await TeerData.findOneAndUpdate(
             { type: 'result', date: today },
             { 
                 type: 'result', 
                 date: today, 
                 data: { firstRound, secondRound } 
             },
-            { upsert: true }
+            { upsert: true, new: true }
         );
-        res.json({ success: true, message: 'Result updated successfully' });
+        
+        res.json({ 
+            success: true, 
+            message: 'Result updated successfully',
+            data: result
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error updating result:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
@@ -163,50 +236,88 @@ app.post('/api/admin/update-common', async (req, res) => {
         const { direct, house, ending } = req.body;
         const today = new Date().toLocaleDateString('en-GB');
         
-        await TeerData.findOneAndUpdate(
+        const common = await TeerData.findOneAndUpdate(
             { type: 'common', date: today },
             { 
                 type: 'common', 
                 date: today, 
                 data: { direct, house, ending } 
             },
-            { upsert: true }
+            { upsert: true, new: true }
         );
-        res.json({ success: true, message: 'Common numbers updated successfully' });
+        
+        res.json({ 
+            success: true, 
+            message: 'Common numbers updated successfully',
+            data: common
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error updating common numbers:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
 // Add dream number
 app.post('/api/admin/add-dream', async (req, res) => {
     try {
-        const dreamData = req.body;
+        const { dream, direct, house, ending } = req.body;
+        
+        if (!dream) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Dream description is required' 
+            });
+        }
         
         // Get highest slNo
         const lastDream = await TeerData.findOne({ type: 'dream' })
             .sort({ 'data.slNo': -1 });
         const newSlNo = lastDream ? lastDream.data.slNo + 1 : 1;
         
-        dreamData.slNo = newSlNo;
-        
-        await TeerData.create({
+        const newDream = await TeerData.create({
             type: 'dream',
-            data: dreamData
+            data: {
+                slNo: newSlNo,
+                dream: dream,
+                direct: direct || '',
+                house: house || '',
+                ending: ending || ''
+            }
         });
-        res.json({ success: true, message: 'Dream added successfully' });
+        
+        res.json({ 
+            success: true, 
+            message: 'Dream added successfully',
+            data: newDream
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error adding dream:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
 // Delete dream
 app.delete('/api/admin/delete-dream/:id', async (req, res) => {
     try {
-        await TeerData.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Dream deleted successfully' });
+        const { id } = req.params;
+        await TeerData.findByIdAndDelete(id);
+        
+        res.json({ 
+            success: true, 
+            message: 'Dream deleted successfully' 
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error deleting dream:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
@@ -215,25 +326,80 @@ app.get('/api/admin/all-results', async (req, res) => {
     try {
         const results = await TeerData.find({ type: 'result' })
             .sort({ date: -1 });
-        res.json(results);
+        
+        res.json({
+            success: true,
+            data: results
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error fetching all results:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
 // Delete result
 app.delete('/api/admin/delete-result/:id', async (req, res) => {
     try {
-        await TeerData.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Result deleted successfully' });
+        const { id } = req.params;
+        await TeerData.findByIdAndDelete(id);
+        
+        res.json({ 
+            success: true, 
+            message: 'Result deleted successfully' 
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Error deleting result:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 
-// Start server
+// ============ Serve HTML Pages ============
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/results.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'results.html'));
+});
+
+app.get('/common.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'common.html'));
+});
+
+app.get('/dreams.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'dreams.html'));
+});
+
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// ============ Error Handling ============
+app.use((req, res) => {
+    res.status(404).json({ 
+        success: false, 
+        error: 'API endpoint not found' 
+    });
+});
+
+// ============ Start Server ============
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
-    await seedInitialData();
+app.listen(PORT, () => {
+    console.log(`\n🚀 Server is running!`);
+    console.log(`📍 URL: http://localhost:${PORT}`);
+    console.log(`🔑 Admin Login: http://localhost:${PORT}/admin.html`);
+    console.log(`📝 Admin Password: ${process.env.ADMIN_PASSWORD || 'admin123'}`);
+    console.log(`\n✅ API endpoints ready:`);
+    console.log(`   GET  /api/today-result`);
+    console.log(`   GET  /api/common-numbers`);
+    console.log(`   GET  /api/results`);
+    console.log(`   GET  /api/dreams`);
+    console.log(`   POST /api/admin/login`);
+    console.log(`\n💡 Make sure to run: node data/seed.js first!\n`);
 });
