@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Previous Results | Khanapara Morning Teer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <link href="assets/css/style.css" rel="stylesheet"/>
+  <style>
+    .category-pill { background: rgba(245,166,35,0.12); color: var(--gold); font-size:11px; padding:2px 10px; border-radius:50px; font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span><i class="bi bi-geo-alt-fill text-warning me-1"></i>Khanapara, Guwahati, Assam</span>
+      <div class="d-flex gap-3">
+        <span id="liveClock"></span>
+        <a href="admin/login.html" class="btn btn-warning btn-sm fw-600"><i class="bi bi-shield-lock me-1"></i>Admin</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="brand-wrap">
+        <div class="brand-icon">🎯</div>
+        <div>
+          <div class="brand-name">KHANAPARA TEER</div>
+          <div class="brand-sub">Morning Result — Official Platform</div>
+        </div>
+      </div>
+      <nav class="header-nav d-none d-lg-flex gap-1">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="results.html" class="nav-link active">Previous Results</a>
+        <a href="common.html" class="nav-link">Common Numbers</a>
+        <a href="dream.html" class="nav-link">Dream Numbers</a>
+      </nav>
+      <button class="btn btn-outline-warning d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
+        <i class="bi bi-list fs-4"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="offcanvas offcanvas-start offcanvas-dark" tabindex="-1" id="mobileMenu">
+  <div class="offcanvas-header border-bottom border-secondary">
+    <h5 class="offcanvas-title text-warning fw-700">🎯 Khanapara Teer</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <nav class="d-flex flex-column gap-1">
+      <a href="index.html" class="mobile-nav-link"><i class="bi bi-house-fill me-2"></i>Home</a>
+      <a href="results.html" class="mobile-nav-link active"><i class="bi bi-table me-2"></i>Previous Results</a>
+      <a href="common.html" class="mobile-nav-link"><i class="bi bi-star-fill me-2"></i>Common Numbers</a>
+      <a href="dream.html" class="mobile-nav-link"><i class="bi bi-moon-stars-fill me-2"></i>Dream Numbers</a>
+    </nav>
+  </div>
+</div>
+
+<section class="py-5">
+  <div class="container">
+    <div class="section-heading mb-4">
+      <span class="section-tag">Archive</span>
+      <h2 class="section-title">Previous Results</h2>
+    </div>
+
+    <div class="table-card">
+      <div class="p-3 border-bottom d-flex flex-wrap gap-3 align-items-center" style="border-color:var(--border) !important;">
+        <input type="text" id="searchInput" class="dream-search" style="max-width:260px;" placeholder="🔍 Search number or date…"/>
+        <select id="monthFilter" class="form-control-dark" style="max-width:200px;"></select>
+        <span class="text-muted ms-auto" style="font-size:13px;" id="resultCount"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="table result-table mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Day</th>
+              <th class="text-warning">FR</th>
+              <th class="text-info">SR</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody">
+            <tr><td colspan="5" class="text-center py-4 text-muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="p-3 d-flex justify-content-center">
+        <ul class="pagination pagination-dark mb-0" id="pagination"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom py-3">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span class="text-muted small">&copy; 2025 Khanapara Morning Teer. All rights reserved.</span>
+        <a href="index.html" class="text-warning text-decoration-none small">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/main.js"></script>
+<script>initResultsPage();</script>
+</body>
+</html>
