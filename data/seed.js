@@ -1,10 +1,3 @@
-/**
- * Database Seed Script for Teer Website
- * Run this script to populate initial data into MongoDB
- * 
- * Usage: node data/seed.js
- */
-
 const mongoose = require('mongoose');
 require('dotenv').config();
 
