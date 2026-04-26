@@ -5,7 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dream Numbers - Teer Results</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-box {
+            margin-bottom: 30px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102,126,234,0.3);
+        }
+        .dream-card {
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .dream-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .number-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 3px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .house-badge {
+            background: #ff6b6b;
+        }
+        .ending-badge {
+            background: #51cf66;
+        }
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 20px;
+            color: white;
+        }
+        .alert {
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -27,7 +94,7 @@
     </nav>
 
     <div class="container mt-5">
-        <h1 class="text-center mb-4">💭 Dream Number Interpretation</h1>
+        <h1 class="text-center mb-4 text-white">💭 Dream Number Interpretation</h1>
         
         <div class="search-box">
             <input type="text" id="searchInput" class="form-control" 
@@ -35,7 +102,7 @@
         </div>
         
         <div id="dreamsList" class="row">
-            <div class="text-center">Loading dreams...</div>
+            <div class="loading">Loading dreams...</div>
         </div>
     </div>
 
@@ -45,79 +112,131 @@
     </footer>
 
     <script>
-       const API_BASE_URL = 'https://teer-website.onrender.com';
+        // IMPORTANT: Change this to your Render backend URL
+        // For local testing: http://localhost:3000
+        // For production: https://your-app-name.onrender.com
+        const API_BASE_URL = 'https://teer-website.onrender.com'; // ← YOUR RENDER BACKEND URL
+        
         let allDreams = [];
         
         async function loadDreams(searchTerm = '') {
+            const dreamsList = document.getElementById('dreamsList');
+            dreamsList.innerHTML = '<div class="loading">Loading dreams...</div>';
+            
             try {
-                let url = '/api/dreams';
-                if (searchTerm) {
-                    url = `/api/search-dream?q=${encodeURIComponent(searchTerm)}`;
+                let url;
+                if (searchTerm && searchTerm.trim()) {
+                    url = `${API_BASE_URL}/api/search-dream?q=${encodeURIComponent(searchTerm)}`;
+                    console.log('Searching dreams:', url);
+                } else {
+                    url = `${API_BASE_URL}/api/dreams`;
+                    console.log('Fetching all dreams:', url);
                 }
                 
                 const response = await fetch(url);
-                const dreams = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                // Handle different response formats
+                let dreams = [];
+                if (data.data && Array.isArray(data.data)) {
+                    dreams = data.data;
+                } else if (Array.isArray(data)) {
+                    dreams = data;
+                } else if (data.dreams && Array.isArray(data.dreams)) {
+                    dreams = data.dreams;
+                } else {
+                    dreams = [];
+                }
+                
                 allDreams = dreams;
                 
-                const dreamsList = document.getElementById('dreamsList');
-                
                 if (dreams.length === 0) {
-                    dreamsList.innerHTML = '<div class="alert alert-info">No dreams found matching your search.</div>';
+                    dreamsList.innerHTML = '<div class="alert alert-info">No dreams found matching your search. Try different keywords!</div>';
                     return;
                 }
                 
-                dreamsList.innerHTML = dreams.map(dream => `
-                    <div class="col-md-6 mb-3">
-                        <div class="card dream-card">
-                            <div class="card-header bg-primary text-white">
-                                <strong>${dream.data.slNo}. ${dream.data.dream}</strong>
-                            </div>
-                            <div class="card-body">
-                                ${dream.data.direct ? `
-                                    <div class="mb-2">
-                                        <strong>Direct Numbers:</strong><br>
-                                        ${dream.data.direct.split(',').map(n => 
-                                            `<span class="number-badge">${n.trim()}</span>`
-                                        ).join('')}
-                                    </div>
-                                ` : ''}
-                                ${dream.data.house ? `
-                                    <div class="mb-2">
-                                        <strong>House Numbers:</strong><br>
-                                        ${dream.data.house.split(',').map(n => 
-                                            `<span class="number-badge house-badge">${n.trim()}</span>`
-                                        ).join('')}
-                                    </div>
-                                ` : ''}
-                                ${dream.data.ending ? `
-                                    <div>
-                                        <strong>Ending Numbers:</strong><br>
-                                        ${dream.data.ending.split(',').map(n => 
-                                            `<span class="number-badge ending-badge">${n.trim()}</span>`
-                                        ).join('')}
-                                    </div>
-                                ` : ''}
+                dreamsList.innerHTML = dreams.map(dream => {
+                    // Handle dream data (could be in dream.data or directly in dream)
+                    const dreamData = dream.data || dream;
+                    
+                    return `
+                        <div class="col-md-6 mb-3">
+                            <div class="card dream-card">
+                                <div class="card-header bg-primary text-white">
+                                    <strong>${dreamData.slNo || '?'}. ${dreamData.dream || 'Unknown Dream'}</strong>
+                                </div>
+                                <div class="card-body">
+                                    ${dreamData.direct ? `
+                                        <div class="mb-2">
+                                            <strong>Direct Numbers:</strong><br>
+                                            ${String(dreamData.direct).split(',').map(n => 
+                                                `<span class="number-badge">${n.trim()}</span>`
+                                            ).join('')}
+                                        </div>
+                                    ` : '<div class="mb-2 text-muted">No direct numbers</div>'}
+                                    
+                                    ${dreamData.house ? `
+                                        <div class="mb-2">
+                                            <strong>House Numbers:</strong><br>
+                                            ${String(dreamData.house).split(',').map(n => 
+                                                `<span class="number-badge house-badge">${n.trim()}</span>`
+                                            ).join('')}
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${dreamData.ending ? `
+                                        <div>
+                                            <strong>Ending Numbers:</strong><br>
+                                            ${String(dreamData.ending).split(',').map(n => 
+                                                `<span class="number-badge ending-badge">${n.trim()}</span>`
+                                            ).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
+                
             } catch (error) {
-                document.getElementById('dreamsList').innerHTML = 
-                    '<div class="alert alert-danger">Error loading dreams. Please try again.</div>';
+                console.error('Error loading dreams:', error);
+                dreamsList.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>❌ Error loading dreams!</strong><br>
+                        Make sure your backend is running at: ${API_BASE_URL}<br>
+                        <small>Error details: ${error.message}</small>
+                    </div>
+                `;
             }
         }
         
-        // Search functionality
+        // Search functionality with debounce
         let searchTimeout;
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                loadDreams(e.target.value);
-            }, 300);
-        });
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadDreams(e.target.value);
+                }, 500);
+            });
+        }
         
         // Load all dreams initially
         loadDreams();
+        
+        // Refresh dreams list every 5 minutes (in case admin adds new ones)
+        setInterval(() => {
+            if (!searchInput || !searchInput.value) {
+                loadDreams();
+            }
+        }, 300000);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
