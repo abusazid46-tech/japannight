@@ -5,7 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Common Numbers - Teer Results</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: bold;
+        }
+        .display-6 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        .alert {
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -27,8 +64,8 @@
     </nav>
 
     <div class="container mt-5">
-        <h1 class="text-center mb-4">🔢 Common Numbers</h1>
-        <h6 class="text-center text-muted mb-4">for <span id="currentDate"></span></h6>
+        <h1 class="text-center mb-4 text-white">🔢 Common Numbers</h1>
+        <h6 class="text-center text-white mb-4">for <span id="currentDate"></span></h6>
         
         <div class="row">
             <div class="col-md-4 mb-4">
@@ -77,34 +114,96 @@
     </footer>
 
     <script>
+        // IMPORTANT: Change this to your Render backend URL after deployment
+        // For local testing: http://localhost:3000
+        // For production: https://your-app-name.onrender.com
+        const API_BASE_URL = 'https://teer-website.onrender.com'; // ← CHANGE THIS TO YOUR RENDER URL
+        
         // Set current date
         document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-GB');
         
         async function loadCommonNumbers() {
             try {
-                const response = await fetch('/api/common-numbers');
+                console.log('Fetching common numbers from:', `${API_BASE_URL}/api/common-numbers`);
+                
+                const response = await fetch(`${API_BASE_URL}/api/common-numbers`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('API Response:', data);
                 
                 if (data && data.data) {
-                    document.getElementById('directNumbers').innerHTML = 
-                        data.data.direct?.join(', ') || '--';
-                    document.getElementById('houseNumbers').innerHTML = 
-                        data.data.house?.join(', ') || '--';
-                    document.getElementById('endingNumbers').innerHTML = 
-                        data.data.ending?.join(', ') || '--';
+                    // Handle direct numbers (could be array or string)
+                    let directText = '--';
+                    if (data.data.direct) {
+                        if (Array.isArray(data.data.direct)) {
+                            directText = data.data.direct.join(', ');
+                        } else if (typeof data.data.direct === 'string') {
+                            directText = data.data.direct;
+                        }
+                    }
+                    document.getElementById('directNumbers').innerHTML = directText;
+                    
+                    // Handle house numbers
+                    let houseText = '--';
+                    if (data.data.house) {
+                        if (Array.isArray(data.data.house)) {
+                            houseText = data.data.house.join(', ');
+                        } else if (typeof data.data.house === 'string') {
+                            houseText = data.data.house;
+                        }
+                    }
+                    document.getElementById('houseNumbers').innerHTML = houseText;
+                    
+                    // Handle ending numbers
+                    let endingText = '--';
+                    if (data.data.ending) {
+                        if (Array.isArray(data.data.ending)) {
+                            endingText = data.data.ending.join(', ');
+                        } else if (typeof data.data.ending === 'string') {
+                            endingText = data.data.ending;
+                        }
+                    }
+                    document.getElementById('endingNumbers').innerHTML = endingText;
+                } else if (data && data.data === undefined && data.message) {
+                    // No data available yet
+                    document.getElementById('directNumbers').innerHTML = 'Not generated';
+                    document.getElementById('houseNumbers').innerHTML = 'Not generated';
+                    document.getElementById('endingNumbers').innerHTML = 'Not generated';
+                    console.log('Message:', data.message);
                 } else {
                     document.getElementById('directNumbers').innerHTML = 'No data';
                     document.getElementById('houseNumbers').innerHTML = 'No data';
                     document.getElementById('endingNumbers').innerHTML = 'No data';
                 }
             } catch (error) {
-                document.getElementById('directNumbers').innerHTML = 'Error';
-                document.getElementById('houseNumbers').innerHTML = 'Error';
-                document.getElementById('endingNumbers').innerHTML = 'Error';
+                console.error('Error loading common numbers:', error);
+                document.getElementById('directNumbers').innerHTML = '❌ Error';
+                document.getElementById('houseNumbers').innerHTML = '❌ Error';
+                document.getElementById('endingNumbers').innerHTML = '❌ Error';
+                
+                // Show helpful message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger mt-3';
+                errorDiv.innerHTML = `
+                    <strong>⚠️ Cannot connect to backend!</strong><br>
+                    Make sure:<br>
+                    1. Backend is running at ${API_BASE_URL}<br>
+                    2. You've deployed backend to Render<br>
+                    3. Updated API_BASE_URL in this file
+                `;
+                document.querySelector('.container').appendChild(errorDiv);
             }
         }
         
+        // Load common numbers when page loads
         loadCommonNumbers();
+        
+        // Refresh every 60 seconds
+        setInterval(loadCommonNumbers, 60000);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
