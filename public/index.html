@@ -124,6 +124,9 @@
     </footer>
 
     <script>
+        // IMPORTANT: Change this to your Render backend URL
+        const API_BASE_URL = 'https://your-render-app.onrender.com'; // ← CHANGE THIS!
+        
         // Display current date
         const today = new Date();
         const formattedDate = today.toLocaleDateString('en-GB');
@@ -131,8 +134,8 @@
         
         async function loadTodayResult() {
             try {
-                console.log('Fetching today\'s result...');
-                const response = await fetch('/api/today-result');
+                console.log('Fetching from:', `${API_BASE_URL}/api/today-result`);
+                const response = await fetch(`${API_BASE_URL}/api/today-result`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -144,21 +147,14 @@
                 if (data && data.data) {
                     document.getElementById('firstRound').innerText = data.data.firstRound || '--';
                     document.getElementById('secondRound').innerText = data.data.secondRound || '--';
-                } else if (data && data.data === undefined) {
+                } else {
                     document.getElementById('firstRound').innerHTML = '<small class="fs-6">No result yet</small>';
                     document.getElementById('secondRound').innerHTML = '<small class="fs-6">No result yet</small>';
-                } else {
-                    document.getElementById('firstRound').innerHTML = '<small class="fs-6">Not available</small>';
-                    document.getElementById('secondRound').innerHTML = '<small class="fs-6">Not available</small>';
                 }
             } catch (error) {
                 console.error('Error loading results:', error);
-                document.getElementById('firstRound').innerHTML = '<small class="fs-6 text-danger">Error loading</small>';
-                document.getElementById('secondRound').innerHTML = '<small class="fs-6 text-danger">Error loading</small>';
-                
-                // Show fallback data for testing
-                document.getElementById('firstRound').innerHTML = '<small class="fs-6">Use admin panel to add results</small>';
-                document.getElementById('secondRound').innerHTML = '<small class="fs-6">Use admin panel to add results</small>';
+                document.getElementById('firstRound').innerHTML = '<small class="fs-6 text-danger">Backend not connected</small>';
+                document.getElementById('secondRound').innerHTML = '<small class="fs-6 text-danger">Backend not connected</small>';
             }
         }
         
