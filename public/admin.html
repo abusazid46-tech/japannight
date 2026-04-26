@@ -3,158 +3,469 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
+    <title>Admin Dashboard - Teer Results</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
         .admin-section { display: none; }
-        .active-section { display: block; }
+        .active-section { display: block; animation: fadeIn 0.5s; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .card {
+            border: none;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .nav-tabs .nav-link {
+            color: white;
+            font-weight: bold;
+            border: none;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: white;
+            color: #667eea;
+            border-radius: 10px;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 10px;
+        }
+        
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .btn-action {
+            margin: 2px;
+            padding: 5px 10px;
+        }
+        
+        .modal-content {
+            border-radius: 15px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #667eea;
+        }
+        
+        .badge-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-item {
+            padding: 10px;
+            margin: 5px 0;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-item:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .sidebar-item.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .stat-number {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container-fluid">
         <!-- Login Form -->
-        <div id="loginForm" class="card mx-auto" style="max-width: 450px;">
-            <div class="card-header bg-dark text-white text-center">
-                <h4>🔐 Admin Login</h4>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <small>Default password: <strong>admin123</strong></small>
+        <div id="loginForm" class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-dark text-white text-center">
+                        <h4><i class="bi bi-shield-lock"></i> Admin Login</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Default password: <strong>admin123</strong>
+                        </div>
+                        <input type="password" id="adminPassword" class="form-control mb-3" 
+                               placeholder="Enter Admin Password" onkeypress="if(event.key==='Enter') login()">
+                        <button onclick="login()" class="btn btn-dark w-100">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                        <div id="loginError" class="text-danger mt-2 text-center"></div>
+                    </div>
                 </div>
-                <input type="password" id="adminPassword" class="form-control mb-3" 
-                       placeholder="Enter Admin Password" onkeypress="if(event.key==='Enter') login()">
-                <button onclick="login()" class="btn btn-dark w-100">Login</button>
-                <div id="loginError" class="text-danger mt-2 text-center"></div>
             </div>
         </div>
 
         <!-- Admin Dashboard -->
         <div id="adminDashboard" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="text-white">Admin Dashboard</h1>
-                <button onclick="logout()" class="btn btn-danger">Logout</button>
-            </div>
-            
-            <ul class="nav nav-tabs mb-4">
-                <li class="nav-item">
-                    <a class="nav-link active" href="#" onclick="showSection('results'); return false;">📊 Update Results</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="showSection('common'); return false;">🔢 Common Numbers</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="showSection('dreams'); return false;">💭 Add Dream</a>
-                </li>
-            </ul>
-
-            <!-- Update Results Section -->
-            <div id="resultsSection" class="admin-section active-section">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Update Today's Results</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="alert alert-info">
-                            Today's Date: <strong id="todayDate"></strong>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">First Round (10:30 AM)</label>
-                            <input type="text" id="firstRound" class="form-control" 
-                                   placeholder="e.g., 08" maxlength="2">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Second Round (11:30 AM)</label>
-                            <input type="text" id="secondRound" class="form-control" 
-                                   placeholder="e.g., 51" maxlength="2">
-                        </div>
-                        <button onclick="updateResults()" class="btn btn-primary">Update Results</button>
-                        <div id="resultMsg" class="mt-3"></div>
+            <!-- Top Navbar -->
+            <nav class="navbar navbar-dark bg-dark mb-4">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">
+                        <i class="bi bi-speedometer2"></i> Admin Dashboard
+                    </a>
+                    <div class="d-flex">
+                        <span class="navbar-text text-white me-3">
+                            <i class="bi bi-person-circle"></i> Admin
+                        </span>
+                        <button onclick="logout()" class="btn btn-danger btn-sm">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
                     </div>
                 </div>
-            </div>
+            </nav>
 
-            <!-- Common Numbers Section -->
-            <div id="commonSection" class="admin-section" style="display:none">
-                <div class="card">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0">Update Common Numbers</h5>
+            <div class="container-fluid">
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <i class="bi bi-calendar-check fs-1"></i>
+                            <div class="stat-number" id="totalResults">0</div>
+                            <div>Total Results</div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="alert alert-info">
-                            Today's Date: <strong id="todayDate2"></strong>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <i class="bi bi-moon-stars fs-1"></i>
+                            <div class="stat-number" id="totalDreams">0</div>
+                            <div>Dream Meanings</div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Direct Numbers (comma separated)</label>
-                            <input type="text" id="direct" class="form-control" 
-                                   placeholder="e.g., 68,39,81">
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <i class="bi bi-calendar-day fs-1"></i>
+                            <div class="stat-number" id="todayResult">--</div>
+                            <div>Today's FR/SR</div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">House Numbers (comma separated)</label>
-                            <input type="text" id="house" class="form-control" 
-                                   placeholder="e.g., 4,5">
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <i class="bi bi-database fs-1"></i>
+                            <div class="stat-number" id="dbStatus">--</div>
+                            <div>Database Status</div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Ending Numbers (comma separated)</label>
-                            <input type="text" id="ending" class="form-control" 
-                                   placeholder="e.g., 7,2">
-                        </div>
-                        <button onclick="updateCommon()" class="btn btn-danger">Update Common Numbers</button>
-                        <div id="commonMsg" class="mt-3"></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Add Dream Section -->
-            <div id="dreamsSection" class="admin-section" style="display:none">
-                <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">Add New Dream Meaning</h5>
+                <!-- Main Content Tabs -->
+                <ul class="nav nav-tabs mb-4" id="adminTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" onclick="showSection('dashboard'); return false;">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('results'); return false;">
+                            <i class="bi bi-trophy"></i> Update Results
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('common'); return false;">
+                            <i class="bi bi-hash"></i> Common Numbers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('dreams'); return false;">
+                            <i class="bi bi-moon-stars"></i> Manage Dreams
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('manage'); return false;">
+                            <i class="bi bi-database-gear"></i> Data Manager
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Dashboard Section -->
+                <div id="dashboardSection" class="admin-section active-section">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Recent Activity</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="recentResults"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Quick Tips</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check-circle-fill text-success"></i> Update results daily by 11:30 AM</li>
+                                        <li><i class="bi bi-check-circle-fill text-success"></i> Common numbers can be updated anytime</li>
+                                        <li><i class="bi bi-check-circle-fill text-success"></i> Add new dream meanings as needed</li>
+                                        <li><i class="bi bi-check-circle-fill text-success"></i> Check database status regularly</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Dream Description</label>
-                            <input type="text" id="dreamName" class="form-control" 
-                                   placeholder="e.g., Seeing a white elephant">
+                </div>
+
+                <!-- Update Results Section -->
+                <div id="resultsSection" class="admin-section" style="display:none">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Update Today's Results</h5>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Direct Numbers (comma separated)</label>
-                            <input type="text" id="dreamDirect" class="form-control" 
-                                   placeholder="e.g., 09,17,37">
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDate"></strong>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">First Round (10:30 AM)</label>
+                                        <input type="text" id="firstRound" class="form-control form-control-lg text-center" 
+                                               placeholder="e.g., 08" maxlength="2" pattern="\d{2}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Second Round (11:30 AM)</label>
+                                        <input type="text" id="secondRound" class="form-control form-control-lg text-center" 
+                                               placeholder="e.g., 51" maxlength="2" pattern="\d{2}">
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="updateResults()" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-save"></i> Update Results
+                            </button>
+                            <div id="resultMsg" class="mt-3"></div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">House Numbers (comma separated)</label>
-                            <input type="text" id="dreamHouse" class="form-control" 
-                                   placeholder="e.g., 7">
+                    </div>
+                </div>
+
+                <!-- Common Numbers Section -->
+                <div id="commonSection" class="admin-section" style="display:none">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="bi bi-hash"></i> Update Common Numbers</h5>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Ending Numbers (comma separated)</label>
-                            <input type="text" id="dreamEnding" class="form-control" 
-                                   placeholder="e.g., 9">
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDate2"></strong>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Direct Numbers (comma separated)</label>
+                                <input type="text" id="direct" class="form-control" 
+                                       placeholder="e.g., 68,39,81">
+                                <small class="text-muted">Example: 68,39,81</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">House Numbers (comma separated)</label>
+                                <input type="text" id="house" class="form-control" 
+                                       placeholder="e.g., 4,5">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ending Numbers (comma separated)</label>
+                                <input type="text" id="ending" class="form-control" 
+                                       placeholder="e.g., 7,2">
+                            </div>
+                            <button onclick="updateCommon()" class="btn btn-danger btn-lg w-100">
+                                <i class="bi bi-save"></i> Update Common Numbers
+                            </button>
+                            <div id="commonMsg" class="mt-3"></div>
                         </div>
-                        <button onclick="addDream()" class="btn btn-success">Add Dream</button>
-                        <div id="dreamMsg" class="mt-3"></div>
+                    </div>
+                </div>
+
+                <!-- Manage Dreams Section -->
+                <div id="dreamsSection" class="admin-section" style="display:none">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Add New Dream</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Dream Description</label>
+                                        <input type="text" id="dreamName" class="form-control" 
+                                               placeholder="e.g., Seeing a white elephant">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Direct Numbers</label>
+                                        <input type="text" id="dreamDirect" class="form-control" 
+                                               placeholder="e.g., 09,17,37">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">House Numbers</label>
+                                        <input type="text" id="dreamHouse" class="form-control" 
+                                               placeholder="e.g., 7">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Ending Numbers</label>
+                                        <input type="text" id="dreamEnding" class="form-control" 
+                                               placeholder="e.g., 9">
+                                    </div>
+                                    <button onclick="addDream()" class="btn btn-success w-100">
+                                        <i class="bi bi-plus-circle"></i> Add Dream
+                                    </button>
+                                    <div id="dreamMsg" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Existing Dreams</h5>
+                                </div>
+                                <div class="card-body">
+                                    <input type="text" id="searchDreams" class="form-control mb-3" 
+                                           placeholder="Search dreams..." onkeyup="filterDreams()">
+                                    <div class="table-responsive" style="max-height: 400px;">
+                                        <table class="table table-hover">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Dream Description</th>
+                                                    <th>Numbers</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dreamsTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Manager Section -->
+                <div id="manageSection" class="admin-section" style="display:none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="bi bi-trophy"></i> Manage Results</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive" style="max-height: 400px;">
+                                        <table class="table table-sm">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>FR/SR</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="manageResultsTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="bi bi-database"></i> Database Actions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <button onclick="refreshData()" class="btn btn-primary w-100 mb-2">
+                                        <i class="bi bi-arrow-repeat"></i> Refresh All Data
+                                    </button>
+                                    <button onclick="exportData()" class="btn btn-success w-100 mb-2">
+                                        <i class="bi bi-download"></i> Export Data (JSON)
+                                    </button>
+                                    <button onclick="clearCache()" class="btn btn-info w-100">
+                                        <i class="bi bi-trash"></i> Clear Cache
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <footer>
+        <p>&copy; 2024 Teer Results Admin Panel | Secure Dashboard</p>
+    </footer>
+
     <script>
         // IMPORTANT: Change this to your Render backend URL
-        const API_BASE_URL = 'https://teer-website.onrender.com'; // ← CHANGE THIS!
+        const API_BASE_URL = 'https://teer-website.onrender.com'; // ← CHANGE THIS TO YOUR RENDER BACKEND URL
         let adminToken = null;
+        let allDreams = [];
         
+        // Initialize
         document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-GB');
         document.getElementById('todayDate2').innerText = new Date().toLocaleDateString('en-GB');
         
+        // Login function
         async function login() {
             const password = document.getElementById('adminPassword').value;
             
@@ -171,31 +482,160 @@
                     adminToken = password;
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('adminDashboard').style.display = 'block';
+                    loadDashboardData();
                 } else {
                     document.getElementById('loginError').innerText = 'Wrong password!';
                 }
             } catch (error) {
-                document.getElementById('loginError').innerText = 'Error connecting to server';
+                document.getElementById('loginError').innerHTML = `
+                    <div class="alert alert-danger">
+                        ❌ Cannot connect to backend<br>
+                        Make sure backend is running at: ${API_BASE_URL}
+                    </div>
+                `;
                 console.error('Login error:', error);
             }
         }
         
         function logout() {
             adminToken = null;
-            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('loginForm').style.display = 'flex';
             document.getElementById('adminDashboard').style.display = 'none';
             document.getElementById('adminPassword').value = '';
-            document.getElementById('loginError').innerText = '';
         }
         
         function showSection(section) {
             document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
-            if (section === 'results') {
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            
+            if (section === 'dashboard') {
+                document.getElementById('dashboardSection').style.display = 'block';
+                document.querySelector('.nav-link[onclick*="dashboard"]').classList.add('active');
+                loadDashboardData();
+            } else if (section === 'results') {
                 document.getElementById('resultsSection').style.display = 'block';
+                document.querySelector('.nav-link[onclick*="results"]').classList.add('active');
             } else if (section === 'common') {
                 document.getElementById('commonSection').style.display = 'block';
+                document.querySelector('.nav-link[onclick*="common"]').classList.add('active');
             } else if (section === 'dreams') {
                 document.getElementById('dreamsSection').style.display = 'block';
+                document.querySelector('.nav-link[onclick*="dreams"]').classList.add('active');
+                loadDreamsList();
+            } else if (section === 'manage') {
+                document.getElementById('manageSection').style.display = 'block';
+                document.querySelector('.nav-link[onclick*="manage"]').classList.add('active');
+                loadManageData();
+            }
+        }
+        
+        async function loadDashboardData() {
+            try {
+                // Load stats
+                const resultsRes = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const resultsData = await resultsRes.json();
+                const results = resultsData.data || [];
+                document.getElementById('totalResults').innerText = results.length;
+                
+                const dreamsRes = await fetch(`${API_BASE_URL}/api/dreams`);
+                const dreamsData = await dreamsRes.json();
+                const dreams = dreamsData.data || dreamsData || [];
+                document.getElementById('totalDreams').innerText = dreams.length;
+                
+                // Today's result
+                const todayRes = await fetch(`${API_BASE_URL}/api/today-result`);
+                const todayData = await todayRes.json();
+                if (todayData.data) {
+                    document.getElementById('todayResult').innerHTML = `${todayData.data.firstRound}/${todayData.data.secondRound}`;
+                } else {
+                    document.getElementById('todayResult').innerHTML = '--/--';
+                }
+                
+                document.getElementById('dbStatus').innerHTML = '<span class="badge bg-success">Connected</span>';
+                
+                // Recent results
+                const recentHtml = results.slice(0, 5).map(r => `
+                    <div class="alert alert-secondary">
+                        <strong>${r.date}</strong>: ${r.data?.firstRound || '--'} | ${r.data?.secondRound || '--'}
+                    </div>
+                `).join('');
+                document.getElementById('recentResults').innerHTML = recentHtml || '<p>No results yet</p>';
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+        
+        async function loadDreamsList() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/dreams`);
+                const data = await response.json();
+                allDreams = data.data || data || [];
+                renderDreamsTable(allDreams);
+            } catch (error) {
+                console.error('Error loading dreams:', error);
+            }
+        }
+        
+        function renderDreamsTable(dreams) {
+            const tableBody = document.getElementById('dreamsTable');
+            if (dreams.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No dreams found</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = dreams.map(dream => {
+                const dreamData = dream.data || dream;
+                const dreamId = dream._id;
+                const numbers = [dreamData.direct, dreamData.house, dreamData.ending].filter(n => n).join(', ');
+                return `
+                    <tr>
+                        <td>${dreamData.slNo || '?'}</td>
+                        <td>${dreamData.dream}</td>
+                        <td><small>${numbers || 'N/A'}</small></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm btn-action" onclick="deleteDream('${dreamId}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function filterDreams() {
+            const searchTerm = document.getElementById('searchDreams').value.toLowerCase();
+            const filtered = allDreams.filter(dream => {
+                const dreamData = dream.data || dream;
+                return dreamData.dream.toLowerCase().includes(searchTerm);
+            });
+            renderDreamsTable(filtered);
+        }
+        
+        async function loadManageData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+                const results = data.data || [];
+                
+                const tableBody = document.getElementById('manageResultsTable');
+                tableBody.innerHTML = results.slice(0, 20).map(result => `
+                    <tr>
+                        <td>${result.date}</td>
+                        <td>${result.data?.firstRound || '--'} / ${result.data?.secondRound || '--'}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteResult('${result._id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading manage data:', error);
             }
         }
         
@@ -224,6 +664,7 @@
                     showMessage('resultMsg', '✅ Results updated successfully!', 'success');
                     document.getElementById('firstRound').value = '';
                     document.getElementById('secondRound').value = '';
+                    loadDashboardData();
                 } else {
                     showMessage('resultMsg', 'Error updating results', 'error');
                 }
@@ -291,6 +732,7 @@
                     document.getElementById('dreamDirect').value = '';
                     document.getElementById('dreamHouse').value = '';
                     document.getElementById('dreamEnding').value = '';
+                    loadDreamsList();
                 } else {
                     showMessage('dreamMsg', 'Error adding dream', 'error');
                 }
@@ -299,9 +741,76 @@
             }
         }
         
+        async function deleteDream(id) {
+            if (confirm('Are you sure you want to delete this dream?')) {
+                try {
+                    await fetch(`${API_BASE_URL}/api/admin/delete-dream/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    });
+                    loadDreamsList();
+                    showMessage('dreamMsg', '✅ Dream deleted successfully!', 'success');
+                } catch (error) {
+                    alert('Error deleting dream');
+                }
+            }
+        }
+        
+        async function deleteResult(id) {
+            if (confirm('Are you sure you want to delete this result?')) {
+                try {
+                    await fetch(`${API_BASE_URL}/api/admin/delete-result/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    });
+                    loadManageData();
+                    loadDashboardData();
+                    showMessage('resultMsg', '✅ Result deleted successfully!', 'success');
+                } catch (error) {
+                    alert('Error deleting result');
+                }
+            }
+        }
+        
+        function refreshData() {
+            loadDashboardData();
+            loadDreamsList();
+            loadManageData();
+            showMessage('commonMsg', '🔄 Data refreshed!', 'success');
+        }
+        
+        function exportData() {
+            fetch(`${API_BASE_URL}/api/admin/all-results`, {
+                headers: { 'Authorization': `Bearer ${adminToken}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const jsonStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `teer-data-${new Date().toISOString()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showMessage('commonMsg', '📥 Data exported successfully!', 'success');
+            });
+        }
+        
+        function clearCache() {
+            if (confirm('Clear browser cache? This will reload the page.')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                location.reload();
+            }
+        }
+        
         function showMessage(elementId, message, type) {
             const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'danger'}">${message}</div>`;
+            element.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
             setTimeout(() => element.innerHTML = '', 3000);
         }
     </script>
