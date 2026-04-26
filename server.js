@@ -13,7 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 // CORS for development (remove for production)
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-admin-key');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
@@ -25,7 +25,9 @@ app.use((req, res, next) => {
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/teer';
 
 console.log('🔄 Connecting to MongoDB...');
-console.log(`📦 Database URI: ${MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')}`); // Hide credentials in logs
+// Hide credentials in logs
+const hiddenUri = MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
+console.log(`📦 Database URI: ${hiddenUri}`);
 
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
@@ -63,7 +65,7 @@ const teerDataSchema = new mongoose.Schema({
         type: String,
         validate: {
             validator: function(v) {
-                return /^\d{2}\/\d{2}\/\d{4}$/.test(v);
+                return !v || /^\d{2}\/\d{2}\/\d{4}$/.test(v);
             },
             message: props => `${props.value} is not a valid date format (DD/MM/YYYY)!`
         },
@@ -311,16 +313,45 @@ app.get('/api/dreams', async (req, res) => {
     }
 });
 
-// ============ ADMIN API ROUTES (Protected) ============
-
-// Admin authentication middleware
+// ============ ADMIN AUTHENTICATION MIDDLEWARE ============
+// This middleware accepts both Bearer token and x-admin-key formats
 const authenticateAdmin = (req, res, next) => {
-    const adminKey = req.headers['x-admin-key'] || req.query.adminKey;
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     
-    if (adminKey === adminPassword) {
+    // Check multiple possible locations for the password/token
+    let providedPassword = null;
+    
+    // 1. Check Authorization header (Bearer token) - What your frontend sends
+    if (req.headers.authorization) {
+        const parts = req.headers.authorization.split(' ');
+        if (parts.length === 2 && parts[0] === 'Bearer') {
+            providedPassword = parts[1];
+        } else if (parts.length === 1) {
+            providedPassword = parts[0];
+        }
+    }
+    
+    // 2. Check x-admin-key header
+    if (!providedPassword && req.headers['x-admin-key']) {
+        providedPassword = req.headers['x-admin-key'];
+    }
+    
+    // 3. Check query parameter
+    if (!providedPassword && req.query.adminKey) {
+        providedPassword = req.query.adminKey;
+    }
+    
+    // 4. Check body (for some requests)
+    if (!providedPassword && req.body && req.body.adminKey) {
+        providedPassword = req.body.adminKey;
+    }
+    
+    // Verify the password
+    if (providedPassword === adminPassword) {
+        console.log('✅ Admin authenticated successfully');
         next();
     } else {
+        console.log(`❌ Auth failed - Provided: ${providedPassword}, Expected: ${adminPassword}`);
         res.status(401).json({ 
             success: false, 
             error: 'Unauthorized. Invalid admin credentials.' 
@@ -328,11 +359,15 @@ const authenticateAdmin = (req, res, next) => {
     }
 };
 
-// Admin login check
+// ============ ADMIN API ROUTES ============
+
+// Admin login check (no authentication needed)
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     const isValid = password === adminPassword;
+    
+    console.log(`Admin login attempt: ${isValid ? 'SUCCESS' : 'FAILED'}`);
     
     res.json({ 
         success: isValid,
@@ -340,7 +375,7 @@ app.post('/api/admin/login', (req, res) => {
     });
 });
 
-// Update today's result
+// Update today's result (requires authentication)
 app.post('/api/admin/update-result', authenticateAdmin, async (req, res) => {
     try {
         const { firstRound, secondRound } = req.body;
@@ -386,7 +421,7 @@ app.post('/api/admin/update-result', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Update common numbers
+// Update common numbers (requires authentication)
 app.post('/api/admin/update-common', authenticateAdmin, async (req, res) => {
     try {
         const { direct, house, ending } = req.body;
@@ -421,7 +456,7 @@ app.post('/api/admin/update-common', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Add dream number
+// Add dream number (requires authentication)
 app.post('/api/admin/add-dream', authenticateAdmin, async (req, res) => {
     try {
         const { dream, direct, house, ending } = req.body;
@@ -477,7 +512,7 @@ app.post('/api/admin/add-dream', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Delete dream
+// Delete dream (requires authentication)
 app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
@@ -512,12 +547,13 @@ app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) =>
     }
 });
 
-// Get all results for admin
+// Get all results for admin (requires authentication)
 app.get('/api/admin/all-results', authenticateAdmin, async (req, res) => {
     try {
         const results = await TeerData.find({ type: 'result' })
             .sort({ date: -1 });
         
+        console.log(`✅ Retrieved ${results.length} results for admin`);
         res.json({
             success: true,
             count: results.length,
@@ -532,7 +568,7 @@ app.get('/api/admin/all-results', authenticateAdmin, async (req, res) => {
     }
 });
 
-// Delete result
+// Delete result (requires authentication)
 app.delete('/api/admin/delete-result/:id', authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
@@ -600,7 +636,14 @@ app.use('/api/*', (req, res) => {
 // General 404 handler for non-API routes
 app.use((req, res) => {
     if (!req.path.startsWith('/api')) {
-        res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+        // Check if 404.html exists
+        const fs = require('fs');
+        const notFoundPath = path.join(__dirname, 'public', '404.html');
+        if (fs.existsSync(notFoundPath)) {
+            res.status(404).sendFile(notFoundPath);
+        } else {
+            res.status(404).send('<h1>404 - Page Not Found</h1>');
+        }
     }
 });
 
@@ -631,6 +674,12 @@ const server = app.listen(PORT, () => {
     console.log(`   GET  /api/results - Previous results`);
     console.log(`   GET  /api/dreams - Dream numbers`);
     console.log(`   POST /api/admin/login - Admin login`);
+    console.log(`   POST /api/admin/update-result - Update results (Protected)`);
+    console.log(`   POST /api/admin/update-common - Update common numbers (Protected)`);
+    console.log(`   POST /api/admin/add-dream - Add dream (Protected)`);
+    console.log(`   GET  /api/admin/all-results - Get all results (Protected)`);
+    console.log(`   DELETE /api/admin/delete-result/:id - Delete result (Protected)`);
+    console.log(`   DELETE /api/admin/delete-dream/:id - Delete dream (Protected)`);
     console.log('\n💡 TIPS:');
     console.log(`   - First time? Run: node data/seed.js`);
     console.log(`   - Check DB status: GET /api/health`);
@@ -640,6 +689,16 @@ const server = app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
     console.log('SIGTERM received, closing server...');
+    server.close(() => {
+        mongoose.connection.close(false, () => {
+            console.log('MongoDB connection closed');
+            process.exit(0);
+        });
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('\nSIGINT received, closing server...');
     server.close(() => {
         mongoose.connection.close(false, () => {
             console.log('MongoDB connection closed');
