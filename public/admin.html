@@ -6,6 +6,8 @@
     <title>Admin Dashboard - Teer Results</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -32,6 +34,7 @@
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.2);
             transition: transform 0.3s;
+            margin-bottom: 20px;
         }
         
         .card:hover {
@@ -45,10 +48,16 @@
             padding: 20px;
             text-align: center;
             margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: scale(1.05);
         }
         
         .stat-number {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
         }
         
@@ -56,6 +65,7 @@
             color: white;
             font-weight: bold;
             border: none;
+            cursor: pointer;
         }
         
         .nav-tabs .nav-link.active {
@@ -90,10 +100,24 @@
             color: #667eea;
         }
         
-        .badge-status {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
+        .drop-zone {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .drop-zone:hover {
+            border-color: #764ba2;
+            background: #e9ecef;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: #28a745;
+            background: #d4edda;
         }
         
         footer {
@@ -102,31 +126,6 @@
             text-align: center;
             padding: 20px;
             margin-top: 50px;
-        }
-        
-        .sidebar {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .sidebar-item {
-            padding: 10px;
-            margin: 5px 0;
-            cursor: pointer;
-            border-radius: 10px;
-            transition: all 0.3s;
-        }
-        
-        .sidebar-item:hover {
-            background: #667eea;
-            color: white;
-        }
-        
-        .sidebar-item.active {
-            background: #667eea;
-            color: white;
         }
         
         @media (max-width: 768px) {
@@ -162,11 +161,10 @@
 
         <!-- Admin Dashboard -->
         <div id="adminDashboard" style="display: none;">
-            <!-- Top Navbar -->
             <nav class="navbar navbar-dark bg-dark mb-4">
                 <div class="container-fluid">
                     <a class="navbar-brand" href="#">
-                        <i class="bi bi-speedometer2"></i> Admin Dashboard
+                        <i class="bi bi-speedometer2"></i> Teer Admin Dashboard
                     </a>
                     <div class="d-flex">
                         <span class="navbar-text text-white me-3">
@@ -183,31 +181,31 @@
                 <!-- Statistics Cards -->
                 <div class="row mb-4">
                     <div class="col-md-3">
-                        <div class="stat-card">
+                        <div class="stat-card" onclick="showSection('manage')">
                             <i class="bi bi-calendar-check fs-1"></i>
                             <div class="stat-number" id="totalResults">0</div>
                             <div>Total Results</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="stat-card">
+                        <div class="stat-card" onclick="showSection('dreams')">
                             <i class="bi bi-moon-stars fs-1"></i>
                             <div class="stat-number" id="totalDreams">0</div>
                             <div>Dream Meanings</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="stat-card">
+                        <div class="stat-card" onclick="showSection('results')">
                             <i class="bi bi-calendar-day fs-1"></i>
                             <div class="stat-number" id="todayResult">--</div>
-                            <div>Today's FR/SR</div>
+                            <div>Today's Result</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="stat-card">
-                            <i class="bi bi-database fs-1"></i>
-                            <div class="stat-number" id="dbStatus">--</div>
-                            <div>Database Status</div>
+                        <div class="stat-card" onclick="showSection('analytics')">
+                            <i class="bi bi-graph-up fs-1"></i>
+                            <div class="stat-number" id="winRate">--</div>
+                            <div>Analysis Ready</div>
                         </div>
                     </div>
                 </div>
@@ -235,8 +233,23 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('import'); return false;">
+                            <i class="bi bi-upload"></i> Import Dreams
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('analytics'); return false;">
+                            <i class="bi bi-bar-chart"></i> Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#" onclick="showSection('manage'); return false;">
                             <i class="bi bi-database-gear"></i> Data Manager
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('backup'); return false;">
+                            <i class="bi bi-cloud-upload"></i> Backup
                         </a>
                     </li>
                 </ul>
@@ -249,23 +262,30 @@
                                 <div class="card-header bg-primary text-white">
                                     <h5 class="mb-0"><i class="bi bi-graph-up"></i> Recent Activity</h5>
                                 </div>
-                                <div class="card-body">
-                                    <div id="recentResults"></div>
-                                </div>
+                                <div class="card-body" id="recentResults"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header bg-success text-white">
-                                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Quick Tips</h5>
+                                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Quick Actions</h5>
                                 </div>
                                 <div class="card-body">
-                                    <ul class="list-unstyled">
-                                        <li><i class="bi bi-check-circle-fill text-success"></i> Update results daily by 11:30 AM</li>
-                                        <li><i class="bi bi-check-circle-fill text-success"></i> Common numbers can be updated anytime</li>
-                                        <li><i class="bi bi-check-circle-fill text-success"></i> Add new dream meanings as needed</li>
-                                        <li><i class="bi bi-check-circle-fill text-success"></i> Check database status regularly</li>
-                                    </ul>
+                                    <button class="btn btn-primary w-100 mb-2" onclick="showSection('results')">
+                                        <i class="bi bi-pencil"></i> Update Today's Result
+                                    </button>
+                                    <button class="btn btn-danger w-100 mb-2" onclick="showSection('common')">
+                                        <i class="bi bi-hash"></i> Update Common Numbers
+                                    </button>
+                                    <button class="btn btn-success w-100 mb-2" onclick="showSection('dreams')">
+                                        <i class="bi bi-plus-circle"></i> Add New Dream
+                                    </button>
+                                    <button class="btn btn-info w-100 mb-2" onclick="showSection('import')">
+                                        <i class="bi bi-upload"></i> Import Dreams (CSV/Excel)
+                                    </button>
+                                    <button class="btn btn-warning w-100" onclick="exportAllData()">
+                                        <i class="bi bi-download"></i> Export All Data
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -287,14 +307,14 @@
                                     <div class="mb-3">
                                         <label class="form-label">First Round (10:30 AM)</label>
                                         <input type="text" id="firstRound" class="form-control form-control-lg text-center" 
-                                               placeholder="e.g., 08" maxlength="2" pattern="\d{2}">
+                                               placeholder="e.g., 08" maxlength="2">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Second Round (11:30 AM)</label>
                                         <input type="text" id="secondRound" class="form-control form-control-lg text-center" 
-                                               placeholder="e.g., 51" maxlength="2" pattern="\d{2}">
+                                               placeholder="e.g., 51" maxlength="2">
                                     </div>
                                 </div>
                             </div>
@@ -346,7 +366,7 @@
                         <div class="col-md-4">
                             <div class="card">
                                 <div class="card-header bg-success text-white">
-                                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Add New Dream</h5>
+                                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Add Single Dream</h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-3">
@@ -382,8 +402,27 @@
                                     <h5 class="mb-0"><i class="bi bi-list-ul"></i> Existing Dreams</h5>
                                 </div>
                                 <div class="card-body">
-                                    <input type="text" id="searchDreams" class="form-control mb-3" 
-                                           placeholder="Search dreams..." onkeyup="filterDreams()">
+                                    <div class="row mb-3">
+                                        <div class="col-md-8">
+                                            <input type="text" id="searchDreams" class="form-control" 
+                                                   placeholder="Search dreams..." onkeyup="filterDreams()">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select id="filterHouse" class="form-control" onchange="filterDreams()">
+                                                <option value="">All House Numbers</option>
+                                                <option value="1">House 1</option>
+                                                <option value="2">House 2</option>
+                                                <option value="3">House 3</option>
+                                                <option value="4">House 4</option>
+                                                <option value="5">House 5</option>
+                                                <option value="6">House 6</option>
+                                                <option value="7">House 7</option>
+                                                <option value="8">House 8</option>
+                                                <option value="9">House 9</option>
+                                                <option value="0">House 0</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <div class="table-responsive" style="max-height: 400px;">
                                         <table class="table table-hover">
                                             <thead class="table-dark">
@@ -397,6 +436,166 @@
                                             <tbody id="dreamsTable"></tbody>
                                         </table>
                                     </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-warning btn-sm" onclick="exportDreams()">
+                                            <i class="bi bi-download"></i> Export Dreams CSV
+                                        </button>
+                                        <button class="btn btn-info btn-sm" onclick="printDreams()">
+                                            <i class="bi bi-printer"></i> Print Dreams
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import Dreams Section - NEW! -->
+                <div id="importSection" class="admin-section" style="display:none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-upload"></i> Import Dreams from CSV/Excel</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <h6><i class="bi bi-info-circle"></i> CSV Format Instructions:</h6>
+                                        <p>Your CSV file should have these columns (in this order):</p>
+                                        <ul>
+                                            <li><strong>Column A:</strong> Dream Description</li>
+                                            <li><strong>Column B:</strong> Direct Numbers (comma separated)</li>
+                                            <li><strong>Column C:</strong> House Numbers</li>
+                                            <li><strong>Column D:</strong> Ending Numbers</li>
+                                        </ul>
+                                        <hr>
+                                        <h6>Example row:</h6>
+                                        <code>Seeing a snake,09,17,37,57,77,99,7,9</code>
+                                    </div>
+                                    
+                                    <!-- File Upload Drop Zone -->
+                                    <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
+                                        <i class="bi bi-cloud-upload fs-1"></i>
+                                        <h5>Click or Drag & Drop</h5>
+                                        <p>Upload CSV or Excel file (.csv, .xlsx, .xls)</p>
+                                        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none" onchange="handleFileUpload(this.files[0])">
+                                    </div>
+                                    
+                                    <div id="importPreview" style="display: none;" class="mt-3">
+                                        <div class="alert alert-success">
+                                            <strong>Preview Data:</strong> <span id="previewCount"></span> dreams found
+                                        </div>
+                                        <div class="table-responsive" style="max-height: 300px;">
+                                            <table class="table table-sm">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th>Dream</th>
+                                                        <th>Direct</th>
+                                                        <th>House</th>
+                                                        <th>Ending</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="importPreviewBody"></tbody>
+                                            </table>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button class="btn btn-success" onclick="confirmImport()">
+                                                <i class="bi bi-check-circle"></i> Import All Dreams
+                                            </button>
+                                            <button class="btn btn-danger" onclick="cancelImport()">
+                                                <i class="bi bi-x-circle"></i> Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="importProgress" style="display: none;">
+                                        <div class="progress">
+                                            <div id="importProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                                 style="width: 0%">0%</div>
+                                        </div>
+                                        <p id="importStatus" class="mt-2">Importing...</p>
+                                    </div>
+                                    
+                                    <div id="importResult"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-secondary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-download"></i> Download Template</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Download sample CSV template to see the correct format:</p>
+                                    <button class="btn btn-primary w-100 mb-2" onclick="downloadTemplate()">
+                                        <i class="bi bi-file-earmark-spreadsheet"></i> Download CSV Template
+                                    </button>
+                                    <button class="btn btn-info w-100" onclick="downloadExcelTemplate()">
+                                        <i class="bi bi-file-excel"></i> Download Excel Template
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-3">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Bulk Import Tips</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul>
+                                        <li>Maximum 500 dreams per import</li>
+                                        <li>Duplicate dreams will be skipped</li>
+                                        <li>House and Ending numbers are optional</li>
+                                        <li>Separate multiple numbers with commas</li>
+                                        <li>Example: <code>07,14,21,35</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div id="analyticsSection" class="admin-section" style="display:none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Most Frequent Numbers</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="hotNumbersChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="bi bi-calendar-week"></i> Results by Day</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="resultsByDayChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mt-3">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="bi bi-trending-up"></i> Number Frequency Analysis</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm" id="frequencyTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Number</th>
+                                                    <th>Count</th>
+                                                    <th>Percentage</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -406,19 +605,48 @@
                 <!-- Data Manager Section -->
                 <div id="manageSection" class="admin-section" style="display:none">
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
                                 <div class="card-header bg-warning text-dark">
-                                    <h5 class="mb-0"><i class="bi bi-trophy"></i> Manage Results</h5>
+                                    <h5 class="mb-0"><i class="bi bi-database"></i> Manage Results</h5>
                                 </div>
                                 <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <input type="text" id="searchResults" class="form-control" 
+                                                   placeholder="Search by date..." onkeyup="filterResults()">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select id="filterMonth" class="form-control" onchange="filterResults()">
+                                                <option value="">All Months</option>
+                                                <option value="01">January</option>
+                                                <option value="02">February</option>
+                                                <option value="03">March</option>
+                                                <option value="04">April</option>
+                                                <option value="05">May</option>
+                                                <option value="06">June</option>
+                                                <option value="07">July</option>
+                                                <option value="08">August</option>
+                                                <option value="09">September</option>
+                                                <option value="10">October</option>
+                                                <option value="11">November</option>
+                                                <option value="12">December</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button class="btn btn-success w-100" onclick="exportResults()">
+                                                <i class="bi bi-download"></i> Export Results CSV
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div class="table-responsive" style="max-height: 400px;">
-                                        <table class="table table-sm">
+                                        <table class="table table-hover">
                                             <thead class="table-dark">
                                                 <tr>
                                                     <th>Date</th>
-                                                    <th>FR/SR</th>
-                                                    <th>Action</th>
+                                                    <th>First Round</th>
+                                                    <th>Second Round</th>
+                                                    <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="manageResultsTable"></tbody>
@@ -427,20 +655,44 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Backup Section -->
+                <div id="backupSection" class="admin-section" style="display:none">
+                    <div class="row">
                         <div class="col-md-6">
-                            <div class="card mb-4">
-                                <div class="card-header bg-warning text-dark">
-                                    <h5 class="mb-0"><i class="bi bi-database"></i> Database Actions</h5>
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0"><i class="bi bi-cloud-upload"></i> Backup & Export</h5>
                                 </div>
                                 <div class="card-body">
-                                    <button onclick="refreshData()" class="btn btn-primary w-100 mb-2">
-                                        <i class="bi bi-arrow-repeat"></i> Refresh All Data
+                                    <button onclick="exportAllData()" class="btn btn-primary w-100 mb-2">
+                                        <i class="bi bi-database"></i> Export All Data (JSON)
                                     </button>
-                                    <button onclick="exportData()" class="btn btn-success w-100 mb-2">
-                                        <i class="bi bi-download"></i> Export Data (JSON)
+                                    <button onclick="exportResultsCSV()" class="btn btn-success w-100 mb-2">
+                                        <i class="bi bi-table"></i> Export Results (CSV)
                                     </button>
-                                    <button onclick="clearCache()" class="btn btn-info w-100">
-                                        <i class="bi bi-trash"></i> Clear Cache
+                                    <button onclick="exportDreamsCSV()" class="btn btn-info w-100 mb-2">
+                                        <i class="bi bi-moon-stars"></i> Export Dreams (CSV)
+                                    </button>
+                                    <button onclick="syncData()" class="btn btn-warning w-100">
+                                        <i class="bi bi-arrow-repeat"></i> Refresh Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Danger Zone</h5>
+                                </div>
+                                <div class="card-body">
+                                    <button onclick="clearAllCache()" class="btn btn-warning w-100 mb-2">
+                                        <i class="bi bi-trash"></i> Clear Browser Cache
+                                    </button>
+                                    <button onclick="showDeleteAllConfirm()" class="btn btn-danger w-100">
+                                        <i class="bi bi-database-slash"></i> Delete ALL Data (Danger!)
                                     </button>
                                 </div>
                             </div>
@@ -452,18 +704,44 @@
     </div>
 
     <footer>
-        <p>&copy; 2024 Teer Results Admin Panel | Secure Dashboard</p>
+        <p>&copy; 2024 Teer Results Admin Panel | Complete Management Dashboard with CSV Import</p>
     </footer>
 
     <script>
-        // IMPORTANT: Change this to your Render backend URL
-        const API_BASE_URL = 'https://teer-website.onrender.com'; // ← CHANGE THIS TO YOUR RENDER BACKEND URL
+        // API Configuration
+        const API_BASE_URL = 'https://teer-website.onrender.com'; // Change to your Render URL
         let adminToken = null;
         let allDreams = [];
+        let allResults = [];
+        let pendingImports = [];
         
-        // Initialize
+        // Initialize dates
         document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-GB');
         document.getElementById('todayDate2').innerText = new Date().toLocaleDateString('en-GB');
+        
+        // Drag & Drop functionality
+        const dropZone = document.getElementById('dropZone');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('drag-over');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                    handleFileUpload(file);
+                } else {
+                    alert('Please upload a CSV or Excel file');
+                }
+            });
+        }
         
         // Login function
         async function login() {
@@ -483,14 +761,15 @@
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('adminDashboard').style.display = 'block';
                     loadDashboardData();
+                    loadDreamsList();
+                    loadManageData();
                 } else {
                     document.getElementById('loginError').innerText = 'Wrong password!';
                 }
             } catch (error) {
                 document.getElementById('loginError').innerHTML = `
                     <div class="alert alert-danger">
-                        ❌ Cannot connect to backend<br>
-                        Make sure backend is running at: ${API_BASE_URL}
+                        ❌ Cannot connect to backend: ${API_BASE_URL}
                     </div>
                 `;
                 console.error('Login error:', error);
@@ -508,35 +787,249 @@
             document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             
-            if (section === 'dashboard') {
-                document.getElementById('dashboardSection').style.display = 'block';
-                document.querySelector('.nav-link[onclick*="dashboard"]').classList.add('active');
-                loadDashboardData();
-            } else if (section === 'results') {
-                document.getElementById('resultsSection').style.display = 'block';
-                document.querySelector('.nav-link[onclick*="results"]').classList.add('active');
-            } else if (section === 'common') {
-                document.getElementById('commonSection').style.display = 'block';
-                document.querySelector('.nav-link[onclick*="common"]').classList.add('active');
-            } else if (section === 'dreams') {
-                document.getElementById('dreamsSection').style.display = 'block';
-                document.querySelector('.nav-link[onclick*="dreams"]').classList.add('active');
-                loadDreamsList();
-            } else if (section === 'manage') {
-                document.getElementById('manageSection').style.display = 'block';
-                document.querySelector('.nav-link[onclick*="manage"]').classList.add('active');
-                loadManageData();
+            const sections = {
+                'dashboard': 'dashboardSection',
+                'results': 'resultsSection',
+                'common': 'commonSection',
+                'dreams': 'dreamsSection',
+                'import': 'importSection',
+                'analytics': 'analyticsSection',
+                'manage': 'manageSection',
+                'backup': 'backupSection'
+            };
+            
+            if (sections[section]) {
+                document.getElementById(sections[section]).style.display = 'block';
+                const clickedLink = Array.from(document.querySelectorAll('.nav-link')).find(
+                    link => link.innerText.toLowerCase().includes(section)
+                );
+                if (clickedLink) clickedLink.classList.add('active');
+                
+                if (section === 'analytics') loadAnalytics();
+                if (section === 'manage') loadManageData();
+                if (section === 'dreams') loadDreamsList();
             }
         }
         
+        // ============ IMPORT FUNCTIONS ============
+        
+        function handleFileUpload(file) {
+            if (!file) return;
+            
+            const fileType = file.name.split('.').pop().toLowerCase();
+            
+            if (fileType === 'csv') {
+                parseCSV(file);
+            } else if (fileType === 'xlsx' || fileType === 'xls') {
+                parseExcel(file);
+            } else {
+                alert('Please upload a CSV or Excel file');
+            }
+        }
+        
+        function parseCSV(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                const dreams = [];
+                
+                for (let i = 1; i < lines.length; i++) { // Skip header
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const parts = line.split(',');
+                    if (parts.length >= 1) {
+                        const dream = {
+                            dream: parts[0]?.trim(),
+                            direct: parts[1]?.trim() || '',
+                            house: parts[2]?.trim() || '',
+                            ending: parts[3]?.trim() || ''
+                        };
+                        
+                        if (dream.dream && dream.dream !== 'Dream Description') {
+                            dreams.push(dream);
+                        }
+                    }
+                }
+                
+                showImportPreview(dreams);
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseExcel(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                const dreams = [];
+                for (let i = 1; i < rows.length; i++) { // Skip header
+                    const row = rows[i];
+                    if (!row || !row[0]) continue;
+                    
+                    const dream = {
+                        dream: row[0]?.toString().trim(),
+                        direct: row[1]?.toString().trim() || '',
+                        house: row[2]?.toString().trim() || '',
+                        ending: row[3]?.toString().trim() || ''
+                    };
+                    
+                    if (dream.dream && dream.dream !== 'Dream Description') {
+                        dreams.push(dream);
+                    }
+                }
+                
+                showImportPreview(dreams);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function showImportPreview(dreams) {
+            if (dreams.length === 0) {
+                alert('No valid dreams found in file. Please check the format.');
+                return;
+            }
+            
+            pendingImports = dreams;
+            document.getElementById('importPreview').style.display = 'block';
+            document.getElementById('previewCount').innerText = dreams.length;
+            
+            const previewBody = document.getElementById('importPreviewBody');
+            previewBody.innerHTML = dreams.slice(0, 10).map(d => `
+                <tr>
+                    <td>${d.dream}</td>
+                    <td><small>${d.direct || '-'}</small></td>
+                    <td><small>${d.house || '-'}</small></td>
+                    <td><small>${d.ending || '-'}</small></td>
+                </tr>
+            `).join('');
+            
+            if (dreams.length > 10) {
+                previewBody.innerHTML += `<tr><td colspan="4" class="text-muted">... and ${dreams.length - 10} more</td></tr>`;
+            }
+        }
+        
+        function cancelImport() {
+            document.getElementById('importPreview').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            pendingImports = [];
+        }
+        
+        async function confirmImport() {
+            if (!pendingImports || pendingImports.length === 0) return;
+            
+            document.getElementById('importPreview').style.display = 'none';
+            document.getElementById('importProgress').style.display = 'block';
+            
+            let successCount = 0;
+            let failCount = 0;
+            let duplicateCount = 0;
+            
+            for (let i = 0; i < pendingImports.length; i++) {
+                const dream = pendingImports[i];
+                const progress = ((i + 1) / pendingImports.length) * 100;
+                document.getElementById('importProgressBar').style.width = `${progress}%`;
+                document.getElementById('importProgressBar').innerText = `${Math.round(progress)}%`;
+                document.getElementById('importStatus').innerText = `Importing ${i + 1} of ${pendingImports.length}: ${dream.dream}`;
+                
+                try {
+                    // Check if dream already exists
+                    const existing = allDreams.find(d => {
+                        const data = d.data || d;
+                        return data.dream?.toLowerCase() === dream.dream.toLowerCase();
+                    });
+                    
+                    if (existing) {
+                        duplicateCount++;
+                        continue;
+                    }
+                    
+                    const response = await fetch(`${API_BASE_URL}/api/admin/add-dream`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${adminToken}`
+                        },
+                        body: JSON.stringify(dream)
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch (error) {
+                    failCount++;
+                }
+            }
+            
+            document.getElementById('importProgress').style.display = 'none';
+            
+            const resultHtml = `
+                <div class="alert alert-success">
+                    <h5>✅ Import Complete!</h5>
+                    <ul>
+                        <li>Successfully imported: <strong>${successCount}</strong> dreams</li>
+                        <li>Duplicates skipped: <strong>${duplicateCount}</strong></li>
+                        <li>Failed: <strong>${failCount}</strong></li>
+                    </ul>
+                </div>
+            `;
+            document.getElementById('importResult').innerHTML = resultHtml;
+            
+            // Reset and refresh
+            pendingImports = [];
+            document.getElementById('fileInput').value = '';
+            loadDreamsList();
+            loadDashboardData();
+            
+            setTimeout(() => {
+                document.getElementById('importResult').innerHTML = '';
+            }, 5000);
+        }
+        
+        function downloadTemplate() {
+            const csvContent = "Dream Description,Direct Numbers,House Numbers,Ending Numbers\nSeeing a snake,09,17,37,57,77,99,7,9\nMoney,00,14,15,20,25,35,50,0,5\nTiger,,9,\nElephant,,9,\nDog,4,5,6,4,";
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dreams_template.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function downloadExcelTemplate() {
+            const data = [
+                ['Dream Description', 'Direct Numbers', 'House Numbers', 'Ending Numbers'],
+                ['Seeing a snake', '09,17,37,57,77,99', '7', '9'],
+                ['Money', '00,14,15,20,25,35,50', '0,5', '0'],
+                ['Tiger', '', '9', ''],
+                ['Elephant', '', '9', ''],
+                ['Dog', '4,5,6', '4', '']
+            ];
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Dreams Template');
+            XLSX.writeFile(wb, 'dreams_template.xlsx');
+        }
+        
+        // ============ REST OF THE FUNCTIONS ============
+        
         async function loadDashboardData() {
             try {
-                // Load stats
                 const resultsRes = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 const resultsData = await resultsRes.json();
                 const results = resultsData.data || [];
+                allResults = results;
                 document.getElementById('totalResults').innerText = results.length;
                 
                 const dreamsRes = await fetch(`${API_BASE_URL}/api/dreams`);
@@ -544,7 +1037,6 @@
                 const dreams = dreamsData.data || dreamsData || [];
                 document.getElementById('totalDreams').innerText = dreams.length;
                 
-                // Today's result
                 const todayRes = await fetch(`${API_BASE_URL}/api/today-result`);
                 const todayData = await todayRes.json();
                 if (todayData.data) {
@@ -553,15 +1045,14 @@
                     document.getElementById('todayResult').innerHTML = '--/--';
                 }
                 
-                document.getElementById('dbStatus').innerHTML = '<span class="badge bg-success">Connected</span>';
+                document.getElementById('winRate').innerHTML = 'Live';
                 
-                // Recent results
-                const recentHtml = results.slice(0, 5).map(r => `
+                const recentHtml = results.slice(0, 10).map(r => `
                     <div class="alert alert-secondary">
                         <strong>${r.date}</strong>: ${r.data?.firstRound || '--'} | ${r.data?.secondRound || '--'}
                     </div>
                 `).join('');
-                document.getElementById('recentResults').innerHTML = recentHtml || '<p>No results yet</p>';
+                document.getElementById('recentResults').innerHTML = recentHtml || '<p>No results yet. Add your first result!</p>';
                 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
@@ -581,7 +1072,7 @@
         
         function renderDreamsTable(dreams) {
             const tableBody = document.getElementById('dreamsTable');
-            if (dreams.length === 0) {
+            if (!dreams || dreams.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No dreams found</td></tr>';
                 return;
             }
@@ -589,11 +1080,11 @@
             tableBody.innerHTML = dreams.map(dream => {
                 const dreamData = dream.data || dream;
                 const dreamId = dream._id;
-                const numbers = [dreamData.direct, dreamData.house, dreamData.ending].filter(n => n).join(', ');
+                const numbers = [dreamData.direct, dreamData.house, dreamData.ending].filter(n => n && n !== '').join(', ');
                 return `
                     <tr>
                         <td>${dreamData.slNo || '?'}</td>
-                        <td>${dreamData.dream}</td>
+                        <td><strong>${dreamData.dream}</strong></td>
                         <td><small>${numbers || 'N/A'}</small></td>
                         <td>
                             <button class="btn btn-danger btn-sm btn-action" onclick="deleteDream('${dreamId}')">
@@ -607,9 +1098,13 @@
         
         function filterDreams() {
             const searchTerm = document.getElementById('searchDreams').value.toLowerCase();
+            const filterHouse = document.getElementById('filterHouse').value;
+            
             const filtered = allDreams.filter(dream => {
                 const dreamData = dream.data || dream;
-                return dreamData.dream.toLowerCase().includes(searchTerm);
+                const matchesSearch = dreamData.dream.toLowerCase().includes(searchTerm);
+                const matchesHouse = !filterHouse || (dreamData.house && dreamData.house.includes(filterHouse));
+                return matchesSearch && matchesHouse;
             });
             renderDreamsTable(filtered);
         }
@@ -620,22 +1115,96 @@
                     headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
                 const data = await response.json();
-                const results = data.data || [];
-                
-                const tableBody = document.getElementById('manageResultsTable');
-                tableBody.innerHTML = results.slice(0, 20).map(result => `
-                    <tr>
-                        <td>${result.date}</td>
-                        <td>${result.data?.firstRound || '--'} / ${result.data?.secondRound || '--'}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="deleteResult('${result._id}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
+                allResults = data.data || [];
+                renderResultsTable(allResults);
             } catch (error) {
                 console.error('Error loading manage data:', error);
+            }
+        }
+        
+        function renderResultsTable(results) {
+            const tableBody = document.getElementById('manageResultsTable');
+            if (!results || results.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No results found</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = results.map(result => `
+                <tr>
+                    <td><strong>${result.date}</strong></td>
+                    <td><span class="badge bg-primary">${result.data?.firstRound || '--'}</span></td>
+                    <td><span class="badge bg-success">${result.data?.secondRound || '--'}</span></td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteResult('${result._id}')">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function filterResults() {
+            const searchTerm = document.getElementById('searchResults').value.toLowerCase();
+            const filterMonth = document.getElementById('filterMonth').value;
+            
+            const filtered = allResults.filter(result => {
+                const matchesSearch = result.date.toLowerCase().includes(searchTerm);
+                const matchesMonth = !filterMonth || result.date.includes(`/${filterMonth}/`);
+                return matchesSearch && matchesMonth;
+            });
+            renderResultsTable(filtered);
+        }
+        
+        async function loadAnalytics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+                const results = data.data || [];
+                
+                const frequency = {};
+                results.forEach(result => {
+                    if (result.data) {
+                        const fr = result.data.firstRound;
+                        const sr = result.data.secondRound;
+                        if (fr) frequency[fr] = (frequency[fr] || 0) + 1;
+                        if (sr) frequency[sr] = (frequency[sr] || 0) + 1;
+                    }
+                });
+                
+                const sorted = Object.entries(frequency).sort((a,b) => b[1] - a[1]).slice(0, 10);
+                
+                const ctx = document.getElementById('hotNumbersChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: sorted.map(s => s[0]),
+                        datasets: [{
+                            label: 'Frequency',
+                            data: sorted.map(s => s[1]),
+                            backgroundColor: 'rgba(102, 126, 234, 0.5)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+                
+                const freqTable = document.getElementById('frequencyTable').querySelector('tbody');
+                freqTable.innerHTML = sorted.map(([num, count]) => `
+                    <tr>
+                        <td><strong>${num}</strong></td>
+                        <td>${count}</td>
+                        <td>${((count / results.length) * 100).toFixed(2)}%</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading analytics:', error);
             }
         }
         
@@ -665,8 +1234,9 @@
                     document.getElementById('firstRound').value = '';
                     document.getElementById('secondRound').value = '';
                     loadDashboardData();
+                    loadManageData();
                 } else {
-                    showMessage('resultMsg', 'Error updating results', 'error');
+                    showMessage('resultMsg', data.error || 'Error updating results', 'error');
                 }
             } catch (error) {
                 showMessage('resultMsg', 'Error connecting to server', 'error');
@@ -696,7 +1266,7 @@
                     document.getElementById('house').value = '';
                     document.getElementById('ending').value = '';
                 } else {
-                    showMessage('commonMsg', 'Error updating common numbers', 'error');
+                    showMessage('commonMsg', data.error || 'Error updating common numbers', 'error');
                 }
             } catch (error) {
                 showMessage('commonMsg', 'Error connecting to server', 'error');
@@ -734,7 +1304,7 @@
                     document.getElementById('dreamEnding').value = '';
                     loadDreamsList();
                 } else {
-                    showMessage('dreamMsg', 'Error adding dream', 'error');
+                    showMessage('dreamMsg', data.error || 'Error adding dream', 'error');
                 }
             } catch (error) {
                 showMessage('dreamMsg', 'Error connecting to server', 'error');
@@ -772,32 +1342,98 @@
             }
         }
         
-        function refreshData() {
-            loadDashboardData();
-            loadDreamsList();
-            loadManageData();
-            showMessage('commonMsg', '🔄 Data refreshed!', 'success');
+        function exportAllData() {
+            const data = {
+                results: allResults,
+                dreams: allDreams,
+                exportDate: new Date().toISOString()
+            };
+            downloadJSON(data, `teer-full-backup-${new Date().toISOString().split('T')[0]}.json`);
         }
         
-        function exportData() {
-            fetch(`${API_BASE_URL}/api/admin/all-results`, {
-                headers: { 'Authorization': `Bearer ${adminToken}` }
-            })
-            .then(res => res.json())
-            .then(data => {
-                const jsonStr = JSON.stringify(data, null, 2);
-                const blob = new Blob([jsonStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `teer-data-${new Date().toISOString()}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                showMessage('commonMsg', '📥 Data exported successfully!', 'success');
+        function exportResultsCSV() {
+            const headers = ['Date', 'First Round', 'Second Round'];
+            const rows = allResults.map(r => [r.date, r.data?.firstRound || '--', r.data?.secondRound || '--']);
+            downloadCSV([headers, ...rows], `teer-results-${new Date().toISOString().split('T')[0]}.csv`);
+        }
+        
+        function exportDreamsCSV() {
+            const headers = ['Sl No', 'Dream', 'Direct', 'House', 'Ending'];
+            const rows = allDreams.map(d => {
+                const data = d.data || d;
+                return [data.slNo, data.dream, data.direct, data.house, data.ending];
             });
+            downloadCSV([headers, ...rows], `teer-dreams-${new Date().toISOString().split('T')[0]}.csv`);
         }
         
-        function clearCache() {
+        function exportResults() {
+            exportResultsCSV();
+        }
+        
+        function exportDreams() {
+            exportDreamsCSV();
+        }
+        
+        function downloadCSV(data, filename) {
+            const csvContent = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function downloadJSON(data, filename) {
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function printDreams() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Teer Dreams List</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                </head>
+                <body>
+                    <div class="container mt-5">
+                        <h1>Dream Numbers - Complete List</h1>
+                        <p>Generated on: ${new Date().toLocaleString()}</p>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr><th>#</th><th>Dream</th><th>Direct</th><th>House</th><th>Ending</th></tr>
+                            </thead>
+                            <tbody>
+                                ${allDreams.map(d => {
+                                    const data = d.data || d;
+                                    return `<tr>
+                                        <td>${data.slNo}</td>
+                                        <td>${data.dream}</td>
+                                        <td>${data.direct || '-'}</td>
+                                        <td>${data.house || '-'}</td>
+                                        <td>${data.ending || '-'}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+        
+        function clearAllCache() {
             if (confirm('Clear browser cache? This will reload the page.')) {
                 localStorage.clear();
                 sessionStorage.clear();
@@ -805,13 +1441,28 @@
             }
         }
         
+        function showDeleteAllConfirm() {
+            if (confirm('⚠️ DANGER: This will delete ALL data from database! Are you ABSOLUTELY sure?')) {
+                alert('Bulk delete requires backend implementation. Contact developer.');
+            }
+        }
+        
+        function syncData() {
+            loadDashboardData();
+            loadDreamsList();
+            loadManageData();
+            showMessage('commonMsg', '🔄 Data refreshed successfully!', 'success');
+        }
+        
         function showMessage(elementId, message, type) {
             const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>`;
-            setTimeout(() => element.innerHTML = '', 3000);
+            if (element) {
+                element.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`;
+                setTimeout(() => element.innerHTML = '', 3000);
+            }
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
