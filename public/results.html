@@ -5,264 +5,312 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Previous Results - Khanapara Morning Teer Result</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #f5f0eb;
+            font-family: 'Roboto', sans-serif;
             min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .navbar {
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        /* ── HEADER ── */
+        .site-header {
+            background: linear-gradient(90deg, #1a8fa0 0%, #16b0c8 100%);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        .site-header .logo-icon {
+            width: 44px; height: 44px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            text-decoration: none;
         }
-        .card-header {
-            border-radius: 15px 15px 0 0 !important;
+        .site-header h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.5rem;
+            color: #fff;
+            letter-spacing: 1px;
+            margin: 0;
         }
-        .table {
-            background: white;
-            border-radius: 10px;
+        .site-header a { text-decoration: none; color: #fff; }
+
+        /* ── PAGE CONTENT ── */
+        .page-content {
+            padding: 20px 12px 30px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        /* ── EXCEL-STYLE RESULTS TABLE ── */
+        .results-table-wrapper {
+            background: #fff;
+            border: 2px solid #555;
+            border-radius: 4px;
             overflow: hidden;
         }
-        .table thead th {
-            background: #343a40;
-            color: white;
-            border: none;
-        }
-        .badge {
+
+        .results-title-row {
+            background: #fff;
+            text-align: center;
+            font-family: 'Oswald', sans-serif;
             font-size: 1rem;
-            padding: 8px 15px;
+            font-weight: 700;
+            color: #111;
+            padding: 8px 4px;
+            border-bottom: 1px solid #888;
+            letter-spacing: 2px;
         }
-        footer {
-            background: #333;
-            color: white;
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Roboto', sans-serif;
+            table-layout: fixed;
+        }
+
+        .results-table th,
+        .results-table td {
+            border: 1px solid #aaa;
             text-align: center;
-            padding: 20px;
-            margin-top: 50px;
+            padding: 7px 4px;
+            font-size: 0.9rem;
+            vertical-align: middle;
         }
-        .pagination {
-            margin-top: 20px;
+
+        .results-table thead th {
+            background: #16b0c8;
+            color: #fff;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border-color: #888;
+        }
+
+        /* Column widths: CITY wide, DATE wide, F/R narrow, S/R narrow */
+        .results-table th:nth-child(1),
+        .results-table td:nth-child(1) { width: 30%; }
+        .results-table th:nth-child(2),
+        .results-table td:nth-child(2) { width: 40%; }
+        .results-table th:nth-child(3),
+        .results-table td:nth-child(3) { width: 15%; }
+        .results-table th:nth-child(4),
+        .results-table td:nth-child(4) { width: 15%; }
+
+        .results-table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .results-table tbody tr:hover {
+            background: #e8f7f9;
+        }
+        .results-table tbody td {
+            color: #222;
+            font-size: 0.88rem;
+        }
+        /* F/R and S/R number cells */
+        .results-table tbody td:nth-child(3),
+        .results-table tbody td:nth-child(4) {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #111;
+        }
+
+        /* Loading / error states */
+        .state-row td {
+            padding: 30px;
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        /* ── PAGINATION ── */
+        .pagination-wrap {
+            margin-top: 16px;
+            display: flex;
             justify-content: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
-        .loading {
+        .page-btn {
+            background: #fff;
+            border: 1px solid #16b0c8;
+            color: #16b0c8;
+            border-radius: 4px;
+            padding: 5px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: 'Oswald', sans-serif;
+            transition: background 0.15s, color 0.15s;
+        }
+        .page-btn:hover, .page-btn.active {
+            background: #16b0c8;
+            color: #fff;
+        }
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ── NOTE ── */
+        .note {
+            margin-top: 14px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            color: #555;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            background: #222;
+            color: #aaa;
             text-align: center;
-            padding: 50px;
-            color: white;
-            font-size: 18px;
+            padding: 16px;
+            font-size: 0.8rem;
+            margin-top: 20px;
+        }
+        footer p { margin: 4px 0; }
+
+        @media (max-width: 480px) {
+            .results-table th, .results-table td { font-size: 0.78rem; padding: 6px 2px; }
+            .results-table tbody td:nth-child(3),
+            .results-table tbody td:nth-child(4) { font-size: 0.88rem; }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">🎯 Khanapara Morning Teer Result</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="navbar-nav ms-auto">
-                    <a class="nav-link" href="/">Home</a>
-                    <a class="nav-link active" href="/results.html">Results</a>
-                    <a class="nav-link" href="/common.html">Common Numbers</a>
-                    <a class="nav-link" href="/dreams.html">Dream Numbers</a>
-                    <a class="nav-link" href="/admin.html">Admin</a>
-                </div>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container mt-5">
-        <h1 class="text-center mb-4 text-white">📊 Previous Results</h1>
-        
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">All Khanapara Morning Teer Result</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Date</th>
-                                <th>First Round (10:30 AM)</th>
-                                <th>Second Round (11:30 AM)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="resultsTable">
-                            <tr>
-                                <td colspan="3" class="text-center">
-                                    <div class="loading">Loading results...</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div id="pagination" class="pagination"></div>
-            </div>
+    <!-- HEADER -->
+    <header class="site-header">
+        <a class="logo-icon" href="/">🎯</a>
+        <a href="/"><h1>Khanapara Morning Teer</h1></a>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="page-content">
+
+        <div class="results-table-wrapper">
+            <div class="results-title-row">RESULTS</div>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>CITY</th>
+                        <th>DATE</th>
+                        <th>F/R</th>
+                        <th>S/R</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTable">
+                    <tr class="state-row">
+                        <td colspan="4">Loading results...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        
-        <div class="alert alert-info mt-4">
+
+        <div class="pagination-wrap" id="pagination"></div>
+
+        <div class="note">
             <strong>📌 Note:</strong> Showing last 50 results. Use the admin panel to add new results.
         </div>
     </div>
 
+    <!-- FOOTER -->
     <footer>
         <p>&copy; 2026 Khanapara Morning Teer Result. All rights reserved.</p>
         <p>⚠️ For entertainment purposes only. No guarantee of accuracy.</p>
     </footer>
 
     <script>
-        // IMPORTANT: Change this to your Render backend URL
-        // For local testing: http://localhost:3000
-        // For production: https://your-app-name.onrender.com
-        const API_BASE_URL = 'https://teer-website.onrender.com'; // ← CHANGE THIS TO YOUR RENDER BACKEND URL
-        
+        const API_BASE_URL = 'https://teer-website.onrender.com';
+
         let currentPage = 1;
         let totalPages = 1;
-        
+
         async function loadResults(page = 1) {
             const tableBody = document.getElementById('resultsTable');
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="3" class="text-center">
-                        <div class="loading">Loading results...</div>
-                    </td>
-                </tr>
-            `;
-            
+            tableBody.innerHTML = `<tr class="state-row"><td colspan="4">Loading results...</td></tr>`;
+
             try {
-                const url = `${API_BASE_URL}/api/results?page=${page}&limit=50`;
-                console.log('Fetching results from:', url);
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
+                const response = await fetch(`${API_BASE_URL}/api/results?page=${page}&limit=50`);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
                 const data = await response.json();
-                console.log('API Response:', data);
-                
-                // Handle different response formats
+
                 let results = [];
-                let total = 0;
-                
                 if (data.data && Array.isArray(data.data)) {
                     results = data.data;
-                    total = data.total || data.count || results.length;
-                    totalPages = data.totalPages || Math.ceil(total / 50);
+                    totalPages = data.totalPages || Math.ceil((data.total || results.length) / 50);
                 } else if (Array.isArray(data)) {
-                    results = data;
-                    total = results.length;
-                    totalPages = 1;
+                    results = data; totalPages = 1;
                 } else if (data.results && Array.isArray(data.results)) {
-                    results = data.results;
-                    total = results.length;
-                    totalPages = 1;
-                } else {
-                    results = [];
+                    results = data.results; totalPages = 1;
                 }
-                
+
                 if (results.length === 0) {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="3" class="text-center text-muted">
-                                No results found. Use admin panel to add results.
-                            </td>
-                        </tr>
-                    `;
+                    tableBody.innerHTML = `<tr class="state-row"><td colspan="4">No results found. Use admin panel to add results.</td></tr>`;
                     return;
                 }
-                
-                // Display results
+
                 tableBody.innerHTML = results.map(result => {
-                    // Handle different data structures
-                    const resultData = result.data || result;
-                    const date = result.date || 'Unknown date';
-                    const firstRound = resultData.firstRound || resultData.first_round || '--';
-                    const secondRound = resultData.secondRound || resultData.second_round || '--';
-                    
+                    const rd = result.data || result;
+                    const date = result.date || 'Unknown';
+                    const fr = (rd.firstRound || rd.first_round || '--').toString().padStart(2, '0');
+                    const sr = (rd.secondRound || rd.second_round || '--').toString().padStart(2, '0');
                     return `
                         <tr>
-                            <td><strong>${date}</strong></td>
-                            <td><span class="badge bg-primary fs-6">${firstRound}</span></td>
-                            <td><span class="badge bg-success fs-6">${secondRound}</span></td>
-                        </tr>
-                    `;
+                            <td>Khanapara</td>
+                            <td>${date}</td>
+                            <td>${fr}</td>
+                            <td>${sr}</td>
+                        </tr>`;
                 }).join('');
-                
-                // Update pagination if needed
-                if (totalPages > 1) {
-                    updatePagination(page);
-                }
-                
-            } catch (error) {
-                console.error('Error loading results:', error);
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="3" class="text-center text-danger">
-                            <strong>❌ Error loading results!</strong><br>
-                            Make sure your backend is running at: ${API_BASE_URL}<br>
-                            <small>Error details: ${error.message}</small>
-                        </td>
-                    </tr>
-                `;
+
+                renderPagination(page);
+
+            } catch (e) {
+                tableBody.innerHTML = `<tr class="state-row"><td colspan="4" style="color:#c00;">
+                    ❌ Error loading results. Backend may not be connected.<br>
+                    <small>${e.message}</small>
+                </td></tr>`;
             }
         }
-        
-        function updatePagination(currentPage) {
-            const paginationDiv = document.getElementById('pagination');
-            let paginationHtml = '<ul class="pagination">';
-            
-            // Previous button
-            paginationHtml += `
-                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Previous</a>
-                </li>
-            `;
-            
-            // Page numbers (show max 5 pages)
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(totalPages, startPage + 4);
-            
-            for (let i = startPage; i <= endPage; i++) {
-                paginationHtml += `
-                    <li class="page-item ${i === currentPage ? 'active' : ''}">
-                        <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
-                    </li>
-                `;
+
+        function renderPagination(page) {
+            const wrap = document.getElementById('pagination');
+            if (totalPages <= 1) { wrap.innerHTML = ''; return; }
+
+            let html = '';
+            html += `<button class="page-btn" onclick="changePage(${page - 1})" ${page === 1 ? 'disabled' : ''}>&#8592; Prev</button>`;
+
+            const start = Math.max(1, page - 2);
+            const end = Math.min(totalPages, start + 4);
+            for (let i = start; i <= end; i++) {
+                html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
             }
-            
-            // Next button
-            paginationHtml += `
-                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Next</a>
-                </li>
-            `;
-            
-            paginationHtml += '</ul>';
-            paginationDiv.innerHTML = paginationHtml;
+
+            html += `<button class="page-btn" onclick="changePage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next &#8594;</button>`;
+            wrap.innerHTML = html;
         }
-        
+
         function changePage(page) {
             if (page >= 1 && page <= totalPages) {
                 currentPage = page;
-                loadResults(currentPage);
-                // Scroll to top of results
+                loadResults(page);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
-        
-        // Load results when page loads
+
         loadResults();
-        
-        // Refresh every 2 minutes
-        setInterval(() => {
-            loadResults(currentPage);
-        }, 120000);
+        setInterval(() => loadResults(currentPage), 120000);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
