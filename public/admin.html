@@ -118,6 +118,22 @@
             margin-top: 50px;
         }
         
+        .separator {
+            border-top: 2px dashed #ddd;
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .separator span {
+            background: #fff;
+            padding: 0 10px;
+            position: relative;
+            top: -12px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
         @media (max-width: 768px) {
             .stat-number {
                 font-size: 1.5rem;
@@ -136,7 +152,7 @@
                     </div>
                     <div class="card-body">
                         <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Default password: <strong> </strong>
+                            <i class="bi bi-info-circle"></i> Default password: <strong>admin123</strong>
                         </div>
                         <input type="password" id="adminPassword" class="form-control mb-3" 
                                placeholder="Enter Admin Password" onkeypress="if(event.key==='Enter') login()">
@@ -290,70 +306,191 @@
                     </div>
                 </div>
 
-                <!-- Update Results Section -->
+                <!-- Update Results Section - UPDATED with separate F/R and S/R -->
                 <div id="resultsSection" class="admin-section" style="display:none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-trophy"></i> Update First Round (F/R)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateFR"></strong>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">First Round (10:30 AM)</label>
+                                        <input type="text" id="firstRoundOnly" class="form-control form-control-lg text-center" 
+                                               placeholder="e.g., 08" maxlength="2">
+                                        <small class="text-muted">Current F/R: <span id="currentFR" class="fw-bold text-primary">--</span></small>
+                                    </div>
+                                    <button onclick="updateFirstRoundOnly()" class="btn btn-primary w-100">
+                                        <i class="bi bi-pencil"></i> Update First Round Only
+                                    </button>
+                                    <div id="frMsg" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="bi bi-trophy"></i> Update Second Round (S/R)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateSR"></strong>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Second Round (11:30 AM)</label>
+                                        <input type="text" id="secondRoundOnly" class="form-control form-control-lg text-center" 
+                                               placeholder="e.g., 51" maxlength="2">
+                                        <small class="text-muted">Current S/R: <span id="currentSR" class="fw-bold text-success">--</span></small>
+                                    </div>
+                                    <button onclick="updateSecondRoundOnly()" class="btn btn-success w-100">
+                                        <i class="bi bi-pencil"></i> Update Second Round Only
+                                    </button>
+                                    <div id="srMsg" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="separator">
+                        <span>OR</span>
+                    </div>
+                    
                     <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Update Today's Results</h5>
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="bi bi-save"></i> Update Both Rounds Together</h5>
                         </div>
                         <div class="card-body">
-                            <div class="alert alert-info">
-                                <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDate"></strong>
-                            </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">First Round (10:30 AM)</label>
-                                        <input type="text" id="firstRound" class="form-control form-control-lg text-center" 
+                                        <label class="form-label">First Round</label>
+                                        <input type="text" id="firstRoundBoth" class="form-control text-center" 
                                                placeholder="e.g., 08" maxlength="2">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Second Round (11:30 AM)</label>
-                                        <input type="text" id="secondRound" class="form-control form-control-lg text-center" 
+                                        <label class="form-label">Second Round</label>
+                                        <input type="text" id="secondRoundBoth" class="form-control text-center" 
                                                placeholder="e.g., 51" maxlength="2">
                                     </div>
                                 </div>
                             </div>
-                            <button onclick="updateResults()" class="btn btn-primary btn-lg w-100">
-                                <i class="bi bi-save"></i> Update Results
+                            <button onclick="updateBothRounds()" class="btn btn-dark w-100">
+                                <i class="bi bi-save"></i> Update Both Rounds
                             </button>
-                            <div id="resultMsg" class="mt-3"></div>
+                            <div id="bothMsg" class="mt-3"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Common Numbers Section -->
+                <!-- Common Numbers Section - UPDATED with separate updates -->
                 <div id="commonSection" class="admin-section" style="display:none">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-hash"></i> Update Direct Numbers</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateDirect"></strong>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Direct Numbers (comma separated)</label>
+                                        <input type="text" id="directOnly" class="form-control" 
+                                               placeholder="e.g., 68,39,81">
+                                        <small class="text-muted">Current Direct: <span id="currentDirect" class="fw-bold">--</span></small>
+                                    </div>
+                                    <button onclick="updateDirectOnly()" class="btn btn-primary w-100">
+                                        <i class="bi bi-pencil"></i> Update Direct Numbers
+                                    </button>
+                                    <div id="directMsg" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0"><i class="bi bi-building"></i> Update House Numbers</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateHouse"></strong>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">House Numbers (comma separated)</label>
+                                        <input type="text" id="houseOnly" class="form-control" 
+                                               placeholder="e.g., 4,5">
+                                        <small class="text-muted">Current House: <span id="currentHouse" class="fw-bold">--</span></small>
+                                    </div>
+                                    <button onclick="updateHouseOnly()" class="btn btn-danger w-100">
+                                        <i class="bi bi-pencil"></i> Update House Numbers
+                                    </button>
+                                    <div id="houseMsg" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="bi bi-arrow-right"></i> Update Ending Numbers</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateEnding"></strong>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Ending Numbers (comma separated)</label>
+                                        <input type="text" id="endingOnly" class="form-control" 
+                                               placeholder="e.g., 7,2">
+                                        <small class="text-muted">Current Ending: <span id="currentEnding" class="fw-bold">--</span></small>
+                                    </div>
+                                    <button onclick="updateEndingOnly()" class="btn btn-success w-100">
+                                        <i class="bi bi-pencil"></i> Update Ending Numbers
+                                    </button>
+                                    <div id="endingMsg" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="separator">
+                        <span>OR</span>
+                    </div>
+                    
                     <div class="card">
-                        <div class="card-header bg-danger text-white">
-                            <h5 class="mb-0"><i class="bi bi-hash"></i> Update Common Numbers</h5>
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="bi bi-save"></i> Update All Common Numbers Together</h5>
                         </div>
                         <div class="card-body">
-                            <div class="alert alert-info">
-                                <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDate2"></strong>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Direct Numbers</label>
+                                    <input type="text" id="directAll" class="form-control" placeholder="68,39,81">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">House Numbers</label>
+                                    <input type="text" id="houseAll" class="form-control" placeholder="4,5">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Ending Numbers</label>
+                                    <input type="text" id="endingAll" class="form-control" placeholder="7,2">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Direct Numbers (comma separated)</label>
-                                <input type="text" id="direct" class="form-control" 
-                                       placeholder="e.g., 68,39,81">
-                                <small class="text-muted">Example: 68,39,81</small>
+                            <div class="mt-3">
+                                <button onclick="updateAllCommon()" class="btn btn-dark w-100">
+                                    <i class="bi bi-save"></i> Update All Common Numbers
+                                </button>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">House Numbers (comma separated)</label>
-                                <input type="text" id="house" class="form-control" 
-                                       placeholder="e.g., 4,5">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Ending Numbers (comma separated)</label>
-                                <input type="text" id="ending" class="form-control" 
-                                       placeholder="e.g., 7,2">
-                            </div>
-                            <button onclick="updateCommon()" class="btn btn-danger btn-lg w-100">
-                                <i class="bi bi-save"></i> Update Common Numbers
-                            </button>
-                            <div id="commonMsg" class="mt-3"></div>
+                            <div id="allCommonMsg" class="mt-3"></div>
                         </div>
                     </div>
                 </div>
@@ -536,7 +673,7 @@
                     </div>
                 </div>
 
-                <!-- Import Results Section - NEW! -->
+                <!-- Import Results Section -->
                 <div id="importResultsSection" class="admin-section" style="display:none">
                     <div class="row">
                         <div class="col-md-6">
@@ -550,8 +687,8 @@
                                         <p>Your CSV file should have these columns (in this order):</p>
                                         <ul>
                                             <li><strong>Column A:</strong> Date (format: DD/MM/YYYY)</li>
-                                            <li><strong>Column B:</strong> First Round Number (2 digits)</li>
-                                            <li><strong>Column C:</strong> Second Round Number (2 digits)</li>
+                                            <li><strong>Column B:</strong> First Round Number</li>
+                                            <li><strong>Column C:</strong> Second Round Number</li>
                                         </ul>
                                         <hr>
                                         <h6>Example row:</h6>
@@ -571,7 +708,7 @@
                                             <strong>Preview Data:</strong> <span id="resultPreviewCount"></span> results found
                                         </div>
                                         <div class="alert alert-warning">
-                                            <i class="bi bi-exclamation-triangle"></i> Existing results for same date will be <strong>updated</strong> (not duplicated)
+                                            <i class="bi bi-exclamation-triangle"></i> Existing results for same date will be <strong>updated</strong>
                                         </div>
                                         <div class="table-responsive" style="max-height: 300px;">
                                             <table class="table table-sm">
@@ -636,11 +773,10 @@
                                 </div>
                                 <div class="card-body">
                                     <ul>
-                                        <li>Date format: <strong>DD/MM/YYYY</strong> (e.g., 25/04/2026)</li>
-                                        <li>Numbers must be <strong>2 digits</strong> (00-99)</li>
+                                        <li>Date format: <strong>DD/MM/YYYY</strong></li>
+                                        <li>Numbers can be 1 or 2 digits (8 or 08)</li>
                                         <li>Existing results will be <strong>updated</strong></li>
                                         <li>No limit on number of rows</li>
-                                        <li>Invalid dates/numbers will be skipped</li>
                                     </ul>
                                 </div>
                             </div>
@@ -797,7 +933,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2024 Teer Results Admin Panel | Import Dreams & Previous Results</p>
+        <p>&copy; 2024 Teer Results Admin Panel | Separate F/R & S/R Updates | Complete Management</p>
     </footer>
 
     <script>
@@ -808,12 +944,61 @@
         let allResults = [];
         let pendingDreamImports = [];
         let pendingResultImports = [];
+        let todayResultData = null;
         
         // Initialize dates
-        document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-GB');
-        document.getElementById('todayDate2').innerText = new Date().toLocaleDateString('en-GB');
+        const todayStr = new Date().toLocaleDateString('en-GB');
+        document.getElementById('todayDateFR').innerText = todayStr;
+        document.getElementById('todayDateSR').innerText = todayStr;
+        document.getElementById('todayDateDirect').innerText = todayStr;
+        document.getElementById('todayDateHouse').innerText = todayStr;
+        document.getElementById('todayDateEnding').innerText = todayStr;
         
-        // Drag & Drop for Dreams
+        // Function to load today's result for display
+        async function loadTodayResultForDisplay() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/today-result`);
+                const data = await response.json();
+                if (data && data.data) {
+                    todayResultData = data.data;
+                    document.getElementById('currentFR').innerText = data.data.firstRound || '--';
+                    document.getElementById('currentSR').innerText = data.data.secondRound || '--';
+                    
+                    // Also populate the both rounds fields
+                    document.getElementById('firstRoundBoth').value = data.data.firstRound || '';
+                    document.getElementById('secondRoundBoth').value = data.data.secondRound || '';
+                }
+            } catch (error) {
+                console.error('Error loading today result:', error);
+            }
+        }
+        
+        // Function to load common numbers for display
+        async function loadCommonNumbersForDisplay() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/common-numbers`);
+                const data = await response.json();
+                if (data && data.data) {
+                    document.getElementById('currentDirect').innerText = data.data.direct?.join(', ') || '--';
+                    document.getElementById('currentHouse').innerText = data.data.house?.join(', ') || '--';
+                    document.getElementById('currentEnding').innerText = data.data.ending?.join(', ') || '--';
+                    
+                    // Populate the "all" fields
+                    document.getElementById('directAll').value = data.data.direct?.join(', ') || '';
+                    document.getElementById('houseAll').value = data.data.house?.join(', ') || '';
+                    document.getElementById('endingAll').value = data.data.ending?.join(', ') || '';
+                    
+                    // Populate individual fields
+                    document.getElementById('directOnly').value = data.data.direct?.join(', ') || '';
+                    document.getElementById('houseOnly').value = data.data.house?.join(', ') || '';
+                    document.getElementById('endingOnly').value = data.data.ending?.join(', ') || '';
+                }
+            } catch (error) {
+                console.error('Error loading common numbers:', error);
+            }
+        }
+        
+        // Drag & Drop setup
         const dreamDropZone = document.getElementById('dreamDropZone');
         if (dreamDropZone) {
             dreamDropZone.addEventListener('dragover', (e) => {
@@ -835,7 +1020,6 @@
             });
         }
         
-        // Drag & Drop for Results
         const resultDropZone = document.getElementById('resultDropZone');
         if (resultDropZone) {
             resultDropZone.addEventListener('dragover', (e) => {
@@ -883,6 +1067,305 @@
                 if (section === 'analytics') loadAnalytics();
                 if (section === 'manage') loadManageData();
                 if (section === 'dreams') loadDreamsList();
+                if (section === 'results') {
+                    loadTodayResultForDisplay();
+                    loadCommonNumbersForDisplay();
+                }
+                if (section === 'common') {
+                    loadCommonNumbersForDisplay();
+                }
+            }
+        }
+        
+        // ============ RESULT UPDATE FUNCTIONS - SEPARATE ============
+        
+        // Update First Round Only
+        async function updateFirstRoundOnly() {
+            const firstRound = document.getElementById('firstRoundOnly').value;
+            
+            if (!firstRound) {
+                showMessage('frMsg', 'Please enter First Round number', 'error');
+                return;
+            }
+            
+            // Validate number
+            if (!/^\d{1,2}$/.test(firstRound)) {
+                showMessage('frMsg', 'Please enter a valid number (0-99)', 'error');
+                return;
+            }
+            
+            const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
+            const currentSR = document.getElementById('currentSR').innerText;
+            const secondRound = currentSR !== '--' ? currentSR : '00';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ firstRound: formattedFR, secondRound: secondRound })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('frMsg', `✅ First Round updated to ${formattedFR}!`, 'success');
+                    document.getElementById('firstRoundOnly').value = '';
+                    document.getElementById('currentFR').innerText = formattedFR;
+                    document.getElementById('firstRoundBoth').value = formattedFR;
+                    loadDashboardData();
+                    loadManageData();
+                } else {
+                    showMessage('frMsg', data.error || 'Error updating First Round', 'error');
+                }
+            } catch (error) {
+                showMessage('frMsg', 'Error connecting to server', 'error');
+            }
+        }
+        
+        // Update Second Round Only
+        async function updateSecondRoundOnly() {
+            const secondRound = document.getElementById('secondRoundOnly').value;
+            
+            if (!secondRound) {
+                showMessage('srMsg', 'Please enter Second Round number', 'error');
+                return;
+            }
+            
+            if (!/^\d{1,2}$/.test(secondRound)) {
+                showMessage('srMsg', 'Please enter a valid number (0-99)', 'error');
+                return;
+            }
+            
+            const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
+            const currentFR = document.getElementById('currentFR').innerText;
+            const firstRound = currentFR !== '--' ? currentFR : '00';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ firstRound: firstRound, secondRound: formattedSR })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('srMsg', `✅ Second Round updated to ${formattedSR}!`, 'success');
+                    document.getElementById('secondRoundOnly').value = '';
+                    document.getElementById('currentSR').innerText = formattedSR;
+                    document.getElementById('secondRoundBoth').value = formattedSR;
+                    loadDashboardData();
+                    loadManageData();
+                } else {
+                    showMessage('srMsg', data.error || 'Error updating Second Round', 'error');
+                }
+            } catch (error) {
+                showMessage('srMsg', 'Error connecting to server', 'error');
+            }
+        }
+        
+        // Update Both Rounds Together
+        async function updateBothRounds() {
+            const firstRound = document.getElementById('firstRoundBoth').value;
+            const secondRound = document.getElementById('secondRoundBoth').value;
+            
+            if (!firstRound || !secondRound) {
+                showMessage('bothMsg', 'Please fill both rounds', 'error');
+                return;
+            }
+            
+            if (!/^\d{1,2}$/.test(firstRound) || !/^\d{1,2}$/.test(secondRound)) {
+                showMessage('bothMsg', 'Please enter valid numbers (0-99)', 'error');
+                return;
+            }
+            
+            const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
+            const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ firstRound: formattedFR, secondRound: formattedSR })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('bothMsg', `✅ Results updated to ${formattedFR} / ${formattedSR}!`, 'success');
+                    document.getElementById('currentFR').innerText = formattedFR;
+                    document.getElementById('currentSR').innerText = formattedSR;
+                    document.getElementById('firstRoundOnly').value = '';
+                    document.getElementById('secondRoundOnly').value = '';
+                    loadDashboardData();
+                    loadManageData();
+                } else {
+                    showMessage('bothMsg', data.error || 'Error updating results', 'error');
+                }
+            } catch (error) {
+                showMessage('bothMsg', 'Error connecting to server', 'error');
+            }
+        }
+        
+        // ============ COMMON NUMBERS UPDATE FUNCTIONS - SEPARATE ============
+        
+        // Update Direct Numbers Only
+        async function updateDirectOnly() {
+            const direct = document.getElementById('directOnly').value;
+            
+            if (!direct.trim()) {
+                showMessage('directMsg', 'Please enter Direct Numbers', 'error');
+                return;
+            }
+            
+            const directArray = direct.split(',').map(s => s.trim());
+            const currentHouse = document.getElementById('currentHouse').innerText;
+            const currentEnding = document.getElementById('currentEnding').innerText;
+            
+            const houseArray = currentHouse !== '--' ? currentHouse.split(',').map(s => s.trim()) : [];
+            const endingArray = currentEnding !== '--' ? currentEnding.split(',').map(s => s.trim()) : [];
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ direct: directArray, house: houseArray, ending: endingArray })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('directMsg', '✅ Direct Numbers updated successfully!', 'success');
+                    document.getElementById('currentDirect').innerText = direct;
+                    document.getElementById('directAll').value = direct;
+                    document.getElementById('directOnly').value = '';
+                } else {
+                    showMessage('directMsg', data.error || 'Error updating Direct Numbers', 'error');
+                }
+            } catch (error) {
+                showMessage('directMsg', 'Error connecting to server', 'error');
+            }
+        }
+        
+        // Update House Numbers Only
+        async function updateHouseOnly() {
+            const house = document.getElementById('houseOnly').value;
+            
+            const currentDirect = document.getElementById('currentDirect').innerText;
+            const currentEnding = document.getElementById('currentEnding').innerText;
+            
+            const directArray = currentDirect !== '--' ? currentDirect.split(',').map(s => s.trim()) : [];
+            const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
+            const endingArray = currentEnding !== '--' ? currentEnding.split(',').map(s => s.trim()) : [];
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ direct: directArray, house: houseArray, ending: endingArray })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('houseMsg', '✅ House Numbers updated successfully!', 'success');
+                    document.getElementById('currentHouse').innerText = house || '--';
+                    document.getElementById('houseAll').value = house;
+                    document.getElementById('houseOnly').value = '';
+                } else {
+                    showMessage('houseMsg', data.error || 'Error updating House Numbers', 'error');
+                }
+            } catch (error) {
+                showMessage('houseMsg', 'Error connecting to server', 'error');
+            }
+        }
+        
+        // Update Ending Numbers Only
+        async function updateEndingOnly() {
+            const ending = document.getElementById('endingOnly').value;
+            
+            const currentDirect = document.getElementById('currentDirect').innerText;
+            const currentHouse = document.getElementById('currentHouse').innerText;
+            
+            const directArray = currentDirect !== '--' ? currentDirect.split(',').map(s => s.trim()) : [];
+            const houseArray = currentHouse !== '--' ? currentHouse.split(',').map(s => s.trim()) : [];
+            const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ direct: directArray, house: houseArray, ending: endingArray })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('endingMsg', '✅ Ending Numbers updated successfully!', 'success');
+                    document.getElementById('currentEnding').innerText = ending || '--';
+                    document.getElementById('endingAll').value = ending;
+                    document.getElementById('endingOnly').value = '';
+                } else {
+                    showMessage('endingMsg', data.error || 'Error updating Ending Numbers', 'error');
+                }
+            } catch (error) {
+                showMessage('endingMsg', 'Error connecting to server', 'error');
+            }
+        }
+        
+        // Update All Common Numbers Together
+        async function updateAllCommon() {
+            const direct = document.getElementById('directAll').value;
+            const house = document.getElementById('houseAll').value;
+            const ending = document.getElementById('endingAll').value;
+            
+            const directArray = direct.trim() ? direct.split(',').map(s => s.trim()) : [];
+            const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
+            const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ direct: directArray, house: houseArray, ending: endingArray })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('allCommonMsg', '✅ All Common Numbers updated successfully!', 'success');
+                    document.getElementById('currentDirect').innerText = direct || '--';
+                    document.getElementById('currentHouse').innerText = house || '--';
+                    document.getElementById('currentEnding').innerText = ending || '--';
+                    document.getElementById('directOnly').value = direct;
+                    document.getElementById('houseOnly').value = house;
+                    document.getElementById('endingOnly').value = ending;
+                } else {
+                    showMessage('allCommonMsg', data.error || 'Error updating Common Numbers', 'error');
+                }
+            } catch (error) {
+                showMessage('allCommonMsg', 'Error connecting to server', 'error');
             }
         }
         
@@ -1066,351 +1549,329 @@
             }, 5000);
         }
         
-      // ============ RESULT IMPORT FUNCTIONS (Handles DD-MM-YYYY & DD/MM/YYYY) ============
-
-function handleResultFileUpload(file) {
-    if (!file) return;
-    
-    const fileType = file.name.split('.').pop().toLowerCase();
-    
-    if (fileType === 'csv') {
-        parseResultCSV(file);
-    } else if (fileType === 'xlsx' || fileType === 'xls') {
-        parseResultExcel(file);
-    } else {
-        alert('Please upload a CSV or Excel file');
-    }
-}
-
-// Convert any date format to DD/MM/YYYY
-function convertToStandardDateFormat(dateStr) {
-    if (!dateStr) return null;
-    
-    // Remove any extra spaces
-    dateStr = dateStr.toString().trim();
-    
-    // Check if it's in DD-MM-YYYY format (with hyphens)
-    if (dateStr.includes('-')) {
-        const parts = dateStr.split('-');
-        if (parts.length === 3) {
-            const day = parts[0].padStart(2, '0');
-            const month = parts[1].padStart(2, '0');
-            const year = parts[2];
-            // Validate year is 4 digits
-            if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) {
+        // ============ RESULT IMPORT FUNCTIONS ============
+        
+        function convertToStandardDateFormat(dateStr) {
+            if (!dateStr) return null;
+            dateStr = dateStr.toString().trim();
+            
+            if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const day = parts[0].padStart(2, '0');
+                    const month = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                        return `${day}/${month}/${year}`;
+                    }
+                }
+            }
+            
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    const day = parts[0].padStart(2, '0');
+                    const month = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                        return `${day}/${month}/${year}`;
+                    }
+                }
+            }
+            
+            const parsedDate = new Date(dateStr);
+            if (!isNaN(parsedDate.getTime())) {
+                const day = parsedDate.getDate().toString().padStart(2, '0');
+                const month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
+                const year = parsedDate.getFullYear();
                 return `${day}/${month}/${year}`;
             }
+            
+            return null;
         }
-    }
-    
-    // Check if it's in DD/MM/YYYY format (with slashes)
-    if (dateStr.includes('/')) {
-        const parts = dateStr.split('/');
-        if (parts.length === 3) {
-            const day = parts[0].padStart(2, '0');
-            const month = parts[1].padStart(2, '0');
-            const year = parts[2];
-            if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) {
-                return `${day}/${month}/${year}`;
-            }
-        }
-    }
-    
-    // Try to parse as Date object (fallback)
-    const parsedDate = new Date(dateStr);
-    if (!isNaN(parsedDate.getTime())) {
-        const day = parsedDate.getDate().toString().padStart(2, '0');
-        const month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
-        const year = parsedDate.getFullYear();
-        return `${day}/${month}/${year}`;
-    }
-    
-    return null;
-}
-
-function parseResultCSV(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const text = e.target.result;
-        const lines = text.split('\n');
-        const results = [];
-        const errors = [];
-        let skippedHeader = false;
         
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
+        function handleResultFileUpload(file) {
+            if (!file) return;
             
-            // Skip header row if it contains column names
-            if (!skippedHeader && (line.toLowerCase().includes('date') || 
-                line.toLowerCase().includes('first') || 
-                line.toLowerCase().includes('second'))) {
-                skippedHeader = true;
-                continue;
+            const fileType = file.name.split('.').pop().toLowerCase();
+            
+            if (fileType === 'csv') {
+                parseResultCSV(file);
+            } else if (fileType === 'xlsx' || fileType === 'xls') {
+                parseResultExcel(file);
+            } else {
+                alert('Please upload a CSV or Excel file');
             }
-            
-            const parts = line.split(',');
-            if (parts.length >= 3) {
-                let rawDate = parts[0]?.trim();
-                let firstRound = parts[1]?.trim();
-                let secondRound = parts[2]?.trim();
+        }
+        
+        function parseResultCSV(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                const results = [];
+                const errors = [];
+                let skippedHeader = false;
                 
-                // Convert date format (DD-MM-YYYY to DD/MM/YYYY)
-                const date = convertToStandardDateFormat(rawDate);
-                
-                // Convert single digit to double digit (e.g., "8" -> "08")
-                if (firstRound && !isNaN(firstRound)) {
-                    firstRound = parseInt(firstRound).toString().padStart(2, '0');
-                }
-                if (secondRound && !isNaN(secondRound)) {
-                    secondRound = parseInt(secondRound).toString().padStart(2, '0');
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    if (!skippedHeader && (line.toLowerCase().includes('date') || 
+                        line.toLowerCase().includes('first') || 
+                        line.toLowerCase().includes('second'))) {
+                        skippedHeader = true;
+                        continue;
+                    }
+                    
+                    const parts = line.split(',');
+                    if (parts.length >= 3) {
+                        let rawDate = parts[0]?.trim();
+                        let firstRound = parts[1]?.trim();
+                        let secondRound = parts[2]?.trim();
+                        
+                        const date = convertToStandardDateFormat(rawDate);
+                        
+                        if (firstRound && !isNaN(firstRound)) {
+                            firstRound = parseInt(firstRound).toString().padStart(2, '0');
+                        }
+                        if (secondRound && !isNaN(secondRound)) {
+                            secondRound = parseInt(secondRound).toString().padStart(2, '0');
+                        }
+                        
+                        const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+                        const numberRegex = /^\d{2}$/;
+                        
+                        if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
+                            results.push({ date, firstRound, secondRound });
+                        } else {
+                            errors.push(`Line ${i + 1}: Invalid - Date: ${rawDate} → ${date}, FR: ${firstRound}, SR: ${secondRound}`);
+                        }
+                    }
                 }
                 
-                // Validate date format (DD/MM/YYYY)
-                const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-                const numberRegex = /^\d{2}$/;
-                
-                if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
-                    results.push({ date, firstRound, secondRound });
-                } else {
-                    errors.push(`Line ${i + 1}: Invalid - Date: ${rawDate} → ${date}, FR: ${firstRound}, SR: ${secondRound}`);
+                if (errors.length > 0) {
+                    console.warn('Import errors:', errors);
                 }
+                
+                showResultImportPreview(results);
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseResultExcel(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                const results = [];
+                const errors = [];
+                let skippedHeader = false;
+                
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || row.length < 3) continue;
+                    
+                    if (!skippedHeader && row[0] && typeof row[0] === 'string' && 
+                        (row[0].toLowerCase().includes('date') || row[0].toLowerCase().includes('दिनांक'))) {
+                        skippedHeader = true;
+                        continue;
+                    }
+                    
+                    let rawDate = row[0]?.toString().trim();
+                    let firstRound = row[1]?.toString().trim();
+                    let secondRound = row[2]?.toString().trim();
+                    
+                    if (rawDate && !isNaN(rawDate) && rawDate.length < 6) {
+                        const excelDate = parseInt(rawDate);
+                        const dateObj = new Date((excelDate - 25569) * 86400000);
+                        rawDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+                    }
+                    
+                    const date = convertToStandardDateFormat(rawDate);
+                    
+                    if (firstRound && !isNaN(firstRound)) {
+                        firstRound = parseInt(firstRound).toString().padStart(2, '0');
+                    }
+                    if (secondRound && !isNaN(secondRound)) {
+                        secondRound = parseInt(secondRound).toString().padStart(2, '0');
+                    }
+                    
+                    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+                    const numberRegex = /^\d{2}$/;
+                    
+                    if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
+                        results.push({ date, firstRound, secondRound });
+                    } else if (rawDate && rawDate !== 'Date' && rawDate !== 'date') {
+                        errors.push(`Row ${i + 1}: Invalid - Date: ${rawDate} → ${date}, FR: ${firstRound}, SR: ${secondRound}`);
+                    }
+                }
+                
+                if (errors.length > 0) {
+                    console.warn('Import errors:', errors);
+                }
+                
+                showResultImportPreview(results);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function showResultImportPreview(results) {
+            if (results.length === 0) {
+                alert('No valid results found. Please check your file format.');
+                return;
+            }
+            
+            pendingResultImports = results;
+            document.getElementById('resultImportPreview').style.display = 'block';
+            document.getElementById('resultPreviewCount').innerText = results.length;
+            
+            const previewBody = document.getElementById('resultImportPreviewBody');
+            previewBody.innerHTML = results.slice(0, 10).map(r => `
+                <tr>
+                    <td>${r.date}</td>
+                    <td><span class="badge bg-primary">${r.firstRound}</span></td>
+                    <td><span class="badge bg-success">${r.secondRound}</span></td>
+                </tr>
+            `).join('');
+            
+            if (results.length > 10) {
+                previewBody.innerHTML += `<tr><td colspan="3" class="text-muted">... and ${results.length - 10} more</td></tr>`;
             }
         }
         
-        if (errors.length > 0) {
-            console.warn('Import errors:', errors);
-            if (errors.length <= 5) {
-                alert(`⚠️ ${errors.length} row(s) had issues:\n\n${errors.join('\n')}`);
-            } else {
-                alert(`⚠️ ${errors.length} rows had issues. Check console for details.\nFirst 5 errors:\n${errors.slice(0, 5).join('\n')}`);
-            }
+        function cancelResultImport() {
+            document.getElementById('resultImportPreview').style.display = 'none';
+            document.getElementById('resultFileInput').value = '';
+            pendingResultImports = [];
         }
         
-        if (results.length === 0) {
-            alert('No valid results found. Please check your file format.\n\nAccepted date formats:\n- DD/MM/YYYY (e.g., 25/04/2026)\n- DD-MM-YYYY (e.g., 24-06-2022)\n\nNumbers can be 1 or 2 digits (e.g., 8 or 08)');
+        async function confirmResultImport() {
+            if (!pendingResultImports || pendingResultImports.length === 0) return;
+            
+            document.getElementById('resultImportPreview').style.display = 'none';
+            document.getElementById('resultImportProgress').style.display = 'block';
+            
+            let successCount = 0;
+            let failCount = 0;
+            let updateCount = 0;
+            
+            for (let i = 0; i < pendingResultImports.length; i++) {
+                const result = pendingResultImports[i];
+                const progress = ((i + 1) / pendingResultImports.length) * 100;
+                document.getElementById('resultImportProgressBar').style.width = `${progress}%`;
+                document.getElementById('resultImportProgressBar').innerText = `${Math.round(progress)}%`;
+                document.getElementById('resultImportStatus').innerText = `Importing ${i + 1} of ${pendingResultImports.length}: ${result.date}`;
+                
+                try {
+                    const existing = allResults.find(r => r.date === result.date);
+                    
+                    const response = await fetch(`${API_BASE_URL}/api/admin/update-result-by-date`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${adminToken}`
+                        },
+                        body: JSON.stringify({ 
+                            date: result.date,
+                            firstRound: result.firstRound, 
+                            secondRound: result.secondRound 
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                        if (existing) updateCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch (error) {
+                    failCount++;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            document.getElementById('resultImportProgress').style.display = 'none';
+            
+            const resultHtml = `
+                <div class="alert alert-success">
+                    <h5>✅ Result Import Complete!</h5>
+                    <ul>
+                        <li>Successfully imported: <strong>${successCount}</strong> results</li>
+                        <li>Updated existing: <strong>${updateCount}</strong></li>
+                        <li>Failed: <strong>${failCount}</strong></li>
+                    </ul>
+                </div>
+            `;
+            document.getElementById('resultImportResult').innerHTML = resultHtml;
+            
+            pendingResultImports = [];
+            document.getElementById('resultFileInput').value = '';
+            loadManageData();
+            loadDashboardData();
+            
+            setTimeout(() => {
+                document.getElementById('resultImportResult').innerHTML = '';
+            }, 5000);
         }
         
-        showResultImportPreview(results);
-    };
-    reader.readAsText(file);
-}
-
-function parseResultExcel(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+        // ============ TEMPLATE DOWNLOADS ============
         
-        const results = [];
-        const errors = [];
-        let skippedHeader = false;
-        
-        for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            if (!row || row.length < 3) continue;
-            
-            // Skip header row if it contains column names
-            if (!skippedHeader && row[0] && typeof row[0] === 'string' && 
-                (row[0].toLowerCase().includes('date') || row[0].toLowerCase().includes('दिनांक'))) {
-                skippedHeader = true;
-                continue;
-            }
-            
-            let rawDate = row[0]?.toString().trim();
-            let firstRound = row[1]?.toString().trim();
-            let secondRound = row[2]?.toString().trim();
-            
-            // Handle Excel date numbers (e.g., 44700)
-            if (rawDate && !isNaN(rawDate) && rawDate.length < 6) {
-                const excelDate = parseInt(rawDate);
-                const dateObj = new Date((excelDate - 25569) * 86400000);
-                rawDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
-            }
-            
-            // Convert date format
-            const date = convertToStandardDateFormat(rawDate);
-            
-            // Convert single digit to double digit
-            if (firstRound && !isNaN(firstRound)) {
-                firstRound = parseInt(firstRound).toString().padStart(2, '0');
-            }
-            if (secondRound && !isNaN(secondRound)) {
-                secondRound = parseInt(secondRound).toString().padStart(2, '0');
-            }
-            
-            const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-            const numberRegex = /^\d{2}$/;
-            
-            if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
-                results.push({ date, firstRound, secondRound });
-            } else if (rawDate && rawDate !== 'Date' && rawDate !== 'date') {
-                errors.push(`Row ${i + 1}: Invalid - Date: ${rawDate} → ${date}, FR: ${firstRound}, SR: ${secondRound}`);
-            }
+        function downloadDreamTemplate() {
+            const csvContent = "Dream Description,Direct Numbers,House Numbers,Ending Numbers\nSeeing a snake,09,17,37,57,77,99,7,9\nMoney,00,14,15,20,25,35,50,0,5\nTiger,,9,\nElephant,,9,";
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dreams_template.csv';
+            a.click();
+            URL.revokeObjectURL(url);
         }
         
-        if (errors.length > 0) {
-            console.warn('Import errors:', errors);
-            if (errors.length <= 5) {
-                alert(`⚠️ ${errors.length} row(s) had issues:\n\n${errors.join('\n')}`);
-            } else {
-                alert(`⚠️ ${errors.length} rows had issues. First 5 errors:\n${errors.slice(0, 5).join('\n')}`);
-            }
+        function downloadDreamExcelTemplate() {
+            const data = [
+                ['Dream Description', 'Direct Numbers', 'House Numbers', 'Ending Numbers'],
+                ['Seeing a snake', '09,17,37,57,77,99', '7', '9'],
+                ['Money', '00,14,15,20,25,35,50', '0,5', '0'],
+                ['Tiger', '', '9', ''],
+                ['Elephant', '', '9', '']
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Dreams Template');
+            XLSX.writeFile(wb, 'dreams_template.xlsx');
         }
         
-        if (results.length === 0) {
-            alert('No valid results found. Please check your file format.\n\nAccepted date formats:\n- DD/MM/YYYY (e.g., 25/04/2026)\n- DD-MM-YYYY (e.g., 24-06-2022)\n\nNumbers can be 1 or 2 digits (e.g., 8 or 08)');
+        function downloadResultTemplate() {
+            const csvContent = `Date,First Round,Second Round\n25/04/2026,08,51\n24-06-2022,76,47\n23/04/2026,6,94\n22-05-2022,91,19`;
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'results_template.csv';
+            a.click();
+            URL.revokeObjectURL(url);
         }
         
-        showResultImportPreview(results);
-    };
-    reader.readAsArrayBuffer(file);
-}
-
-function showResultImportPreview(results) {
-    if (results.length === 0) {
-        alert('No valid results found in file. Please check the format.\n\nAccepted formats:\n- Date: DD/MM/YYYY or DD-MM-YYYY (e.g., 25/04/2026 or 24-06-2022)\n- Numbers: 1 or 2 digits (e.g., 8 or 08)');
-        return;
-    }
-    
-    pendingResultImports = results;
-    document.getElementById('resultImportPreview').style.display = 'block';
-    document.getElementById('resultPreviewCount').innerText = results.length;
-    
-    const previewBody = document.getElementById('resultImportPreviewBody');
-    previewBody.innerHTML = results.slice(0, 10).map(r => `
-        <tr>
-            <td><strong>${r.date}</strong> (converted)</strong></td>
-            <td><span class="badge bg-primary">${r.firstRound}</span></td>
-            <td><span class="badge bg-success">${r.secondRound}</span></td>
-        </tr>
-    `).join('');
-    
-    if (results.length > 10) {
-        previewBody.innerHTML += `<tr><td colspan="3" class="text-muted">... and ${results.length - 10} more</td></tr>`;
-    }
-}
-
-function cancelResultImport() {
-    document.getElementById('resultImportPreview').style.display = 'none';
-    document.getElementById('resultFileInput').value = '';
-    pendingResultImports = [];
-}
-
-async function confirmResultImport() {
-    if (!pendingResultImports || pendingResultImports.length === 0) return;
-    
-    document.getElementById('resultImportPreview').style.display = 'none';
-    document.getElementById('resultImportProgress').style.display = 'block';
-    
-    let successCount = 0;
-    let failCount = 0;
-    let updateCount = 0;
-    
-    for (let i = 0; i < pendingResultImports.length; i++) {
-        const result = pendingResultImports[i];
-        const progress = ((i + 1) / pendingResultImports.length) * 100;
-        document.getElementById('resultImportProgressBar').style.width = `${progress}%`;
-        document.getElementById('resultImportProgressBar').innerText = `${Math.round(progress)}%`;
-        document.getElementById('resultImportStatus').innerText = `Importing ${i + 1} of ${pendingResultImports.length}: ${result.date}`;
-        
-        try {
-            // Check if result already exists
-            const existing = allResults.find(r => r.date === result.date);
-            
-            // Use the update-result endpoint with custom date
-            // You'll need to add a custom endpoint for this
-            const response = await fetch(`${API_BASE_URL}/api/admin/update-result-by-date`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${adminToken}`
-                },
-                body: JSON.stringify({ 
-                    date: result.date,
-                    firstRound: result.firstRound, 
-                    secondRound: result.secondRound 
-                })
-            });
-            
-            if (response.ok) {
-                successCount++;
-                if (existing) updateCount++;
-            } else {
-                failCount++;
-            }
-        } catch (error) {
-            failCount++;
-            console.error(`Error importing ${result.date}:`, error);
+        function downloadResultExcelTemplate() {
+            const data = [
+                ['Date', 'First Round', 'Second Round'],
+                ['25/04/2026', '08', '51'],
+                ['24-06-2022', '76', '47'],
+                ['23/04/2026', '6', '94'],
+                ['22-05-2022', '91', '19']
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Results Template');
+            XLSX.writeFile(wb, 'results_template.xlsx');
         }
         
-        // Small delay to avoid overwhelming the server
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    
-    document.getElementById('resultImportProgress').style.display = 'none';
-    
-    const resultHtml = `
-        <div class="alert alert-success">
-            <h5>✅ Result Import Complete!</h5>
-            <ul>
-                <li>Successfully imported: <strong>${successCount}</strong> results</li>
-                <li>Updated existing: <strong>${updateCount}</strong></li>
-                <li>Failed: <strong>${failCount}</strong></li>
-            </ul>
-            ${failCount > 0 ? '<hr><small class="text-danger">Some rows failed. Check date format (DD/MM/YYYY) and numbers (00-99).</small>' : ''}
-        </div>
-    `;
-    document.getElementById('resultImportResult').innerHTML = resultHtml;
-    
-    pendingResultImports = [];
-    document.getElementById('resultFileInput').value = '';
-    loadManageData();
-    loadDashboardData();
-    
-    setTimeout(() => {
-        document.getElementById('resultImportResult').innerHTML = '';
-    }, 5000);
-}
-
-// Updated template downloads with examples in both formats
-function downloadResultTemplate() {
-    const csvContent = `Date,First Round,Second Round
-25/04/2026,08,51
-24-06-2022,76,47
-23/04/2026,6,94
-22-05-2022,91,19
-21/04/2026,30,45
-20-03-2022,78,84
-19/04/2026,60,5`;
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'results_template.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-function downloadResultExcelTemplate() {
-    const data = [
-        ['Date', 'First Round', 'Second Round'],
-        ['25/04/2026', '08', '51'],
-        ['24-06-2022', '76', '47'],  // DD-MM-YYYY format example
-        ['23/04/2026', '6', '94'],
-        ['22-05-2022', '91', '19'],  // DD-MM-YYYY format example
-        ['21/04/2026', '30', '45'],
-        ['20-03-2022', '78', '84'],  // DD-MM-YYYY format example
-        ['19/04/2026', '60', '5']
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Results Template');
-    XLSX.writeFile(wb, 'results_template.xlsx');
-}
-        // ============ REST OF THE FUNCTIONS (same as before) ============
+        // ============ CORE FUNCTIONS ============
         
         async function login() {
             const password = document.getElementById('adminPassword').value;
@@ -1431,6 +1892,8 @@ function downloadResultExcelTemplate() {
                     loadDashboardData();
                     loadDreamsList();
                     loadManageData();
+                    loadTodayResultForDisplay();
+                    loadCommonNumbersForDisplay();
                 } else {
                     document.getElementById('loginError').innerText = 'Wrong password!';
                 }
@@ -1451,49 +1914,57 @@ function downloadResultExcelTemplate() {
             document.getElementById('adminPassword').value = '';
         }
         
-       async function loadDashboardData() {
-    try {
-        const resultsRes = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
-            headers: { 'Authorization': `Bearer ${adminToken}` }
-        });
-        const resultsData = await resultsRes.json();
-        const results = resultsData.data || [];
-        allResults = results;
-        document.getElementById('totalResults').innerText = results.length;
-        
-        const dreamsRes = await fetch(`${API_BASE_URL}/api/dreams`);
-        const dreamsData = await dreamsRes.json();
-        const dreams = dreamsData.data || dreamsData || [];
-        document.getElementById('totalDreams').innerText = dreams.length;
-        
-        const todayRes = await fetch(`${API_BASE_URL}/api/today-result`);
-        const todayData = await todayRes.json();
-        if (todayData.data) {
-            document.getElementById('todayResult').innerHTML = `${todayData.data.firstRound}/${todayData.data.secondRound}`;
-        } else {
-            document.getElementById('todayResult').innerHTML = '--/--';
+        function parseDateToTimestamp(dateStr) {
+            if (!dateStr) return 0;
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parseInt(parts[1]) - 1, parts[0]).getTime();
+            }
+            return 0;
         }
         
-        document.getElementById('winRate').innerHTML = 'Live';
-        
-        // Sort results by date descending for recent activity
-        const sortedResults = [...results].sort((a, b) => {
-            const dateA = parseDateToTimestamp(a.date);
-            const dateB = parseDateToTimestamp(b.date);
-            return dateB - dateA;
-        });
-        
-        const recentHtml = sortedResults.slice(0, 10).map(r => `
-            <div class="alert alert-secondary">
-                <strong>${r.date}</strong>: ${r.data?.firstRound || '--'} | ${r.data?.secondRound || '--'}
-            </div>
-        `).join('');
-        document.getElementById('recentResults').innerHTML = recentHtml || '<p>No results yet. Add your first result!</p>';
-        
-    } catch (error) {
-        console.error('Error loading dashboard:', error);
-    }
-}
+        async function loadDashboardData() {
+            try {
+                const resultsRes = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const resultsData = await resultsRes.json();
+                const results = resultsData.data || [];
+                allResults = results;
+                document.getElementById('totalResults').innerText = results.length;
+                
+                const dreamsRes = await fetch(`${API_BASE_URL}/api/dreams`);
+                const dreamsData = await dreamsRes.json();
+                const dreams = dreamsData.data || dreamsData || [];
+                document.getElementById('totalDreams').innerText = dreams.length;
+                
+                const todayRes = await fetch(`${API_BASE_URL}/api/today-result`);
+                const todayData = await todayRes.json();
+                if (todayData && todayData.data) {
+                    document.getElementById('todayResult').innerHTML = `${todayData.data.firstRound}/${todayData.data.secondRound}`;
+                } else {
+                    document.getElementById('todayResult').innerHTML = '--/--';
+                }
+                
+                document.getElementById('winRate').innerHTML = 'Live';
+                
+                const sortedResults = [...results].sort((a, b) => {
+                    const dateA = parseDateToTimestamp(a.date);
+                    const dateB = parseDateToTimestamp(b.date);
+                    return dateB - dateA;
+                });
+                
+                const recentHtml = sortedResults.slice(0, 10).map(r => `
+                    <div class="alert alert-secondary">
+                        <strong>${r.date}</strong>: ${r.data?.firstRound || '--'} | ${r.data?.secondRound || '--'}
+                    </div>
+                `).join('');
+                document.getElementById('recentResults').innerHTML = recentHtml || '<p>No results yet. Add your first result!</p>';
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
         
         async function loadDreamsList() {
             try {
@@ -1546,84 +2017,64 @@ function downloadResultExcelTemplate() {
         }
         
         async function loadManageData() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
-            headers: { 'Authorization': `Bearer ${adminToken}` }
-        });
-        const data = await response.json();
-        allResults = data.data || [];
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                const data = await response.json();
+                allResults = data.data || [];
+                
+                const sortedResults = [...allResults].sort((a, b) => {
+                    const dateA = parseDateToTimestamp(a.date);
+                    const dateB = parseDateToTimestamp(b.date);
+                    return dateB - dateA;
+                });
+                
+                renderResultsTable(sortedResults);
+            } catch (error) {
+                console.error('Error loading manage data:', error);
+            }
+        }
         
-        // Sort by date descending before rendering
-        const sortedResults = [...allResults].sort((a, b) => {
-            const dateA = parseDateToTimestamp(a.date);
-            const dateB = parseDateToTimestamp(b.date);
-            return dateB - dateA;
-        });
+        function renderResultsTable(results) {
+            const tableBody = document.getElementById('manageResultsTable');
+            if (!results || results.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No results found</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = results.map(result => `
+                <tr>
+                    <td><strong>${result.date}</strong></td>
+                    <td><span class="badge bg-primary">${result.data?.firstRound || '--'}</span></td>
+                    <td><span class="badge bg-success">${result.data?.secondRound || '--'}</span></td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteResult('${result._id}')">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
         
-        renderResultsTable(sortedResults);
-    } catch (error) {
-        console.error('Error loading manage data:', error);
-    }
-}
-
-        
-        // Helper function to parse date string (DD/MM/YYYY) and convert to timestamp for sorting
-function parseDateToTimestamp(dateStr) {
-    if (!dateStr) return 0;
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-        // Create date object: year, month (0-indexed), day
-        return new Date(parts[2], parseInt(parts[1]) - 1, parts[0]).getTime();
-    }
-    return 0;
-}
-
-function renderResultsTable(results) {
-    const tableBody = document.getElementById('manageResultsTable');
-    if (!results || results.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No results found</td></tr>';
-        return;
-    }
-    
-    // Sort results by date (latest first)
-    const sortedResults = [...results].sort((a, b) => {
-        const dateA = parseDateToTimestamp(a.date);
-        const dateB = parseDateToTimestamp(b.date);
-        return dateB - dateA; // Descending order (newest first)
-    });
-    
-    tableBody.innerHTML = sortedResults.map(result => `
-        <tr>
-            <td><strong>${result.date}</strong></td>
-            <td><span class="badge bg-primary">${result.data?.firstRound || '--'}</span></td>
-            <td><span class="badge bg-success">${result.data?.secondRound || '--'}</span></td>
-            <td>
-                <button class="btn btn-danger btn-sm" onclick="deleteResult('${result._id}')">
-                    <i class="bi bi-trash"></i> Delete
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-       function filterResults() {
-    const searchTerm = document.getElementById('searchResults').value.toLowerCase();
-    const filterMonth = document.getElementById('filterMonth').value;
-    
-    let filtered = allResults.filter(result => {
-        const matchesSearch = result.date.toLowerCase().includes(searchTerm);
-        const matchesMonth = !filterMonth || result.date.includes(`/${filterMonth}/`);
-        return matchesSearch && matchesMonth;
-    });
-    
-    // Sort filtered results by date descending
-    filtered = filtered.sort((a, b) => {
-        const dateA = parseDateToTimestamp(a.date);
-        const dateB = parseDateToTimestamp(b.date);
-        return dateB - dateA;
-    });
-    
-    renderResultsTable(filtered);
-}
+        function filterResults() {
+            const searchTerm = document.getElementById('searchResults').value.toLowerCase();
+            const filterMonth = document.getElementById('filterMonth').value;
+            
+            let filtered = allResults.filter(result => {
+                const matchesSearch = result.date.toLowerCase().includes(searchTerm);
+                const matchesMonth = !filterMonth || result.date.includes(`/${filterMonth}/`);
+                return matchesSearch && matchesMonth;
+            });
+            
+            filtered = filtered.sort((a, b) => {
+                const dateA = parseDateToTimestamp(a.date);
+                const dateB = parseDateToTimestamp(b.date);
+                return dateB - dateA;
+            });
+            
+            renderResultsTable(filtered);
+        }
         
         async function loadAnalytics() {
             try {
@@ -1677,71 +2128,6 @@ function renderResultsTable(results) {
                 
             } catch (error) {
                 console.error('Error loading analytics:', error);
-            }
-        }
-        
-        async function updateResults() {
-            const firstRound = document.getElementById('firstRound').value;
-            const secondRound = document.getElementById('secondRound').value;
-            
-            if (!firstRound || !secondRound) {
-                showMessage('resultMsg', 'Please fill both rounds', 'error');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ firstRound, secondRound })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('resultMsg', '✅ Results updated successfully!', 'success');
-                    document.getElementById('firstRound').value = '';
-                    document.getElementById('secondRound').value = '';
-                    loadDashboardData();
-                    loadManageData();
-                } else {
-                    showMessage('resultMsg', data.error || 'Error updating results', 'error');
-                }
-            } catch (error) {
-                showMessage('resultMsg', 'Error connecting to server', 'error');
-            }
-        }
-        
-        async function updateCommon() {
-            const direct = document.getElementById('direct').value.split(',').map(s => s.trim());
-            const house = document.getElementById('house').value.split(',').map(s => s.trim());
-            const ending = document.getElementById('ending').value.split(',').map(s => s.trim());
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ direct, house, ending })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('commonMsg', '✅ Common numbers updated successfully!', 'success');
-                    document.getElementById('direct').value = '';
-                    document.getElementById('house').value = '';
-                    document.getElementById('ending').value = '';
-                } else {
-                    showMessage('commonMsg', data.error || 'Error updating common numbers', 'error');
-                }
-            } catch (error) {
-                showMessage('commonMsg', 'Error connecting to server', 'error');
             }
         }
         
@@ -1923,6 +2309,8 @@ function renderResultsTable(results) {
             loadDashboardData();
             loadDreamsList();
             loadManageData();
+            loadTodayResultForDisplay();
+            loadCommonNumbersForDisplay();
             showMessage('commonMsg', '🔄 Data refreshed successfully!', 'success');
         }
         
