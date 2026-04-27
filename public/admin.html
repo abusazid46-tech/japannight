@@ -388,114 +388,91 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Common Numbers Section - UPDATED with separate updates -->
-                <div id="commonSection" class="admin-section" style="display:none">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0"><i class="bi bi-hash"></i> Update Direct Numbers</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateDirect"></strong>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Direct Numbers (comma separated)</label>
-                                        <input type="text" id="directOnly" class="form-control" 
-                                               placeholder="e.g., 68,39,81">
-                                        <small class="text-muted">Current Direct: <span id="currentDirect" class="fw-bold">--</span></small>
-                                    </div>
-                                    <button onclick="updateDirectOnly()" class="btn btn-primary w-100">
-                                        <i class="bi bi-pencil"></i> Update Direct Numbers
-                                    </button>
-                                    <div id="directMsg" class="mt-3"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header bg-danger text-white">
-                                    <h5 class="mb-0"><i class="bi bi-building"></i> Update House Numbers</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateHouse"></strong>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">House Numbers (comma separated)</label>
-                                        <input type="text" id="houseOnly" class="form-control" 
-                                               placeholder="e.g., 4,5">
-                                        <small class="text-muted">Current House: <span id="currentHouse" class="fw-bold">--</span></small>
-                                    </div>
-                                    <button onclick="updateHouseOnly()" class="btn btn-danger w-100">
-                                        <i class="bi bi-pencil"></i> Update House Numbers
-                                    </button>
-                                    <div id="houseMsg" class="mt-3"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header bg-success text-white">
-                                    <h5 class="mb-0"><i class="bi bi-arrow-right"></i> Update Ending Numbers</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateEnding"></strong>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Ending Numbers (comma separated)</label>
-                                        <input type="text" id="endingOnly" class="form-control" 
-                                               placeholder="e.g., 7,2">
-                                        <small class="text-muted">Current Ending: <span id="currentEnding" class="fw-bold">--</span></small>
-                                    </div>
-                                    <button onclick="updateEndingOnly()" class="btn btn-success w-100">
-                                        <i class="bi bi-pencil"></i> Update Ending Numbers
-                                    </button>
-                                    <div id="endingMsg" class="mt-3"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="separator">
-                        <span>OR</span>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="card-header bg-dark text-white">
-                            <h5 class="mb-0"><i class="bi bi-save"></i> Update All Common Numbers Together</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label class="form-label">Direct Numbers</label>
-                                    <input type="text" id="directAll" class="form-control" placeholder="68,39,81">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">House Numbers</label>
-                                    <input type="text" id="houseAll" class="form-control" placeholder="4,5">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Ending Numbers</label>
-                                    <input type="text" id="endingAll" class="form-control" placeholder="7,2">
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <button onclick="updateAllCommon()" class="btn btn-dark w-100">
-                                    <i class="bi bi-save"></i> Update All Common Numbers
-                                </button>
-                            </div>
-                            <div id="allCommonMsg" class="mt-3"></div>
-                        </div>
-                    </div>
+<!-- Common Numbers Section - UPDATED with separate F/R and S/R rows -->
+<div id="commonSection" class="admin-section" style="display:none">
+    <div class="row">
+        <!-- FIRST ROW - First Round (F/R) Common Numbers -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-trophy"></i> First Round (F/R) Common Numbers</h5>
                 </div>
-
-                <!-- Manage Dreams Section -->
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateFRCommon"></strong>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Direct Numbers (comma separated)</label>
+                        <input type="text" id="frDirect" class="form-control" 
+                               placeholder="e.g., 68,39,81">
+                        <small class="text-muted">Current Direct: <span id="currentFRDirect" class="fw-bold text-primary">--</span></small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">House Numbers (comma separated)</label>
+                        <input type="text" id="frHouse" class="form-control" 
+                               placeholder="e.g., 4,5">
+                        <small class="text-muted">Current House: <span id="currentFRHouse" class="fw-bold text-primary">--</span></small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Ending Numbers (comma separated)</label>
+                        <input type="text" id="frEnding" class="form-control" 
+                               placeholder="e.g., 7,2">
+                        <small class="text-muted">Current Ending: <span id="currentFREnding" class="fw-bold text-primary">--</span></small>
+                    </div>
+                    
+                    <button onclick="updateFRCommon()" class="btn btn-primary w-100">
+                        <i class="bi bi-save"></i> Update First Round Common Numbers
+                    </button>
+                    <div id="frCommonMsg" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SECOND ROW - Second Round (S/R) Common Numbers -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-trophy"></i> Second Round (S/R) Common Numbers</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-calendar"></i> Today's Date: <strong id="todayDateSRCommon"></strong>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Direct Numbers (comma separated)</label>
+                        <input type="text" id="srDirect" class="form-control" 
+                               placeholder="e.g., 22,34">
+                        <small class="text-muted">Current Direct: <span id="currentSRDirect" class="fw-bold text-success">--</span></small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">House Numbers (comma separated)</label>
+                        <input type="text" id="srHouse" class="form-control" 
+                               placeholder="e.g., 5">
+                        <small class="text-muted">Current House: <span id="currentSRHouse" class="fw-bold text-success">--</span></small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Ending Numbers (comma separated)</label>
+                        <input type="text" id="srEnding" class="form-control" 
+                               placeholder="e.g., 3">
+                        <small class="text-muted">Current Ending: <span id="currentSREnding" class="fw-bold text-success">--</span></small>
+                    </div>
+                    
+                    <button onclick="updateSRCommon()" class="btn btn-success w-100">
+                        <i class="bi bi-save"></i> Update Second Round Common Numbers
+                    </button>
+                    <div id="srCommonMsg" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                                <!-- Manage Dreams Section -->
                 <div id="dreamsSection" class="admin-section" style="display:none">
                     <div class="row">
                         <div class="col-md-4">
@@ -945,7 +922,8 @@
         let pendingDreamImports = [];
         let pendingResultImports = [];
         let todayResultData = null;
-        
+        let frCommonData = { direct: [], house: [], ending: [] };
+        let srCommonData = { direct: [], house: [], ending: [] };
         // Initialize dates
         const todayStr = new Date().toLocaleDateString('en-GB');
         document.getElementById('todayDateFR').innerText = todayStr;
@@ -953,7 +931,8 @@
         document.getElementById('todayDateDirect').innerText = todayStr;
         document.getElementById('todayDateHouse').innerText = todayStr;
         document.getElementById('todayDateEnding').innerText = todayStr;
-        
+        document.getElementById('todayDateFRCommon').innerText = new Date().toLocaleDateString('en-GB');
+        document.getElementById('todayDateSRCommon').innerText = new Date().toLocaleDateString('en-GB');
         // Function to load today's result for display
        async function loadTodayResultForDisplay() {
     try {
@@ -979,31 +958,149 @@
         document.getElementById('currentSR').innerText = '--';
     }
 }        
-        // Function to load common numbers for display
-        async function loadCommonNumbersForDisplay() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/common-numbers`);
-                const data = await response.json();
-                if (data && data.data) {
-                    document.getElementById('currentDirect').innerText = data.data.direct?.join(', ') || '--';
-                    document.getElementById('currentHouse').innerText = data.data.house?.join(', ') || '--';
-                    document.getElementById('currentEnding').innerText = data.data.ending?.join(', ') || '--';
-                    
-                    // Populate the "all" fields
-                    document.getElementById('directAll').value = data.data.direct?.join(', ') || '';
-                    document.getElementById('houseAll').value = data.data.house?.join(', ') || '';
-                    document.getElementById('endingAll').value = data.data.ending?.join(', ') || '';
-                    
-                    // Populate individual fields
-                    document.getElementById('directOnly').value = data.data.direct?.join(', ') || '';
-                    document.getElementById('houseOnly').value = data.data.house?.join(', ') || '';
-                    document.getElementById('endingOnly').value = data.data.ending?.join(', ') || '';
-                }
-            } catch (error) {
-                console.error('Error loading common numbers:', error);
-            }
-        }
+        // Load Common Numbers for both F/R and S/R
+async function loadCommonNumbersForDisplay() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/common-numbers`);
+        const data = await response.json();
         
+        if (data && data.data) {
+            // Check if data has separate F/R and S/R structure
+            if (data.data.fr && data.data.sr) {
+                // New structure with separate F/R and S/R
+                frCommonData = data.data.fr;
+                srCommonData = data.data.sr;
+            } else {
+                // Old structure - assume it's for F/R, leave S/R empty
+                frCommonData = {
+                    direct: data.data.direct || [],
+                    house: data.data.house || [],
+                    ending: data.data.ending || []
+                };
+                srCommonData = { direct: [], house: [], ending: [] };
+            }
+            
+            // Display F/R Common Numbers
+            document.getElementById('currentFRDirect').innerText = frCommonData.direct?.join(', ') || '--';
+            document.getElementById('currentFRHouse').innerText = frCommonData.house?.join(', ') || '--';
+            document.getElementById('currentFREnding').innerText = frCommonData.ending?.join(', ') || '--';
+            
+            // Display S/R Common Numbers
+            document.getElementById('currentSRDirect').innerText = srCommonData.direct?.join(', ') || '--';
+            document.getElementById('currentSRHouse').innerText = srCommonData.house?.join(', ') || '--';
+            document.getElementById('currentSREnding').innerText = srCommonData.ending?.join(', ') || '--';
+            
+            // Populate input fields
+            document.getElementById('frDirect').value = frCommonData.direct?.join(', ') || '';
+            document.getElementById('frHouse').value = frCommonData.house?.join(', ') || '';
+            document.getElementById('frEnding').value = frCommonData.ending?.join(', ') || '';
+            
+            document.getElementById('srDirect').value = srCommonData.direct?.join(', ') || '';
+            document.getElementById('srHouse').value = srCommonData.house?.join(', ') || '';
+            document.getElementById('srEnding').value = srCommonData.ending?.join(', ') || '';
+        }
+    } catch (error) {
+        console.error('Error loading common numbers:', error);
+    }
+}
+
+// Update First Round Common Numbers
+async function updateFRCommon() {
+    const direct = document.getElementById('frDirect').value;
+    const house = document.getElementById('frHouse').value;
+    const ending = document.getElementById('frEnding').value;
+    
+    const directArray = direct.trim() ? direct.split(',').map(s => s.trim()) : [];
+    const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
+    const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
+    
+    // Get current S/R common numbers
+    const srDirect = document.getElementById('srDirect').value;
+    const srHouse = document.getElementById('srHouse').value;
+    const srEnding = document.getElementById('srEnding').value;
+    
+    const srDirectArray = srDirect.trim() ? srDirect.split(',').map(s => s.trim()) : [];
+    const srHouseArray = srHouse.trim() ? srHouse.split(',').map(s => s.trim()) : [];
+    const srEndingArray = srEnding.trim() ? srEnding.split(',').map(s => s.trim()) : [];
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ 
+                fr: { direct: directArray, house: houseArray, ending: endingArray },
+                sr: { direct: srDirectArray, house: srHouseArray, ending: srEndingArray }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('frCommonMsg', '✅ First Round Common Numbers updated successfully!', 'success');
+            // Update displayed values
+            document.getElementById('currentFRDirect').innerText = directArray.join(', ') || '--';
+            document.getElementById('currentFRHouse').innerText = houseArray.join(', ') || '--';
+            document.getElementById('currentFREnding').innerText = endingArray.join(', ') || '--';
+        } else {
+            showMessage('frCommonMsg', data.error || 'Error updating First Round Common Numbers', 'error');
+        }
+    } catch (error) {
+        console.error('Update error:', error);
+        showMessage('frCommonMsg', 'Error connecting to server: ' + error.message, 'error');
+    }
+}
+
+// Update Second Round Common Numbers
+async function updateSRCommon() {
+    const direct = document.getElementById('srDirect').value;
+    const house = document.getElementById('srHouse').value;
+    const ending = document.getElementById('srEnding').value;
+    
+    const directArray = direct.trim() ? direct.split(',').map(s => s.trim()) : [];
+    const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
+    const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
+    
+    // Get current F/R common numbers
+    const frDirect = document.getElementById('frDirect').value;
+    const frHouse = document.getElementById('frHouse').value;
+    const frEnding = document.getElementById('frEnding').value;
+    
+    const frDirectArray = frDirect.trim() ? frDirect.split(',').map(s => s.trim()) : [];
+    const frHouseArray = frHouse.trim() ? frHouse.split(',').map(s => s.trim()) : [];
+    const frEndingArray = frEnding.trim() ? frEnding.split(',').map(s => s.trim()) : [];
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ 
+                fr: { direct: frDirectArray, house: frHouseArray, ending: frEndingArray },
+                sr: { direct: directArray, house: houseArray, ending: endingArray }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('srCommonMsg', '✅ Second Round Common Numbers updated successfully!', 'success');
+            // Update displayed values
+            document.getElementById('currentSRDirect').innerText = directArray.join(', ') || '--';
+            document.getElementById('currentSRHouse').innerText = houseArray.join(', ') || '--';
+            document.getElementById('currentSREnding').innerText = endingArray.join(', ') || '--';
+        } else {
+            showMessage('srCommonMsg', data.error || 'Error updating Second Round Common Numbers', 'error');
+        }
+    } catch (error) {
+        console.error('Update error:', error);
+        showMessage('srCommonMsg', 'Error connecting to server: ' + error.message, 'error');
+    }
+}
         // Drag & Drop setup
         const dreamDropZone = document.getElementById('dreamDropZone');
         if (dreamDropZone) {
