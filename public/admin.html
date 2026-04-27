@@ -1066,7 +1066,7 @@
             }, 5000);
         }
         
-       // ============ RESULT IMPORT FUNCTIONS (UPDATED) ============
+      // ============ RESULT IMPORT FUNCTIONS (Handles DD-MM-YYYY & DD/MM/YYYY) ============
 
 function handleResultFileUpload(file) {
     if (!file) return;
@@ -1082,23 +1082,81 @@ function handleResultFileUpload(file) {
     }
 }
 
+// Convert any date format to DD/MM/YYYY
+function convertToStandardDateFormat(dateStr) {
+    if (!dateStr) return null;
+    
+    // Remove any extra spaces
+    dateStr = dateStr.toString().trim();
+    
+    // Check if it's in DD-MM-YYYY format (with hyphens)
+    if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            const day = parts[0].padStart(2, '0');
+            const month = parts[1].padStart(2, '0');
+            const year = parts[2];
+            // Validate year is 4 digits
+            if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                return `${day}/${month}/${year}`;
+            }
+        }
+    }
+    
+    // Check if it's in DD/MM/YYYY format (with slashes)
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            const day = parts[0].padStart(2, '0');
+            const month = parts[1].padStart(2, '0');
+            const year = parts[2];
+            if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                return `${day}/${month}/${year}`;
+            }
+        }
+    }
+    
+    // Try to parse as Date object (fallback)
+    const parsedDate = new Date(dateStr);
+    if (!isNaN(parsedDate.getTime())) {
+        const day = parsedDate.getDate().toString().padStart(2, '0');
+        const month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
+        const year = parsedDate.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+    
+    return null;
+}
+
 function parseResultCSV(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
         const text = e.target.result;
         const lines = text.split('\n');
         const results = [];
-        let errors = [];
+        const errors = [];
+        let skippedHeader = false;
         
-        for (let i = 1; i < lines.length; i++) {
+        for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line) continue;
             
+            // Skip header row if it contains column names
+            if (!skippedHeader && (line.toLowerCase().includes('date') || 
+                line.toLowerCase().includes('first') || 
+                line.toLowerCase().includes('second'))) {
+                skippedHeader = true;
+                continue;
+            }
+            
             const parts = line.split(',');
             if (parts.length >= 3) {
-                const date = parts[0]?.trim();
+                let rawDate = parts[0]?.trim();
                 let firstRound = parts[1]?.trim();
                 let secondRound = parts[2]?.trim();
+                
+                // Convert date format (DD-MM-YYYY to DD/MM/YYYY)
+                const date = convertToStandardDateFormat(rawDate);
                 
                 // Convert single digit to double digit (e.g., "8" -> "08")
                 if (firstRound && !isNaN(firstRound)) {
@@ -1115,14 +1173,22 @@ function parseResultCSV(file) {
                 if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
                     results.push({ date, firstRound, secondRound });
                 } else {
-                    errors.push(`Line ${i + 1}: Invalid format - Date: ${date}, FR: ${firstRound}, SR: ${secondRound}`);
+                    errors.push(`Line ${i + 1}: Invalid - Date: ${rawDate} → ${date}, FR: ${firstRound}, SR: ${secondRound}`);
                 }
             }
         }
         
         if (errors.length > 0) {
             console.warn('Import errors:', errors);
-            alert(`${errors.length} rows had issues:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n... and ${errors.length - 5} more` : ''}`);
+            if (errors.length <= 5) {
+                alert(`⚠️ ${errors.length} row(s) had issues:\n\n${errors.join('\n')}`);
+            } else {
+                alert(`⚠️ ${errors.length} rows had issues. Check console for details.\nFirst 5 errors:\n${errors.slice(0, 5).join('\n')}`);
+            }
+        }
+        
+        if (results.length === 0) {
+            alert('No valid results found. Please check your file format.\n\nAccepted date formats:\n- DD/MM/YYYY (e.g., 25/04/2026)\n- DD-MM-YYYY (e.g., 24-06-2022)\n\nNumbers can be 1 or 2 digits (e.g., 8 or 08)');
         }
         
         showResultImportPreview(results);
@@ -1140,14 +1206,32 @@ function parseResultExcel(file) {
         
         const results = [];
         const errors = [];
+        let skippedHeader = false;
         
-        for (let i = 1; i < rows.length; i++) {
+        for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
-            if (!row || !row[0] || !row[1] || !row[2]) continue;
+            if (!row || row.length < 3) continue;
             
-            let date = row[0]?.toString().trim();
+            // Skip header row if it contains column names
+            if (!skippedHeader && row[0] && typeof row[0] === 'string' && 
+                (row[0].toLowerCase().includes('date') || row[0].toLowerCase().includes('दिनांक'))) {
+                skippedHeader = true;
+                continue;
+            }
+            
+            let rawDate = row[0]?.toString().trim();
             let firstRound = row[1]?.toString().trim();
             let secondRound = row[2]?.toString().trim();
+            
+            // Handle Excel date numbers (e.g., 44700)
+            if (rawDate && !isNaN(rawDate) && rawDate.length < 6) {
+                const excelDate = parseInt(rawDate);
+                const dateObj = new Date((excelDate - 25569) * 86400000);
+                rawDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+            }
+            
+            // Convert date format
+            const date = convertToStandardDateFormat(rawDate);
             
             // Convert single digit to double digit
             if (firstRound && !isNaN(firstRound)) {
@@ -1162,14 +1246,22 @@ function parseResultExcel(file) {
             
             if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
                 results.push({ date, firstRound, secondRound });
-            } else {
-                errors.push(`Row ${i + 1}: Invalid format - Date: ${date}, FR: ${firstRound}, SR: ${secondRound}`);
+            } else if (rawDate && rawDate !== 'Date' && rawDate !== 'date') {
+                errors.push(`Row ${i + 1}: Invalid - Date: ${rawDate} → ${date}, FR: ${firstRound}, SR: ${secondRound}`);
             }
         }
         
         if (errors.length > 0) {
             console.warn('Import errors:', errors);
-            alert(`${errors.length} rows had issues:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n... and ${errors.length - 5} more` : ''}`);
+            if (errors.length <= 5) {
+                alert(`⚠️ ${errors.length} row(s) had issues:\n\n${errors.join('\n')}`);
+            } else {
+                alert(`⚠️ ${errors.length} rows had issues. First 5 errors:\n${errors.slice(0, 5).join('\n')}`);
+            }
+        }
+        
+        if (results.length === 0) {
+            alert('No valid results found. Please check your file format.\n\nAccepted date formats:\n- DD/MM/YYYY (e.g., 25/04/2026)\n- DD-MM-YYYY (e.g., 24-06-2022)\n\nNumbers can be 1 or 2 digits (e.g., 8 or 08)');
         }
         
         showResultImportPreview(results);
@@ -1179,7 +1271,7 @@ function parseResultExcel(file) {
 
 function showResultImportPreview(results) {
     if (results.length === 0) {
-        alert('No valid results found in file. Please check the format.\n\nAccepted formats:\n- Date: DD/MM/YYYY (e.g., 25/04/2026)\n- Numbers: 1 or 2 digits (e.g., 8 or 08)');
+        alert('No valid results found in file. Please check the format.\n\nAccepted formats:\n- Date: DD/MM/YYYY or DD-MM-YYYY (e.g., 25/04/2026 or 24-06-2022)\n- Numbers: 1 or 2 digits (e.g., 8 or 08)');
         return;
     }
     
@@ -1190,7 +1282,7 @@ function showResultImportPreview(results) {
     const previewBody = document.getElementById('resultImportPreviewBody');
     previewBody.innerHTML = results.slice(0, 10).map(r => `
         <tr>
-            <td>${r.date}</td>
+            <td><strong>${r.date}</strong> (converted)</strong></td>
             <td><span class="badge bg-primary">${r.firstRound}</span></td>
             <td><span class="badge bg-success">${r.secondRound}</span></td>
         </tr>
@@ -1228,24 +1320,20 @@ async function confirmResultImport() {
             // Check if result already exists
             const existing = allResults.find(r => r.date === result.date);
             
-            // Use the update-result endpoint (it uses today's date by default)
-            // For custom dates, we need to use a different approach
-            // Let's create a dedicated endpoint for bulk import with custom dates
-            
-            const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+            // Use the update-result endpoint with custom date
+            // You'll need to add a custom endpoint for this
+            const response = await fetch(`${API_BASE_URL}/api/admin/update-result-by-date`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${adminToken}`
                 },
                 body: JSON.stringify({ 
+                    date: result.date,
                     firstRound: result.firstRound, 
                     secondRound: result.secondRound 
                 })
             });
-            
-            // Note: Currently the update-result endpoint uses today's date
-            // For custom date import, you'll need to add a new endpoint in server.js
             
             if (response.ok) {
                 successCount++;
@@ -1255,7 +1343,11 @@ async function confirmResultImport() {
             }
         } catch (error) {
             failCount++;
+            console.error(`Error importing ${result.date}:`, error);
         }
+        
+        // Small delay to avoid overwhelming the server
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     document.getElementById('resultImportProgress').style.display = 'none';
@@ -1264,15 +1356,11 @@ async function confirmResultImport() {
         <div class="alert alert-success">
             <h5>✅ Result Import Complete!</h5>
             <ul>
-                <li>Successfully processed: <strong>${successCount}</strong> results</li>
+                <li>Successfully imported: <strong>${successCount}</strong> results</li>
                 <li>Updated existing: <strong>${updateCount}</strong></li>
                 <li>Failed: <strong>${failCount}</strong></li>
             </ul>
-            <hr>
-            <small class="text-muted">
-                <i class="bi bi-info-circle"></i> 
-                Note: For bulk import with custom dates, please add the backend endpoint below.
-            </small>
+            ${failCount > 0 ? '<hr><small class="text-danger">Some rows failed. Check date format (DD/MM/YYYY) and numbers (00-99).</small>' : ''}
         </div>
     `;
     document.getElementById('resultImportResult').innerHTML = resultHtml;
@@ -1287,15 +1375,15 @@ async function confirmResultImport() {
     }, 5000);
 }
 
-// Updated template download with examples including single digits
+// Updated template downloads with examples in both formats
 function downloadResultTemplate() {
     const csvContent = `Date,First Round,Second Round
 25/04/2026,08,51
-24/04/2026,76,47
+24-06-2022,76,47
 23/04/2026,6,94
-22/04/2026,91,19
+22-05-2022,91,19
 21/04/2026,30,45
-20/04/2026,78,84
+20-03-2022,78,84
 19/04/2026,60,5`;
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -1310,18 +1398,18 @@ function downloadResultExcelTemplate() {
     const data = [
         ['Date', 'First Round', 'Second Round'],
         ['25/04/2026', '08', '51'],
-        ['24/04/2026', '76', '47'],
+        ['24-06-2022', '76', '47'],  // DD-MM-YYYY format example
         ['23/04/2026', '6', '94'],
-        ['22/04/2026', '91', '19'],
+        ['22-05-2022', '91', '19'],  // DD-MM-YYYY format example
         ['21/04/2026', '30', '45'],
-        ['20/04/2026', '78', '84'],
+        ['20-03-2022', '78', '84'],  // DD-MM-YYYY format example
         ['19/04/2026', '60', '5']
     ];
     const ws = XLSX.utils.aoa_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Results Template');
     XLSX.writeFile(wb, 'results_template.xlsx');
-}        
+}
         // ============ REST OF THE FUNCTIONS (same as before) ============
         
         async function login() {
