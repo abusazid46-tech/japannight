@@ -955,24 +955,30 @@
         document.getElementById('todayDateEnding').innerText = todayStr;
         
         // Function to load today's result for display
-        async function loadTodayResultForDisplay() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/today-result`);
-                const data = await response.json();
-                if (data && data.data) {
-                    todayResultData = data.data;
-                    document.getElementById('currentFR').innerText = data.data.firstRound || '--';
-                    document.getElementById('currentSR').innerText = data.data.secondRound || '--';
-                    
-                    // Also populate the both rounds fields
-                    document.getElementById('firstRoundBoth').value = data.data.firstRound || '';
-                    document.getElementById('secondRoundBoth').value = data.data.secondRound || '';
-                }
-            } catch (error) {
-                console.error('Error loading today result:', error);
-            }
+       async function loadTodayResultForDisplay() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/today-result`);
+        const data = await response.json();
+        if (data && data.data) {
+            todayResultData = data.data;
+            const fr = data.data.firstRound || '--';
+            const sr = data.data.secondRound || '--';
+            document.getElementById('currentFR').innerText = fr;
+            document.getElementById('currentSR').innerText = sr;
+            
+            // Populate the both rounds fields
+            if (fr !== '--') document.getElementById('firstRoundBoth').value = fr;
+            if (sr !== '--') document.getElementById('secondRoundBoth').value = sr;
+        } else {
+            document.getElementById('currentFR').innerText = '--';
+            document.getElementById('currentSR').innerText = '--';
         }
-        
+    } catch (error) {
+        console.error('Error loading today result:', error);
+        document.getElementById('currentFR').innerText = '--';
+        document.getElementById('currentSR').innerText = '--';
+    }
+}        
         // Function to load common numbers for display
         async function loadCommonNumbersForDisplay() {
             try {
