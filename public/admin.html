@@ -1451,42 +1451,49 @@ function downloadResultExcelTemplate() {
             document.getElementById('adminPassword').value = '';
         }
         
-        async function loadDashboardData() {
-            try {
-                const resultsRes = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
-                });
-                const resultsData = await resultsRes.json();
-                const results = resultsData.data || [];
-                allResults = results;
-                document.getElementById('totalResults').innerText = results.length;
-                
-                const dreamsRes = await fetch(`${API_BASE_URL}/api/dreams`);
-                const dreamsData = await dreamsRes.json();
-                const dreams = dreamsData.data || dreamsData || [];
-                document.getElementById('totalDreams').innerText = dreams.length;
-                
-                const todayRes = await fetch(`${API_BASE_URL}/api/today-result`);
-                const todayData = await todayRes.json();
-                if (todayData.data) {
-                    document.getElementById('todayResult').innerHTML = `${todayData.data.firstRound}/${todayData.data.secondRound}`;
-                } else {
-                    document.getElementById('todayResult').innerHTML = '--/--';
-                }
-                
-                document.getElementById('winRate').innerHTML = 'Live';
-                
-                const recentHtml = results.slice(0, 10).map(r => `
-                    <div class="alert alert-secondary">
-                        <strong>${r.date}</strong>: ${r.data?.firstRound || '--'} | ${r.data?.secondRound || '--'}
-                    </div>
-                `).join('');
-                document.getElementById('recentResults').innerHTML = recentHtml || '<p>No results yet. Add your first result!</p>';
-                
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-            }
+       async function loadDashboardData() {
+    try {
+        const resultsRes = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const resultsData = await resultsRes.json();
+        const results = resultsData.data || [];
+        allResults = results;
+        document.getElementById('totalResults').innerText = results.length;
+        
+        const dreamsRes = await fetch(`${API_BASE_URL}/api/dreams`);
+        const dreamsData = await dreamsRes.json();
+        const dreams = dreamsData.data || dreamsData || [];
+        document.getElementById('totalDreams').innerText = dreams.length;
+        
+        const todayRes = await fetch(`${API_BASE_URL}/api/today-result`);
+        const todayData = await todayRes.json();
+        if (todayData.data) {
+            document.getElementById('todayResult').innerHTML = `${todayData.data.firstRound}/${todayData.data.secondRound}`;
+        } else {
+            document.getElementById('todayResult').innerHTML = '--/--';
         }
+        
+        document.getElementById('winRate').innerHTML = 'Live';
+        
+        // Sort results by date descending for recent activity
+        const sortedResults = [...results].sort((a, b) => {
+            const dateA = parseDateToTimestamp(a.date);
+            const dateB = parseDateToTimestamp(b.date);
+            return dateB - dateA;
+        });
+        
+        const recentHtml = sortedResults.slice(0, 10).map(r => `
+            <div class="alert alert-secondary">
+                <strong>${r.date}</strong>: ${r.data?.firstRound || '--'} | ${r.data?.secondRound || '--'}
+            </div>
+        `).join('');
+        document.getElementById('recentResults').innerHTML = recentHtml || '<p>No results yet. Add your first result!</p>';
+        
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+    }
+}
         
         async function loadDreamsList() {
             try {
@@ -1539,50 +1546,84 @@ function downloadResultExcelTemplate() {
         }
         
         async function loadManageData() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
-                });
-                const data = await response.json();
-                allResults = data.data || [];
-                renderResultsTable(allResults);
-            } catch (error) {
-                console.error('Error loading manage data:', error);
-            }
-        }
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        const data = await response.json();
+        allResults = data.data || [];
         
-        function renderResultsTable(results) {
-            const tableBody = document.getElementById('manageResultsTable');
-            if (!results || results.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No results found</td></tr>';
-                return;
-            }
-            
-            tableBody.innerHTML = results.map(result => `
-                <tr>
-                    <td><strong>${result.date}</strong></td>
-                    <td><span class="badge bg-primary">${result.data?.firstRound || '--'}</span></td>
-                    <td><span class="badge bg-success">${result.data?.secondRound || '--'}</span></td>
-                    <td>
-                        <button class="btn btn-danger btn-sm" onclick="deleteResult('${result._id}')">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+        // Sort by date descending before rendering
+        const sortedResults = [...allResults].sort((a, b) => {
+            const dateA = parseDateToTimestamp(a.date);
+            const dateB = parseDateToTimestamp(b.date);
+            return dateB - dateA;
+        });
         
-        function filterResults() {
-            const searchTerm = document.getElementById('searchResults').value.toLowerCase();
-            const filterMonth = document.getElementById('filterMonth').value;
-            
-            const filtered = allResults.filter(result => {
-                const matchesSearch = result.date.toLowerCase().includes(searchTerm);
-                const matchesMonth = !filterMonth || result.date.includes(`/${filterMonth}/`);
-                return matchesSearch && matchesMonth;
-            });
-            renderResultsTable(filtered);
-        }
+        renderResultsTable(sortedResults);
+    } catch (error) {
+        console.error('Error loading manage data:', error);
+    }
+}
+
+        
+        // Helper function to parse date string (DD/MM/YYYY) and convert to timestamp for sorting
+function parseDateToTimestamp(dateStr) {
+    if (!dateStr) return 0;
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+        // Create date object: year, month (0-indexed), day
+        return new Date(parts[2], parseInt(parts[1]) - 1, parts[0]).getTime();
+    }
+    return 0;
+}
+
+function renderResultsTable(results) {
+    const tableBody = document.getElementById('manageResultsTable');
+    if (!results || results.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No results found</td></tr>';
+        return;
+    }
+    
+    // Sort results by date (latest first)
+    const sortedResults = [...results].sort((a, b) => {
+        const dateA = parseDateToTimestamp(a.date);
+        const dateB = parseDateToTimestamp(b.date);
+        return dateB - dateA; // Descending order (newest first)
+    });
+    
+    tableBody.innerHTML = sortedResults.map(result => `
+        <tr>
+            <td><strong>${result.date}</strong></td>
+            <td><span class="badge bg-primary">${result.data?.firstRound || '--'}</span></td>
+            <td><span class="badge bg-success">${result.data?.secondRound || '--'}</span></td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteResult('${result._id}')">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+       function filterResults() {
+    const searchTerm = document.getElementById('searchResults').value.toLowerCase();
+    const filterMonth = document.getElementById('filterMonth').value;
+    
+    let filtered = allResults.filter(result => {
+        const matchesSearch = result.date.toLowerCase().includes(searchTerm);
+        const matchesMonth = !filterMonth || result.date.includes(`/${filterMonth}/`);
+        return matchesSearch && matchesMonth;
+    });
+    
+    // Sort filtered results by date descending
+    filtered = filtered.sort((a, b) => {
+        const dateA = parseDateToTimestamp(a.date);
+        const dateB = parseDateToTimestamp(b.date);
+        return dateB - dateA;
+    });
+    
+    renderResultsTable(filtered);
+}
         
         async function loadAnalytics() {
             try {
