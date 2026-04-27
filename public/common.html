@@ -5,204 +5,268 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Common Numbers - Khanapara Morning Teer Result</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #f5f0eb;
+            font-family: 'Roboto', sans-serif;
             min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
         }
-        .navbar {
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        /* ── HEADER ── */
+        .site-header {
+            background: linear-gradient(90deg, #1a8fa0 0%, #16b0c8 100%);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            transition: transform 0.3s;
+        .site-header .logo-icon {
+            width: 44px; height: 44px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            text-decoration: none;
         }
-        .card:hover {
-            transform: translateY(-5px);
+        .site-header h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.5rem;
+            color: #fff;
+            letter-spacing: 1px;
+            margin: 0;
         }
-        .card-header {
-            border-radius: 15px 15px 0 0 !important;
-            font-weight: bold;
+        .site-header a { text-decoration: none; }
+
+        /* ── PAGE CONTENT ── */
+        .page-content {
+            flex: 1;
+            padding: 28px 16px 30px;
+            max-width: 860px;
+            margin: 0 auto;
+            width: 100%;
         }
-        .display-6 {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #333;
-        }
-        footer {
-            background: #333;
-            color: white;
+
+        /* ── DATE ── */
+        .date-label {
             text-align: center;
-            padding: 20px;
-            margin-top: 50px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
         }
-        .alert {
-            border-radius: 10px;
+
+        /* ── EXCEL TABLE ── */
+        .common-table-wrapper {
+            border: 2px solid #555;
+            border-radius: 3px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .common-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .common-table td, .common-table th {
+            border: 1px solid #aaa;
+            text-align: center;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        /* City row */
+        .city-row td {
+            background: #e8e8e8;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #222;
+            letter-spacing: 2px;
+            height: 34px;
+            border-color: #888;
+        }
+
+        /* Teal header rows (Direct | House | Ending) */
+        .header-row td {
+            background: #16b0c8;
+            color: #fff;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            height: 34px;
+            border-color: #0e8fa0;
+        }
+
+        /* Number rows */
+        .num-row td {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #111;
+            height: 44px;
+            border-color: #aaa;
+            background: #fff;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disclaimer {
+            margin-top: 18px;
+            font-size: 0.85rem;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            background: #5baec8;
+            color: #fff;
+            text-align: center;
+            padding: 14px 16px;
+            font-size: 0.82rem;
+            margin-top: auto;
+        }
+        footer p { margin: 3px 0; }
+        footer a { color: #1a2a6c; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 480px) {
+            .num-row td { font-size: 1.1rem; height: 38px; }
+            .header-row td { font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">🎯 Khanapara Morning Teer Result</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="navbar-nav ms-auto">
-                    <a class="nav-link" href="/">Home</a>
-                    <a class="nav-link" href="/results.html">Results</a>
-                    <a class="nav-link active" href="/common.html">Common Numbers</a>
-                    <a class="nav-link" href="/dreams.html">Dream Numbers</a>
-                    <a class="nav-link" href="/admin.html">Admin</a>
-                </div>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container mt-5">
-        <h1 class="text-center mb-4 text-white">🔢 Common Numbers</h1>
-        <h6 class="text-center text-white mb-4">for <span id="currentDate"></span></h6>
-        
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <div class="card text-center h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">Direct Numbers</h4>
-                    </div>
-                    <div class="card-body">
-                        <div id="directNumbers" class="display-6">--</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-4 mb-4">
-                <div class="card text-center h-100">
-                    <div class="card-header bg-danger text-white">
-                        <h4 class="mb-0">House Numbers</h4>
-                    </div>
-                    <div class="card-body">
-                        <div id="houseNumbers" class="display-6">--</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-4 mb-4">
-                <div class="card text-center h-100">
-                    <div class="card-header bg-success text-white">
-                        <h4 class="mb-0">Ending Numbers</h4>
-                    </div>
-                    <div class="card-body">
-                        <div id="endingNumbers" class="display-6">--</div>
-                    </div>
-                </div>
-            </div>
+    <!-- HEADER -->
+    <header class="site-header">
+        <a class="logo-icon" href="/">🎯</a>
+        <a href="/"><h1>Khanapara Morning Teer</h1></a>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="page-content">
+
+        <div class="date-label" id="currentDate">--/--/----</div>
+
+        <div class="common-table-wrapper">
+            <table class="common-table">
+
+                <!-- City row -->
+                <tr class="city-row">
+                    <td colspan="3">KHANAPARA</td>
+                </tr>
+
+                <!-- F/R header + numbers -->
+                <tr class="header-row">
+                    <td>Direct</td>
+                    <td>House</td>
+                    <td>Ending</td>
+                </tr>
+                <tr class="num-row">
+                    <td id="frDirect">--</td>
+                    <td id="frHouse">--</td>
+                    <td id="frEnding">--</td>
+                </tr>
+
+                <!-- S/R header + numbers -->
+                <tr class="header-row">
+                    <td>Direct</td>
+                    <td>House</td>
+                    <td>Ending</td>
+                </tr>
+                <tr class="num-row">
+                    <td id="srDirect">--</td>
+                    <td id="srHouse">--</td>
+                    <td id="srEnding">--</td>
+                </tr>
+
+            </table>
         </div>
-        
-        <div class="alert alert-warning mt-4">
-            <strong>⚠️ Disclaimer:</strong> These common numbers are purely based on certain calculations done using past results. 
+
+        <p class="disclaimer">
+            Disclaimer : These common numbers are purely based on certain calculations done using past results.
             There is no guarantee of the accuracy of these numbers.
-        </div>
+        </p>
+
     </div>
 
+    <!-- FOOTER -->
     <footer>
-        <p>&copy; 2026 Khanapara Morning Teer Result. All rights reserved.</p>
-        <p>⚠️ For entertainment purposes only. No guarantee of accuracy.</p>
+        <p>All rights Reserved. Khanapara Morning Teer Result.</p>
+        <p><a href="#">Terms</a> | <a href="#">Contact</a> | <a href="#">Privacy Policy</a></p>
     </footer>
 
     <script>
-        // IMPORTANT: Change this to your Render backend URL after deployment
-        // For local testing: http://localhost:3000
-        // For production: https://your-app-name.onrender.com
-        const API_BASE_URL = 'https://teer-website.onrender.com'; // ← CHANGE THIS TO YOUR RENDER URL
-        
-        // Set current date
-        document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-GB');
-        
+        const API_BASE_URL = 'https://teer-website.onrender.com';
+
+        // Date
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        document.getElementById('currentDate').innerText = dd + '/' + mm + '/' + yyyy;
+
+        function parseField(val) {
+            if (!val) return '--';
+            if (Array.isArray(val)) return val.join(', ');
+            return String(val);
+        }
+
         async function loadCommonNumbers() {
             try {
-                console.log('Fetching common numbers from:', `${API_BASE_URL}/api/common-numbers`);
-                
                 const response = await fetch(`${API_BASE_URL}/api/common-numbers`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
+                if (!response.ok) throw new Error('HTTP ' + response.status);
                 const data = await response.json();
-                console.log('API Response:', data);
-                
+
                 if (data && data.data) {
-                    // Handle direct numbers (could be array or string)
-                    let directText = '--';
-                    if (data.data.direct) {
-                        if (Array.isArray(data.data.direct)) {
-                            directText = data.data.direct.join(', ');
-                        } else if (typeof data.data.direct === 'string') {
-                            directText = data.data.direct;
-                        }
+                    const d = data.data;
+
+                    // Support both flat and split FR/SR structures
+                    // Flat: { direct, house, ending }
+                    // Split: { fr: { direct, house, ending }, sr: { direct, house, ending } }
+                    if (d.fr || d.sr) {
+                        document.getElementById('frDirect').innerText  = parseField(d.fr?.direct);
+                        document.getElementById('frHouse').innerText   = parseField(d.fr?.house);
+                        document.getElementById('frEnding').innerText  = parseField(d.fr?.ending);
+                        document.getElementById('srDirect').innerText  = parseField(d.sr?.direct);
+                        document.getElementById('srHouse').innerText   = parseField(d.sr?.house);
+                        document.getElementById('srEnding').innerText  = parseField(d.sr?.ending);
+                    } else {
+                        // Flat — show same in both rows
+                        const direct  = parseField(d.direct);
+                        const house   = parseField(d.house);
+                        const ending  = parseField(d.ending);
+                        document.getElementById('frDirect').innerText  = direct;
+                        document.getElementById('frHouse').innerText   = house;
+                        document.getElementById('frEnding').innerText  = ending;
+                        document.getElementById('srDirect').innerText  = direct;
+                        document.getElementById('srHouse').innerText   = house;
+                        document.getElementById('srEnding').innerText  = ending;
                     }
-                    document.getElementById('directNumbers').innerHTML = directText;
-                    
-                    // Handle house numbers
-                    let houseText = '--';
-                    if (data.data.house) {
-                        if (Array.isArray(data.data.house)) {
-                            houseText = data.data.house.join(', ');
-                        } else if (typeof data.data.house === 'string') {
-                            houseText = data.data.house;
-                        }
-                    }
-                    document.getElementById('houseNumbers').innerHTML = houseText;
-                    
-                    // Handle ending numbers
-                    let endingText = '--';
-                    if (data.data.ending) {
-                        if (Array.isArray(data.data.ending)) {
-                            endingText = data.data.ending.join(', ');
-                        } else if (typeof data.data.ending === 'string') {
-                            endingText = data.data.ending;
-                        }
-                    }
-                    document.getElementById('endingNumbers').innerHTML = endingText;
-                } else if (data && data.data === undefined && data.message) {
-                    // No data available yet
-                    document.getElementById('directNumbers').innerHTML = 'Not generated';
-                    document.getElementById('houseNumbers').innerHTML = 'Not generated';
-                    document.getElementById('endingNumbers').innerHTML = 'Not generated';
-                    console.log('Message:', data.message);
                 } else {
-                    document.getElementById('directNumbers').innerHTML = 'No data';
-                    document.getElementById('houseNumbers').innerHTML = 'No data';
-                    document.getElementById('endingNumbers').innerHTML = 'No data';
+                    ['frDirect','frHouse','frEnding','srDirect','srHouse','srEnding']
+                        .forEach(id => document.getElementById(id).innerText = 'N/A');
                 }
-            } catch (error) {
-                console.error('Error loading common numbers:', error);
-                document.getElementById('directNumbers').innerHTML = '❌ Error';
-                document.getElementById('houseNumbers').innerHTML = '❌ Error';
-                document.getElementById('endingNumbers').innerHTML = '❌ Error';
-                
-                // Show helpful message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'alert alert-danger mt-3';
-                errorDiv.innerHTML = `
-                    <strong>⚠️ Cannot connect to backend!</strong><br>
-                    Make sure:<br>
-                    1. Backend is running at ${API_BASE_URL}<br>
-                    2. You've deployed backend to Render<br>
-                    3. Updated API_BASE_URL in this file
-                `;
-                document.querySelector('.container').appendChild(errorDiv);
+            } catch (e) {
+                ['frDirect','frHouse','frEnding','srDirect','srHouse','srEnding']
+                    .forEach(id => document.getElementById(id).innerHTML = '<small style="font-size:0.7rem;color:#c00">Error</small>');
+                console.error('Error:', e);
             }
         }
-        
-        // Load common numbers when page loads
+
         loadCommonNumbers();
-        
-        // Refresh every 60 seconds
         setInterval(loadCommonNumbers, 60000);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
