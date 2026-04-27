@@ -97,6 +97,18 @@
             border-color: #888;
         }
 
+        /* Round label rows (F/R, S/R) */
+        .round-label-row td {
+            background: #f0f0f0;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            letter-spacing: 1px;
+            height: 28px;
+            border-color: #aaa;
+        }
+
         /* Teal header rows (Direct | House | Ending) */
         .header-row td {
             background: #16b0c8;
@@ -152,7 +164,7 @@
     <!-- HEADER -->
     <header class="site-header">
         <a class="logo-icon" href="/">🎯</a>
-        <a href="/"><h1>Khanapara Morning Teer Result</h1></a>
+        <a href="/"><h1>Khanapara Morning Teer</h1></a>
     </header>
 
     <!-- CONTENT -->
@@ -168,6 +180,10 @@
                     <td colspan="3">KHANAPARA</td>
                 </tr>
 
+                <!-- F/R label -->
+                <tr class="round-label-row">
+                    <td colspan="3">F/R &nbsp;(10:30 AM)</td>
+                </tr>
                 <!-- F/R header + numbers -->
                 <tr class="header-row">
                     <td>Direct</td>
@@ -180,6 +196,10 @@
                     <td id="frEnding">--</td>
                 </tr>
 
+                <!-- S/R label -->
+                <tr class="round-label-row">
+                    <td colspan="3">S/R &nbsp;(11:30 AM)</td>
+                </tr>
                 <!-- S/R header + numbers -->
                 <tr class="header-row">
                     <td>Direct</td>
