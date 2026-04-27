@@ -365,7 +365,113 @@ app.post('/api/admin/login', (req, res) => {
         message: isValid ? 'Login successful' : 'Invalid password'
     });
 });
+// Update ONLY First Round (keeps existing Second Round)
+app.post('/api/admin/update-first-round', authenticateAdmin, async (req, res) => {
+    try {
+        const { firstRound } = req.body;
+        const today = new Date().toLocaleDateString('en-GB');
+        
+        if (!firstRound) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'First Round number is required' 
+            });
+        }
+        
+        // Validate number is 2-digit
+        if (!/^\d{2}$/.test(firstRound)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'First Round must be a 2-digit number (00-99)' 
+            });
+        }
+        
+        // Get existing result to preserve Second Round
+        const existingResult = await TeerData.findOne({ type: 'result', date: today });
+        let secondRound = '00';
+        
+        if (existingResult && existingResult.data && existingResult.data.secondRound) {
+            secondRound = existingResult.data.secondRound;
+        }
+        
+        const result = await TeerData.findOneAndUpdate(
+            { type: 'result', date: today },
+            { 
+                type: 'result', 
+                date: today, 
+                data: { firstRound, secondRound } 
+            },
+            { upsert: true, new: true }
+        );
+        
+        console.log(`✅ First Round updated for ${today}: ${firstRound} (Second Round: ${secondRound})`);
+        res.json({ 
+            success: true, 
+            message: 'First Round updated successfully',
+            data: result
+        });
+    } catch (error) {
+        console.error('Error updating first round:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
 
+// Update ONLY Second Round (keeps existing First Round)
+app.post('/api/admin/update-second-round', authenticateAdmin, async (req, res) => {
+    try {
+        const { secondRound } = req.body;
+        const today = new Date().toLocaleDateString('en-GB');
+        
+        if (!secondRound) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Second Round number is required' 
+            });
+        }
+        
+        // Validate number is 2-digit
+        if (!/^\d{2}$/.test(secondRound)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Second Round must be a 2-digit number (00-99)' 
+            });
+        }
+        
+        // Get existing result to preserve First Round
+        const existingResult = await TeerData.findOne({ type: 'result', date: today });
+        let firstRound = '00';
+        
+        if (existingResult && existingResult.data && existingResult.data.firstRound) {
+            firstRound = existingResult.data.firstRound;
+        }
+        
+        const result = await TeerData.findOneAndUpdate(
+            { type: 'result', date: today },
+            { 
+                type: 'result', 
+                date: today, 
+                data: { firstRound, secondRound } 
+            },
+            { upsert: true, new: true }
+        );
+        
+        console.log(`✅ Second Round updated for ${today}: ${secondRound} (First Round: ${firstRound})`);
+        res.json({ 
+            success: true, 
+            message: 'Second Round updated successfully',
+            data: result
+        });
+    } catch (error) {
+        console.error('Error updating second round:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
 // Update today's result (requires authentication)
 app.post('/api/admin/update-result', authenticateAdmin, async (req, res) => {
     try {
