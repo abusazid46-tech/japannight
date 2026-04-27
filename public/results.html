@@ -233,7 +233,56 @@
 
         let currentPage = 1;
         let totalPages = 1;
+// Add this helper function at the top of results.html script
+function parseDateToTimestamp(dateStr) {
+    if (!dateStr) return 0;
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+        return new Date(parts[2], parseInt(parts[1]) - 1, parts[0]).getTime();
+    }
+    return 0;
+}
 
+async function loadResults() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/results`);
+        const data = await response.json();
+        
+        // Handle different response formats
+        let results = [];
+        if (data.data && Array.isArray(data.data)) {
+            results = data.data;
+        } else if (Array.isArray(data)) {
+            results = data;
+        }
+        
+        // Sort by date (latest first)
+        results.sort((a, b) => {
+            const dateA = parseDateToTimestamp(a.date);
+            const dateB = parseDateToTimestamp(b.date);
+            return dateB - dateA;
+        });
+        
+        const tableBody = document.getElementById('resultsTable');
+        
+        if (results.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No results found</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = results.map(result => `
+            <tr>
+                <td><strong>${result.date}</strong></td>
+                <td><span class="badge bg-primary fs-6">${result.data?.firstRound || '--'}</span></td>
+                <td><span class="badge bg-success fs-6">${result.data?.secondRound || '--'}</span></td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        document.getElementById('resultsTable').innerHTML = 
+            '<tr><td colspan="3" class="text-center text-danger">Error loading results</td></tr>';
+    }
+}
         async function loadResults(page = 1) {
             const tableBody = document.getElementById('resultsTable');
             tableBody.innerHTML = `<tr class="state-row"><td colspan="4">Loading results...</td></tr>`;
