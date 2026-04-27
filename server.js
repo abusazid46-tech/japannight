@@ -420,7 +420,59 @@ app.post('/api/admin/update-result', authenticateAdmin, async (req, res) => {
         });
     }
 });
-
+// Update result by specific date (for bulk import)
+app.post('/api/admin/update-result-by-date', authenticateAdmin, async (req, res) => {
+    try {
+        const { date, firstRound, secondRound } = req.body;
+        
+        if (!date || !firstRound || !secondRound) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Date, firstRound, and secondRound are required' 
+            });
+        }
+        
+        // Validate date format (DD/MM/YYYY)
+        const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+        if (!dateRegex.test(date)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Invalid date format. Use DD/MM/YYYY' 
+            });
+        }
+        
+        // Validate numbers are 2-digit
+        if (!/^\d{2}$/.test(firstRound) || !/^\d{2}$/.test(secondRound)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Both rounds must be 2-digit numbers (00-99)' 
+            });
+        }
+        
+        const result = await TeerData.findOneAndUpdate(
+            { type: 'result', date: date },
+            { 
+                type: 'result', 
+                date: date, 
+                data: { firstRound, secondRound } 
+            },
+            { upsert: true, new: true }
+        );
+        
+        console.log(`✅ Result updated for ${date}: ${firstRound}, ${secondRound}`);
+        res.json({ 
+            success: true, 
+            message: 'Result updated successfully',
+            data: result
+        });
+    } catch (error) {
+        console.error('Error updating result:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
 // Update common numbers (requires authentication)
 app.post('/api/admin/update-common', authenticateAdmin, async (req, res) => {
     try {
