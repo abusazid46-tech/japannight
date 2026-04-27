@@ -5,237 +5,294 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dream Numbers - Khanapara Morning Teer Result</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #f5f0eb;
+            font-family: 'Roboto', sans-serif;
             min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
         }
-        .navbar {
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        /* ── HEADER ── */
+        .site-header {
+            background: linear-gradient(90deg, #1a8fa0 0%, #16b0c8 100%);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .search-box {
-            margin-bottom: 30px;
+        .site-header .logo-icon {
+            width: 44px; height: 44px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            text-decoration: none;
         }
-        .search-box input {
+        .site-header h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.5rem;
+            color: #fff;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+        .site-header a { text-decoration: none; }
+
+        /* ── PAGE CONTENT ── */
+        .page-content {
+            flex: 1;
+            padding: 18px 10px 30px;
+            max-width: 1100px;
+            margin: 0 auto;
             width: 100%;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s;
         }
-        .search-box input:focus {
+
+        /* ── SUBTITLE ── */
+        .subtitle {
+            text-align: center;
+            font-style: italic;
+            font-size: 0.92rem;
+            color: #444;
+            margin-bottom: 14px;
+        }
+
+        /* ── SEARCH ── */
+        .search-wrap {
+            margin-bottom: 14px;
+        }
+        .search-wrap input {
+            width: 100%;
+            padding: 9px 14px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            font-size: 0.92rem;
+            font-family: 'Roboto', sans-serif;
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 10px rgba(102,126,234,0.3);
+            transition: border-color 0.2s;
         }
-        .dream-card {
-            transition: all 0.3s;
-            cursor: pointer;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .search-wrap input:focus {
+            border-color: #16b0c8;
+            box-shadow: 0 0 0 2px rgba(22,176,200,0.15);
         }
-        .dream-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+
+        /* ── EXCEL TABLE ── */
+        .dream-table-wrapper {
+            border: 2px solid #555;
+            border-radius: 3px;
+            overflow: hidden;
+            background: #fff;
         }
-        .number-badge {
-            display: inline-block;
-            padding: 5px 10px;
-            margin: 3px;
-            background: #667eea;
-            color: white;
-            border-radius: 5px;
-            font-size: 14px;
+
+        .dream-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.88rem;
         }
-        .house-badge {
-            background: #ff6b6b;
+
+        .dream-table th,
+        .dream-table td {
+            border: 1px solid #bbb;
+            padding: 6px 8px;
+            vertical-align: middle;
         }
-        .ending-badge {
-            background: #51cf66;
+
+        /* Header row */
+        .dream-table thead th {
+            background: #16b0c8;
+            color: #fff;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-align: center;
+            border-color: #0e8fa0;
+            white-space: nowrap;
         }
+
+        /* Column widths */
+        .col-slno  { width: 50px;  text-align: center; }
+        .col-dream { width: 30%; }
+        .col-direct{ width: auto; }
+        .col-house { width: 80px;  text-align: center; }
+        .col-ending{ width: 70px;  text-align: center; }
+
+        .dream-table tbody td { color: #222; }
+        .dream-table tbody td.col-slno,
+        .dream-table tbody td.col-house,
+        .dream-table tbody td.col-ending { text-align: center; }
+
+        .dream-table tbody tr:nth-child(even) { background: #f4f4f4; }
+        .dream-table tbody tr:hover { background: #e4f7fa; }
+
+        /* Loading / error */
+        .state-row td {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* ── FOOTER ── */
         footer {
-            background: #333;
-            color: white;
+            background: #5baec8;
+            color: #fff;
             text-align: center;
-            padding: 20px;
-            margin-top: 50px;
+            padding: 14px 16px;
+            font-size: 0.82rem;
+            margin-top: auto;
         }
-        .loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 20px;
-            color: white;
-        }
-        .alert {
-            border-radius: 10px;
+        footer p { margin: 3px 0; }
+        footer a { color: #1a2a6c; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 500px) {
+            .dream-table { font-size: 0.75rem; }
+            .dream-table th, .dream-table td { padding: 4px 5px; }
+            .col-house, .col-ending { width: 55px; }
+            .col-slno { width: 36px; }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">🎯 Khanapara Morning Teer Result</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="navbar-nav ms-auto">
-                    <a class="nav-link" href="/">Home</a>
-                    <a class="nav-link" href="/results.html">Results</a>
-                    <a class="nav-link" href="/common.html">Common Numbers</a>
-                    <a class="nav-link active" href="/dreams.html">Dream Numbers</a>
-                    <a class="nav-link" href="/admin.html">Admin</a>
-                </div>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container mt-5">
-        <h1 class="text-center mb-4 text-white">💭 Dream Number Interpretation</h1>
-        
-        <div class="search-box">
-            <input type="text" id="searchInput" class="form-control" 
-                   placeholder="🔍 Search your dream... (e.g., snake, money, tiger)">
+    <!-- HEADER -->
+    <header class="site-header">
+        <a class="logo-icon" href="/">🎯</a>
+        <a href="/"><h1>Khanapara Morning Teer</h1></a>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="page-content">
+
+        <p class="subtitle">Below is a compilation of dream meanings.</p>
+
+        <!-- Search -->
+        <div class="search-wrap">
+            <input type="text" id="searchInput" placeholder="🔍 Search your dream... (e.g., snake, money, tiger)">
         </div>
-        
-        <div id="dreamsList" class="row">
-            <div class="loading">Loading dreams...</div>
+
+        <!-- Table -->
+        <div class="dream-table-wrapper">
+            <table class="dream-table">
+                <thead>
+                    <tr>
+                        <th class="col-slno">Sl.no</th>
+                        <th class="col-dream">Dream</th>
+                        <th class="col-direct">Direct</th>
+                        <th class="col-house">House</th>
+                        <th class="col-ending">Ending</th>
+                    </tr>
+                </thead>
+                <tbody id="dreamsTable">
+                    <tr class="state-row">
+                        <td colspan="5">Loading dreams...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
+
     </div>
 
+    <!-- FOOTER -->
     <footer>
-        <p>&copy; 2026 Khanapara Morning Teer Result. All rights reserved.</p>
-        <p>⚠️ For entertainment purposes only. No guarantee of accuracy.</p>
+        <p>All rights Reserved. Khanapara Morning Teer Result.</p>
+        <p><a href="#">Terms</a> | <a href="#">Contact</a> | <a href="#">Privacy Policy</a></p>
     </footer>
 
     <script>
-        // IMPORTANT: Change this to your Render backend URL
-        // For local testing: http://localhost:3000
-        // For production: https://your-app-name.onrender.com
-        const API_BASE_URL = 'https://teer-website.onrender.com'; // ← YOUR RENDER BACKEND URL
-        
+        const API_BASE_URL = 'https://teer-website.onrender.com';
         let allDreams = [];
-        
+
+        function renderTable(dreams) {
+            const tbody = document.getElementById('dreamsTable');
+            if (!dreams || dreams.length === 0) {
+                tbody.innerHTML = `<tr class="state-row"><td colspan="5">No dreams found. Try a different search.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = dreams.map((dream, idx) => {
+                const d = dream.data || dream;
+                const slNo   = d.slNo || d.sl_no || (idx + 1);
+                const name   = d.dream || d.name || '';
+                const direct = d.direct  || '';
+                const house  = d.house   || '';
+                const ending = d.ending  || '';
+                return `<tr>
+                    <td class="col-slno">${slNo}</td>
+                    <td class="col-dream">${name}</td>
+                    <td class="col-direct">${direct}</td>
+                    <td class="col-house">${house}</td>
+                    <td class="col-ending">${ending}</td>
+                </tr>`;
+            }).join('');
+        }
+
         async function loadDreams(searchTerm = '') {
-            const dreamsList = document.getElementById('dreamsList');
-            dreamsList.innerHTML = '<div class="loading">Loading dreams...</div>';
-            
+            const tbody = document.getElementById('dreamsTable');
+            tbody.innerHTML = `<tr class="state-row"><td colspan="5">Loading dreams...</td></tr>`;
+
             try {
                 let url;
-                if (searchTerm && searchTerm.trim()) {
-                    url = `${API_BASE_URL}/api/search-dream?q=${encodeURIComponent(searchTerm)}`;
-                    console.log('Searching dreams:', url);
+                if (searchTerm.trim()) {
+                    url = `${API_BASE_URL}/api/search-dream?q=${encodeURIComponent(searchTerm.trim())}`;
                 } else {
                     url = `${API_BASE_URL}/api/dreams`;
-                    console.log('Fetching all dreams:', url);
                 }
-                
+
                 const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
+                if (!response.ok) throw new Error('HTTP ' + response.status);
                 const data = await response.json();
-                console.log('API Response:', data);
-                
-                // Handle different response formats
+
                 let dreams = [];
-                if (data.data && Array.isArray(data.data)) {
-                    dreams = data.data;
-                } else if (Array.isArray(data)) {
-                    dreams = data;
-                } else if (data.dreams && Array.isArray(data.dreams)) {
-                    dreams = data.dreams;
-                } else {
-                    dreams = [];
-                }
-                
+                if (data.data && Array.isArray(data.data))       dreams = data.data;
+                else if (Array.isArray(data))                     dreams = data;
+                else if (data.dreams && Array.isArray(data.dreams)) dreams = data.dreams;
+
                 allDreams = dreams;
-                
-                if (dreams.length === 0) {
-                    dreamsList.innerHTML = '<div class="alert alert-info">No dreams found matching your search. Try different keywords!</div>';
-                    return;
-                }
-                
-                dreamsList.innerHTML = dreams.map(dream => {
-                    // Handle dream data (could be in dream.data or directly in dream)
-                    const dreamData = dream.data || dream;
-                    
-                    return `
-                        <div class="col-md-6 mb-3">
-                            <div class="card dream-card">
-                                <div class="card-header bg-primary text-white">
-                                    <strong>${dreamData.slNo || '?'}. ${dreamData.dream || 'Unknown Dream'}</strong>
-                                </div>
-                                <div class="card-body">
-                                    ${dreamData.direct ? `
-                                        <div class="mb-2">
-                                            <strong>Direct Numbers:</strong><br>
-                                            ${String(dreamData.direct).split(',').map(n => 
-                                                `<span class="number-badge">${n.trim()}</span>`
-                                            ).join('')}
-                                        </div>
-                                    ` : '<div class="mb-2 text-muted">No direct numbers</div>'}
-                                    
-                                    ${dreamData.house ? `
-                                        <div class="mb-2">
-                                            <strong>House Numbers:</strong><br>
-                                            ${String(dreamData.house).split(',').map(n => 
-                                                `<span class="number-badge house-badge">${n.trim()}</span>`
-                                            ).join('')}
-                                        </div>
-                                    ` : ''}
-                                    
-                                    ${dreamData.ending ? `
-                                        <div>
-                                            <strong>Ending Numbers:</strong><br>
-                                            ${String(dreamData.ending).split(',').map(n => 
-                                                `<span class="number-badge ending-badge">${n.trim()}</span>`
-                                            ).join('')}
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-            } catch (error) {
-                console.error('Error loading dreams:', error);
-                dreamsList.innerHTML = `
-                    <div class="alert alert-danger">
-                        <strong>❌ Error loading dreams!</strong><br>
-                        Make sure your backend is running at: ${API_BASE_URL}<br>
-                        <small>Error details: ${error.message}</small>
-                    </div>
-                `;
+                renderTable(dreams);
+
+            } catch (e) {
+                tbody.innerHTML = `<tr class="state-row"><td colspan="5" style="color:#c00;">
+                    ❌ Error loading dreams. Backend may not be connected.<br>
+                    <small>${e.message}</small>
+                </td></tr>`;
+                console.error(e);
             }
         }
-        
-        // Search functionality with debounce
-        let searchTimeout;
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    loadDreams(e.target.value);
-                }, 500);
+
+        // Client-side search fallback
+        function clientSearch(term) {
+            if (!term.trim()) { renderTable(allDreams); return; }
+            const t = term.toLowerCase();
+            const filtered = allDreams.filter(dream => {
+                const d = dream.data || dream;
+                return (d.dream || d.name || '').toLowerCase().includes(t);
             });
+            renderTable(filtered);
         }
-        
-        // Load all dreams initially
+
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', e => {
+            clearTimeout(searchTimeout);
+            const val = e.target.value;
+            searchTimeout = setTimeout(() => {
+                // Use client-side filter if we have data, else call API
+                if (allDreams.length > 0) {
+                    clientSearch(val);
+                } else {
+                    loadDreams(val);
+                }
+            }, 300);
+        });
+
         loadDreams();
-        
-        // Refresh dreams list every 5 minutes (in case admin adds new ones)
         setInterval(() => {
-            if (!searchInput || !searchInput.value) {
-                loadDreams();
-            }
+            if (!document.getElementById('searchInput').value) loadDreams();
         }, 300000);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
