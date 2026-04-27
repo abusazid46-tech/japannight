@@ -112,8 +112,16 @@
             color: #888;
             font-size: 0.95rem;
         }
+        .stats {
+            margin-top: 10px;
+            padding: 8px;
+            background: #e8f7f9;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: center;
+        }
 
-                footer {
+        footer {
             background: #222;
             color: #aaa;
             text-align: center;
@@ -136,6 +144,7 @@
     </header>
 
     <div class="page-content">
+
         <div class="results-table-wrapper">
             <div class="results-title-row">RESULTS</div>
             <div class="table-responsive">
@@ -158,6 +167,10 @@
         </div>
 
         <div class="stats" id="stats"></div>
+
+        <div class="note" style="margin-top: 14px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 6px; padding: 10px 14px; font-size: 0.82rem; color: #555;">
+            ⚠️ Disclaimer: Results are for informational purposes only. No guarantee of accuracy.
+        </div>
     </div>
 
     <footer>
@@ -270,6 +283,46 @@
                 statsDiv.innerHTML = `📊 Showing ${showingResults} of ${totalResults} results`;
             }
         }
+
+        function filterResults() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const yearFilter = document.getElementById('yearFilter').value;
+            
+            filteredResults = allResults.filter(result => {
+                const date = result.date || '';
+                
+                // Search filter
+                let matchesSearch = true;
+                if (searchTerm) {
+                    matchesSearch = date.toLowerCase().includes(searchTerm);
+                }
+                
+                // Year filter
+                let matchesYear = true;
+                if (yearFilter) {
+                    matchesYear = date.includes(`/${yearFilter}`);
+                }
+                
+                return matchesSearch && matchesYear;
+            });
+            
+            renderTable();
+            updateStats();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('yearFilter').value = '';
+            filteredResults = [...allResults];
+            renderTable();
+            updateStats();
+        }
+
+        // Initial load
+        loadResults();
+        
+        // Refresh every 2 minutes
+        setInterval(loadResults, 120000);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
