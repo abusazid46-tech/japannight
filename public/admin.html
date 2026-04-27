@@ -1078,145 +1078,164 @@
         }
         
         // ============ RESULT UPDATE FUNCTIONS - SEPARATE ============
+        // Update First Round Only - Fixed
+async function updateFirstRoundOnly() {
+    const firstRound = document.getElementById('firstRoundOnly').value;
+    
+    if (!firstRound) {
+        showMessage('frMsg', 'Please enter First Round number', 'error');
+        return;
+    }
+    
+    // Validate number
+    if (!/^\d{1,2}$/.test(firstRound)) {
+        showMessage('frMsg', 'Please enter a valid number (0-99)', 'error');
+        return;
+    }
+    
+    const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
+    
+    // Get current second round from the displayed value
+    let currentSR = document.getElementById('currentSR').innerText;
+    if (currentSR === '--' || !currentSR) {
+        currentSR = '00';
+    }
+    const formattedSR = currentSR.toString().padStart(2, '0');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ 
+                firstRound: formattedFR, 
+                secondRound: formattedSR 
+            })
+        });
         
-        // Update First Round Only
-        async function updateFirstRoundOnly() {
-            const firstRound = document.getElementById('firstRoundOnly').value;
-            
-            if (!firstRound) {
-                showMessage('frMsg', 'Please enter First Round number', 'error');
-                return;
-            }
-            
-            // Validate number
-            if (!/^\d{1,2}$/.test(firstRound)) {
-                showMessage('frMsg', 'Please enter a valid number (0-99)', 'error');
-                return;
-            }
-            
-            const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
-            const currentSR = document.getElementById('currentSR').innerText;
-            const secondRound = currentSR !== '--' ? currentSR : '00';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ firstRound: formattedFR, secondRound: secondRound })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('frMsg', `✅ First Round updated to ${formattedFR}!`, 'success');
-                    document.getElementById('firstRoundOnly').value = '';
-                    document.getElementById('currentFR').innerText = formattedFR;
-                    document.getElementById('firstRoundBoth').value = formattedFR;
-                    loadDashboardData();
-                    loadManageData();
-                } else {
-                    showMessage('frMsg', data.error || 'Error updating First Round', 'error');
-                }
-            } catch (error) {
-                showMessage('frMsg', 'Error connecting to server', 'error');
-            }
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('frMsg', `✅ First Round updated to ${formattedFR}! Second Round remains ${formattedSR}`, 'success');
+            document.getElementById('firstRoundOnly').value = '';
+            document.getElementById('currentFR').innerText = formattedFR;
+            document.getElementById('firstRoundBoth').value = formattedFR;
+            loadDashboardData();
+            loadManageData();
+        } else {
+            showMessage('frMsg', data.error || 'Error updating First Round', 'error');
         }
+    } catch (error) {
+        console.error('Update error:', error);
+        showMessage('frMsg', 'Error connecting to server: ' + error.message, 'error');
+    }
+}
+
+// Update Second Round Only - Fixed
+async function updateSecondRoundOnly() {
+    const secondRound = document.getElementById('secondRoundOnly').value;
+    
+    if (!secondRound) {
+        showMessage('srMsg', 'Please enter Second Round number', 'error');
+        return;
+    }
+    
+    if (!/^\d{1,2}$/.test(secondRound)) {
+        showMessage('srMsg', 'Please enter a valid number (0-99)', 'error');
+        return;
+    }
+    
+    const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
+    
+    // Get current first round from the displayed value
+    let currentFR = document.getElementById('currentFR').innerText;
+    if (currentFR === '--' || !currentFR) {
+        currentFR = '00';
+    }
+    const formattedFR = currentFR.toString().padStart(2, '0');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ 
+                firstRound: formattedFR, 
+                secondRound: formattedSR 
+            })
+        });
         
-        // Update Second Round Only
-        async function updateSecondRoundOnly() {
-            const secondRound = document.getElementById('secondRoundOnly').value;
-            
-            if (!secondRound) {
-                showMessage('srMsg', 'Please enter Second Round number', 'error');
-                return;
-            }
-            
-            if (!/^\d{1,2}$/.test(secondRound)) {
-                showMessage('srMsg', 'Please enter a valid number (0-99)', 'error');
-                return;
-            }
-            
-            const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
-            const currentFR = document.getElementById('currentFR').innerText;
-            const firstRound = currentFR !== '--' ? currentFR : '00';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ firstRound: firstRound, secondRound: formattedSR })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('srMsg', `✅ Second Round updated to ${formattedSR}!`, 'success');
-                    document.getElementById('secondRoundOnly').value = '';
-                    document.getElementById('currentSR').innerText = formattedSR;
-                    document.getElementById('secondRoundBoth').value = formattedSR;
-                    loadDashboardData();
-                    loadManageData();
-                } else {
-                    showMessage('srMsg', data.error || 'Error updating Second Round', 'error');
-                }
-            } catch (error) {
-                showMessage('srMsg', 'Error connecting to server', 'error');
-            }
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('srMsg', `✅ Second Round updated to ${formattedSR}! First Round remains ${formattedFR}`, 'success');
+            document.getElementById('secondRoundOnly').value = '';
+            document.getElementById('currentSR').innerText = formattedSR;
+            document.getElementById('secondRoundBoth').value = formattedSR;
+            loadDashboardData();
+            loadManageData();
+        } else {
+            showMessage('srMsg', data.error || 'Error updating Second Round', 'error');
         }
+    } catch (error) {
+        console.error('Update error:', error);
+        showMessage('srMsg', 'Error connecting to server: ' + error.message, 'error');
+    }
+}
+
+// Update Both Rounds Together - Fixed
+async function updateBothRounds() {
+    const firstRound = document.getElementById('firstRoundBoth').value;
+    const secondRound = document.getElementById('secondRoundBoth').value;
+    
+    if (!firstRound || !secondRound) {
+        showMessage('bothMsg', 'Please fill both rounds', 'error');
+        return;
+    }
+    
+    if (!/^\d{1,2}$/.test(firstRound) || !/^\d{1,2}$/.test(secondRound)) {
+        showMessage('bothMsg', 'Please enter valid numbers (0-99)', 'error');
+        return;
+    }
+    
+    const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
+    const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({ firstRound: formattedFR, secondRound: formattedSR })
+        });
         
-        // Update Both Rounds Together
-        async function updateBothRounds() {
-            const firstRound = document.getElementById('firstRoundBoth').value;
-            const secondRound = document.getElementById('secondRoundBoth').value;
-            
-            if (!firstRound || !secondRound) {
-                showMessage('bothMsg', 'Please fill both rounds', 'error');
-                return;
-            }
-            
-            if (!/^\d{1,2}$/.test(firstRound) || !/^\d{1,2}$/.test(secondRound)) {
-                showMessage('bothMsg', 'Please enter valid numbers (0-99)', 'error');
-                return;
-            }
-            
-            const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
-            const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ firstRound: formattedFR, secondRound: formattedSR })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('bothMsg', `✅ Results updated to ${formattedFR} / ${formattedSR}!`, 'success');
-                    document.getElementById('currentFR').innerText = formattedFR;
-                    document.getElementById('currentSR').innerText = formattedSR;
-                    document.getElementById('firstRoundOnly').value = '';
-                    document.getElementById('secondRoundOnly').value = '';
-                    loadDashboardData();
-                    loadManageData();
-                } else {
-                    showMessage('bothMsg', data.error || 'Error updating results', 'error');
-                }
-            } catch (error) {
-                showMessage('bothMsg', 'Error connecting to server', 'error');
-            }
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('bothMsg', `✅ Results updated to ${formattedFR} / ${formattedSR}!`, 'success');
+            document.getElementById('currentFR').innerText = formattedFR;
+            document.getElementById('currentSR').innerText = formattedSR;
+            document.getElementById('firstRoundBoth').value = '';
+            document.getElementById('secondRoundBoth').value = '';
+            document.getElementById('firstRoundOnly').value = '';
+            document.getElementById('secondRoundOnly').value = '';
+            loadDashboardData();
+            loadManageData();
+        } else {
+            showMessage('bothMsg', data.error || 'Error updating results', 'error');
         }
-        
-        // ============ COMMON NUMBERS UPDATE FUNCTIONS - SEPARATE ============
+    } catch (error) {
+        console.error('Update error:', error);
+        showMessage('bothMsg', 'Error connecting to server: ' + error.message, 'error');
+    }
+}
+                // ============ COMMON NUMBERS UPDATE FUNCTIONS - SEPARATE ============
         
         // Update Direct Numbers Only
         async function updateDirectOnly() {
