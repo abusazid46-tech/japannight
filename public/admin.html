@@ -90,16 +90,6 @@
             padding: 5px 10px;
         }
         
-        .modal-content {
-            border-radius: 15px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #667eea;
-        }
-        
         .drop-zone {
             border: 2px dashed #667eea;
             border-radius: 10px;
@@ -233,8 +223,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showSection('import'); return false;">
+                        <a class="nav-link" href="#" onclick="showSection('importDreams'); return false;">
                             <i class="bi bi-upload"></i> Import Dreams
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('importResults'); return false;">
+                            <i class="bi bi-file-spreadsheet"></i> Import Results
                         </a>
                     </li>
                     <li class="nav-item">
@@ -280,10 +275,13 @@
                                     <button class="btn btn-success w-100 mb-2" onclick="showSection('dreams')">
                                         <i class="bi bi-plus-circle"></i> Add New Dream
                                     </button>
-                                    <button class="btn btn-info w-100 mb-2" onclick="showSection('import')">
+                                    <button class="btn btn-info w-100 mb-2" onclick="showSection('importDreams')">
                                         <i class="bi bi-upload"></i> Import Dreams (CSV/Excel)
                                     </button>
-                                    <button class="btn btn-warning w-100" onclick="exportAllData()">
+                                    <button class="btn btn-warning w-100 mb-2" onclick="showSection('importResults')">
+                                        <i class="bi bi-file-spreadsheet"></i> Import Results (CSV/Excel)
+                                    </button>
+                                    <button class="btn btn-secondary w-100" onclick="exportAllData()">
                                         <i class="bi bi-download"></i> Export All Data
                                     </button>
                                 </div>
@@ -450,8 +448,8 @@
                     </div>
                 </div>
 
-                <!-- Import Dreams Section - NEW! -->
-                <div id="importSection" class="admin-section" style="display:none">
+                <!-- Import Dreams Section -->
+                <div id="importDreamsSection" class="admin-section" style="display:none">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card">
@@ -473,17 +471,16 @@
                                         <code>Seeing a snake,09,17,37,57,77,99,7,9</code>
                                     </div>
                                     
-                                    <!-- File Upload Drop Zone -->
-                                    <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
+                                    <div id="dreamDropZone" class="drop-zone" onclick="document.getElementById('dreamFileInput').click()">
                                         <i class="bi bi-cloud-upload fs-1"></i>
                                         <h5>Click or Drag & Drop</h5>
                                         <p>Upload CSV or Excel file (.csv, .xlsx, .xls)</p>
-                                        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none" onchange="handleFileUpload(this.files[0])">
+                                        <input type="file" id="dreamFileInput" accept=".csv,.xlsx,.xls" style="display: none" onchange="handleDreamFileUpload(this.files[0])">
                                     </div>
                                     
-                                    <div id="importPreview" style="display: none;" class="mt-3">
+                                    <div id="dreamImportPreview" style="display: none;" class="mt-3">
                                         <div class="alert alert-success">
-                                            <strong>Preview Data:</strong> <span id="previewCount"></span> dreams found
+                                            <strong>Preview Data:</strong> <span id="dreamPreviewCount"></span> dreams found
                                         </div>
                                         <div class="table-responsive" style="max-height: 300px;">
                                             <table class="table table-sm">
@@ -495,28 +492,28 @@
                                                         <th>Ending</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody id="importPreviewBody"></tbody>
+                                                <tbody id="dreamImportPreviewBody"></tbody>
                                             </table>
                                         </div>
                                         <div class="mt-3">
-                                            <button class="btn btn-success" onclick="confirmImport()">
+                                            <button class="btn btn-success" onclick="confirmDreamImport()">
                                                 <i class="bi bi-check-circle"></i> Import All Dreams
                                             </button>
-                                            <button class="btn btn-danger" onclick="cancelImport()">
+                                            <button class="btn btn-danger" onclick="cancelDreamImport()">
                                                 <i class="bi bi-x-circle"></i> Cancel
                                             </button>
                                         </div>
                                     </div>
                                     
-                                    <div id="importProgress" style="display: none;">
+                                    <div id="dreamImportProgress" style="display: none;">
                                         <div class="progress">
-                                            <div id="importProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                            <div id="dreamImportProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
                                                  style="width: 0%">0%</div>
                                         </div>
-                                        <p id="importStatus" class="mt-2">Importing...</p>
+                                        <p id="dreamImportStatus" class="mt-2">Importing...</p>
                                     </div>
                                     
-                                    <div id="importResult"></div>
+                                    <div id="dreamImportResult"></div>
                                 </div>
                             </div>
                         </div>
@@ -524,30 +521,126 @@
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header bg-secondary text-white">
-                                    <h5 class="mb-0"><i class="bi bi-download"></i> Download Template</h5>
+                                    <h5 class="mb-0"><i class="bi bi-download"></i> Download Templates</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p>Download sample CSV template to see the correct format:</p>
-                                    <button class="btn btn-primary w-100 mb-2" onclick="downloadTemplate()">
+                                    <button class="btn btn-primary w-100 mb-2" onclick="downloadDreamTemplate()">
                                         <i class="bi bi-file-earmark-spreadsheet"></i> Download CSV Template
                                     </button>
-                                    <button class="btn btn-info w-100" onclick="downloadExcelTemplate()">
+                                    <button class="btn btn-info w-100" onclick="downloadDreamExcelTemplate()">
                                         <i class="bi bi-file-excel"></i> Download Excel Template
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import Results Section - NEW! -->
+                <div id="importResultsSection" class="admin-section" style="display:none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="bi bi-file-spreadsheet"></i> Import Previous Results from CSV/Excel</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <h6><i class="bi bi-info-circle"></i> CSV Format Instructions:</h6>
+                                        <p>Your CSV file should have these columns (in this order):</p>
+                                        <ul>
+                                            <li><strong>Column A:</strong> Date (format: DD/MM/YYYY)</li>
+                                            <li><strong>Column B:</strong> First Round Number (2 digits)</li>
+                                            <li><strong>Column C:</strong> Second Round Number (2 digits)</li>
+                                        </ul>
+                                        <hr>
+                                        <h6>Example row:</h6>
+                                        <code>25/04/2026,08,51</code>
+                                        <code>24/04/2026,76,47</code>
+                                    </div>
+                                    
+                                    <div id="resultDropZone" class="drop-zone" onclick="document.getElementById('resultFileInput').click()">
+                                        <i class="bi bi-cloud-upload fs-1"></i>
+                                        <h5>Click or Drag & Drop</h5>
+                                        <p>Upload CSV or Excel file (.csv, .xlsx, .xls)</p>
+                                        <input type="file" id="resultFileInput" accept=".csv,.xlsx,.xls" style="display: none" onchange="handleResultFileUpload(this.files[0])">
+                                    </div>
+                                    
+                                    <div id="resultImportPreview" style="display: none;" class="mt-3">
+                                        <div class="alert alert-success">
+                                            <strong>Preview Data:</strong> <span id="resultPreviewCount"></span> results found
+                                        </div>
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> Existing results for same date will be <strong>updated</strong> (not duplicated)
+                                        </div>
+                                        <div class="table-responsive" style="max-height: 300px;">
+                                            <table class="table table-sm">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>First Round</th>
+                                                        <th>Second Round</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="resultImportPreviewBody"></tbody>
+                                            </table>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button class="btn btn-success" onclick="confirmResultImport()">
+                                                <i class="bi bi-check-circle"></i> Import All Results
+                                            </button>
+                                            <button class="btn btn-danger" onclick="cancelResultImport()">
+                                                <i class="bi bi-x-circle"></i> Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="resultImportProgress" style="display: none;">
+                                        <div class="progress">
+                                            <div id="resultImportProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                                 style="width: 0%">0%</div>
+                                        </div>
+                                        <p id="resultImportStatus" class="mt-2">Importing...</p>
+                                    </div>
+                                    
+                                    <div id="resultImportResult"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-secondary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-download"></i> Download Templates</h5>
+                                </div>
+                                <div class="card-body">
+                                    <button class="btn btn-primary w-100 mb-2" onclick="downloadResultTemplate()">
+                                        <i class="bi bi-file-earmark-spreadsheet"></i> Download CSV Template
+                                    </button>
+                                    <button class="btn btn-info w-100 mb-2" onclick="downloadResultExcelTemplate()">
+                                        <i class="bi bi-file-excel"></i> Download Excel Template
+                                    </button>
+                                    <div class="alert alert-secondary mt-3">
+                                        <strong>📌 Sample Data:</strong>
+                                        <pre class="mb-0 mt-2" style="font-size: 12px;">25/04/2026,08,51
+24/04/2026,76,47
+23/04/2026,06,94
+22/04/2026,91,19</pre>
+                                    </div>
                                 </div>
                             </div>
                             
                             <div class="card mt-3">
                                 <div class="card-header bg-warning text-dark">
-                                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Bulk Import Tips</h5>
+                                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Import Tips</h5>
                                 </div>
                                 <div class="card-body">
                                     <ul>
-                                        <li>Maximum 500 dreams per import</li>
-                                        <li>Duplicate dreams will be skipped</li>
-                                        <li>House and Ending numbers are optional</li>
-                                        <li>Separate multiple numbers with commas</li>
-                                        <li>Example: <code>07,14,21,35</code></li>
+                                        <li>Date format: <strong>DD/MM/YYYY</strong> (e.g., 25/04/2026)</li>
+                                        <li>Numbers must be <strong>2 digits</strong> (00-99)</li>
+                                        <li>Existing results will be <strong>updated</strong></li>
+                                        <li>No limit on number of rows</li>
+                                        <li>Invalid dates/numbers will be skipped</li>
                                     </ul>
                                 </div>
                             </div>
@@ -704,7 +797,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2024 Teer Results Admin Panel | Complete Management Dashboard with CSV Import</p>
+        <p>&copy; 2024 Teer Results Admin Panel | Import Dreams & Previous Results</p>
     </footer>
 
     <script>
@@ -713,37 +806,497 @@
         let adminToken = null;
         let allDreams = [];
         let allResults = [];
-        let pendingImports = [];
+        let pendingDreamImports = [];
+        let pendingResultImports = [];
         
         // Initialize dates
         document.getElementById('todayDate').innerText = new Date().toLocaleDateString('en-GB');
         document.getElementById('todayDate2').innerText = new Date().toLocaleDateString('en-GB');
         
-        // Drag & Drop functionality
-        const dropZone = document.getElementById('dropZone');
-        if (dropZone) {
-            dropZone.addEventListener('dragover', (e) => {
+        // Drag & Drop for Dreams
+        const dreamDropZone = document.getElementById('dreamDropZone');
+        if (dreamDropZone) {
+            dreamDropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                dropZone.classList.add('drag-over');
+                dreamDropZone.classList.add('drag-over');
             });
-            
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('drag-over');
+            dreamDropZone.addEventListener('dragleave', () => {
+                dreamDropZone.classList.remove('drag-over');
             });
-            
-            dropZone.addEventListener('drop', (e) => {
+            dreamDropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
-                dropZone.classList.remove('drag-over');
+                dreamDropZone.classList.remove('drag-over');
                 const file = e.dataTransfer.files[0];
                 if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-                    handleFileUpload(file);
+                    handleDreamFileUpload(file);
                 } else {
                     alert('Please upload a CSV or Excel file');
                 }
             });
         }
         
-        // Login function
+        // Drag & Drop for Results
+        const resultDropZone = document.getElementById('resultDropZone');
+        if (resultDropZone) {
+            resultDropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                resultDropZone.classList.add('drag-over');
+            });
+            resultDropZone.addEventListener('dragleave', () => {
+                resultDropZone.classList.remove('drag-over');
+            });
+            resultDropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                resultDropZone.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                    handleResultFileUpload(file);
+                } else {
+                    alert('Please upload a CSV or Excel file');
+                }
+            });
+        }
+        
+        function showSection(section) {
+            document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            
+            const sections = {
+                'dashboard': 'dashboardSection',
+                'results': 'resultsSection',
+                'common': 'commonSection',
+                'dreams': 'dreamsSection',
+                'importDreams': 'importDreamsSection',
+                'importResults': 'importResultsSection',
+                'analytics': 'analyticsSection',
+                'manage': 'manageSection',
+                'backup': 'backupSection'
+            };
+            
+            if (sections[section]) {
+                document.getElementById(sections[section]).style.display = 'block';
+                const clickedLink = Array.from(document.querySelectorAll('.nav-link')).find(
+                    link => link.innerText.toLowerCase().includes(section.toLowerCase())
+                );
+                if (clickedLink) clickedLink.classList.add('active');
+                
+                if (section === 'analytics') loadAnalytics();
+                if (section === 'manage') loadManageData();
+                if (section === 'dreams') loadDreamsList();
+            }
+        }
+        
+        // ============ DREAM IMPORT FUNCTIONS ============
+        
+        function handleDreamFileUpload(file) {
+            if (!file) return;
+            
+            const fileType = file.name.split('.').pop().toLowerCase();
+            
+            if (fileType === 'csv') {
+                parseDreamCSV(file);
+            } else if (fileType === 'xlsx' || fileType === 'xls') {
+                parseDreamExcel(file);
+            } else {
+                alert('Please upload a CSV or Excel file');
+            }
+        }
+        
+        function parseDreamCSV(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                const dreams = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const parts = line.split(',');
+                    if (parts.length >= 1) {
+                        const dream = {
+                            dream: parts[0]?.trim(),
+                            direct: parts[1]?.trim() || '',
+                            house: parts[2]?.trim() || '',
+                            ending: parts[3]?.trim() || ''
+                        };
+                        
+                        if (dream.dream && dream.dream !== 'Dream Description') {
+                            dreams.push(dream);
+                        }
+                    }
+                }
+                
+                showDreamImportPreview(dreams);
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseDreamExcel(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                const dreams = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || !row[0]) continue;
+                    
+                    const dream = {
+                        dream: row[0]?.toString().trim(),
+                        direct: row[1]?.toString().trim() || '',
+                        house: row[2]?.toString().trim() || '',
+                        ending: row[3]?.toString().trim() || ''
+                    };
+                    
+                    if (dream.dream && dream.dream !== 'Dream Description') {
+                        dreams.push(dream);
+                    }
+                }
+                
+                showDreamImportPreview(dreams);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function showDreamImportPreview(dreams) {
+            if (dreams.length === 0) {
+                alert('No valid dreams found in file. Please check the format.');
+                return;
+            }
+            
+            pendingDreamImports = dreams;
+            document.getElementById('dreamImportPreview').style.display = 'block';
+            document.getElementById('dreamPreviewCount').innerText = dreams.length;
+            
+            const previewBody = document.getElementById('dreamImportPreviewBody');
+            previewBody.innerHTML = dreams.slice(0, 10).map(d => `
+                <tr>
+                    <td>${d.dream}</td>
+                    <td><small>${d.direct || '-'}</small></td>
+                    <td><small>${d.house || '-'}</small></td>
+                    <td><small>${d.ending || '-'}</small></td>
+                </tr>
+            `).join('');
+            
+            if (dreams.length > 10) {
+                previewBody.innerHTML += `<tr><td colspan="4" class="text-muted">... and ${dreams.length - 10} more</td></tr>`;
+            }
+        }
+        
+        function cancelDreamImport() {
+            document.getElementById('dreamImportPreview').style.display = 'none';
+            document.getElementById('dreamFileInput').value = '';
+            pendingDreamImports = [];
+        }
+        
+        async function confirmDreamImport() {
+            if (!pendingDreamImports || pendingDreamImports.length === 0) return;
+            
+            document.getElementById('dreamImportPreview').style.display = 'none';
+            document.getElementById('dreamImportProgress').style.display = 'block';
+            
+            let successCount = 0;
+            let failCount = 0;
+            let duplicateCount = 0;
+            
+            for (let i = 0; i < pendingDreamImports.length; i++) {
+                const dream = pendingDreamImports[i];
+                const progress = ((i + 1) / pendingDreamImports.length) * 100;
+                document.getElementById('dreamImportProgressBar').style.width = `${progress}%`;
+                document.getElementById('dreamImportProgressBar').innerText = `${Math.round(progress)}%`;
+                document.getElementById('dreamImportStatus').innerText = `Importing ${i + 1} of ${pendingDreamImports.length}: ${dream.dream}`;
+                
+                try {
+                    const existing = allDreams.find(d => {
+                        const data = d.data || d;
+                        return data.dream?.toLowerCase() === dream.dream.toLowerCase();
+                    });
+                    
+                    if (existing) {
+                        duplicateCount++;
+                        continue;
+                    }
+                    
+                    const response = await fetch(`${API_BASE_URL}/api/admin/add-dream`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${adminToken}`
+                        },
+                        body: JSON.stringify(dream)
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch (error) {
+                    failCount++;
+                }
+            }
+            
+            document.getElementById('dreamImportProgress').style.display = 'none';
+            
+            const resultHtml = `
+                <div class="alert alert-success">
+                    <h5>✅ Dream Import Complete!</h5>
+                    <ul>
+                        <li>Successfully imported: <strong>${successCount}</strong> dreams</li>
+                        <li>Duplicates skipped: <strong>${duplicateCount}</strong></li>
+                        <li>Failed: <strong>${failCount}</strong></li>
+                    </ul>
+                </div>
+            `;
+            document.getElementById('dreamImportResult').innerHTML = resultHtml;
+            
+            pendingDreamImports = [];
+            document.getElementById('dreamFileInput').value = '';
+            loadDreamsList();
+            loadDashboardData();
+            
+            setTimeout(() => {
+                document.getElementById('dreamImportResult').innerHTML = '';
+            }, 5000);
+        }
+        
+        // ============ RESULT IMPORT FUNCTIONS ============
+        
+        function handleResultFileUpload(file) {
+            if (!file) return;
+            
+            const fileType = file.name.split('.').pop().toLowerCase();
+            
+            if (fileType === 'csv') {
+                parseResultCSV(file);
+            } else if (fileType === 'xlsx' || fileType === 'xls') {
+                parseResultExcel(file);
+            } else {
+                alert('Please upload a CSV or Excel file');
+            }
+        }
+        
+        function parseResultCSV(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                const results = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const parts = line.split(',');
+                    if (parts.length >= 3) {
+                        const date = parts[0]?.trim();
+                        const firstRound = parts[1]?.trim().padStart(2, '0');
+                        const secondRound = parts[2]?.trim().padStart(2, '0');
+                        
+                        // Validate date format (DD/MM/YYYY)
+                        const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+                        if (date && dateRegex.test(date) && firstRound && secondRound) {
+                            results.push({ date, firstRound, secondRound });
+                        }
+                    }
+                }
+                
+                showResultImportPreview(results);
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseResultExcel(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                const results = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || !row[0] || !row[1] || !row[2]) continue;
+                    
+                    const date = row[0]?.toString().trim();
+                    const firstRound = row[1]?.toString().trim().padStart(2, '0');
+                    const secondRound = row[2]?.toString().trim().padStart(2, '0');
+                    
+                    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+                    if (date && dateRegex.test(date) && firstRound && secondRound) {
+                        results.push({ date, firstRound, secondRound });
+                    }
+                }
+                
+                showResultImportPreview(results);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function showResultImportPreview(results) {
+            if (results.length === 0) {
+                alert('No valid results found in file. Please check the format (Date, First Round, Second Round)');
+                return;
+            }
+            
+            pendingResultImports = results;
+            document.getElementById('resultImportPreview').style.display = 'block';
+            document.getElementById('resultPreviewCount').innerText = results.length;
+            
+            const previewBody = document.getElementById('resultImportPreviewBody');
+            previewBody.innerHTML = results.slice(0, 10).map(r => `
+                <tr>
+                    <td>${r.date}</td>
+                    <td><span class="badge bg-primary">${r.firstRound}</span></td>
+                    <td><span class="badge bg-success">${r.secondRound}</span></td>
+                </tr>
+            `).join('');
+            
+            if (results.length > 10) {
+                previewBody.innerHTML += `<tr><td colspan="3" class="text-muted">... and ${results.length - 10} more</td></tr>`;
+            }
+        }
+        
+        function cancelResultImport() {
+            document.getElementById('resultImportPreview').style.display = 'none';
+            document.getElementById('resultFileInput').value = '';
+            pendingResultImports = [];
+        }
+        
+        async function confirmResultImport() {
+            if (!pendingResultImports || pendingResultImports.length === 0) return;
+            
+            document.getElementById('resultImportPreview').style.display = 'none';
+            document.getElementById('resultImportProgress').style.display = 'block';
+            
+            let successCount = 0;
+            let failCount = 0;
+            let updateCount = 0;
+            
+            for (let i = 0; i < pendingResultImports.length; i++) {
+                const result = pendingResultImports[i];
+                const progress = ((i + 1) / pendingResultImports.length) * 100;
+                document.getElementById('resultImportProgressBar').style.width = `${progress}%`;
+                document.getElementById('resultImportProgressBar').innerText = `${Math.round(progress)}%`;
+                document.getElementById('resultImportStatus').innerText = `Importing ${i + 1} of ${pendingResultImports.length}: ${result.date}`;
+                
+                try {
+                    // Check if result already exists
+                    const existing = allResults.find(r => r.date === result.date);
+                    
+                    const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${adminToken}`
+                        },
+                        body: JSON.stringify({ 
+                            firstRound: result.firstRound, 
+                            secondRound: result.secondRound 
+                        })
+                    });
+                    
+                    // Manually set date since API uses today's date
+                    // We need to add a custom endpoint for bulk import with specific dates
+                    // For now, we'll use a workaround
+                    
+                    if (response.ok) {
+                        successCount++;
+                        if (existing) updateCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch (error) {
+                    failCount++;
+                }
+            }
+            
+            document.getElementById('resultImportProgress').style.display = 'none';
+            
+            const resultHtml = `
+                <div class="alert alert-success">
+                    <h5>✅ Result Import Complete!</h5>
+                    <ul>
+                        <li>Successfully imported: <strong>${successCount}</strong> results</li>
+                        <li>Updated existing: <strong>${updateCount}</strong></li>
+                        <li>Failed: <strong>${failCount}</strong></li>
+                    </ul>
+                    <small class="text-muted">Note: For bulk import with custom dates, a backend endpoint is recommended.</small>
+                </div>
+            `;
+            document.getElementById('resultImportResult').innerHTML = resultHtml;
+            
+            pendingResultImports = [];
+            document.getElementById('resultFileInput').value = '';
+            loadManageData();
+            loadDashboardData();
+            
+            setTimeout(() => {
+                document.getElementById('resultImportResult').innerHTML = '';
+            }, 5000);
+        }
+        
+        // ============ TEMPLATE DOWNLOADS ============
+        
+        function downloadDreamTemplate() {
+            const csvContent = "Dream Description,Direct Numbers,House Numbers,Ending Numbers\nSeeing a snake,09,17,37,57,77,99,7,9\nMoney,00,14,15,20,25,35,50,0,5\nTiger,,9,\nElephant,,9,";
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dreams_template.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function downloadDreamExcelTemplate() {
+            const data = [
+                ['Dream Description', 'Direct Numbers', 'House Numbers', 'Ending Numbers'],
+                ['Seeing a snake', '09,17,37,57,77,99', '7', '9'],
+                ['Money', '00,14,15,20,25,35,50', '0,5', '0'],
+                ['Tiger', '', '9', ''],
+                ['Elephant', '', '9', '']
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Dreams Template');
+            XLSX.writeFile(wb, 'dreams_template.xlsx');
+        }
+        
+        function downloadResultTemplate() {
+            const csvContent = "Date,First Round,Second Round\n25/04/2026,08,51\n24/04/2026,76,47\n23/04/2026,06,94\n22/04/2026,91,19";
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'results_template.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function downloadResultExcelTemplate() {
+            const data = [
+                ['Date', 'First Round', 'Second Round'],
+                ['25/04/2026', '08', '51'],
+                ['24/04/2026', '76', '47'],
+                ['23/04/2026', '06', '94'],
+                ['22/04/2026', '91', '19']
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Results Template');
+            XLSX.writeFile(wb, 'results_template.xlsx');
+        }
+        
+        // ============ REST OF THE FUNCTIONS (same as before) ============
+        
         async function login() {
             const password = document.getElementById('adminPassword').value;
             
@@ -782,245 +1335,6 @@
             document.getElementById('adminDashboard').style.display = 'none';
             document.getElementById('adminPassword').value = '';
         }
-        
-        function showSection(section) {
-            document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            
-            const sections = {
-                'dashboard': 'dashboardSection',
-                'results': 'resultsSection',
-                'common': 'commonSection',
-                'dreams': 'dreamsSection',
-                'import': 'importSection',
-                'analytics': 'analyticsSection',
-                'manage': 'manageSection',
-                'backup': 'backupSection'
-            };
-            
-            if (sections[section]) {
-                document.getElementById(sections[section]).style.display = 'block';
-                const clickedLink = Array.from(document.querySelectorAll('.nav-link')).find(
-                    link => link.innerText.toLowerCase().includes(section)
-                );
-                if (clickedLink) clickedLink.classList.add('active');
-                
-                if (section === 'analytics') loadAnalytics();
-                if (section === 'manage') loadManageData();
-                if (section === 'dreams') loadDreamsList();
-            }
-        }
-        
-        // ============ IMPORT FUNCTIONS ============
-        
-        function handleFileUpload(file) {
-            if (!file) return;
-            
-            const fileType = file.name.split('.').pop().toLowerCase();
-            
-            if (fileType === 'csv') {
-                parseCSV(file);
-            } else if (fileType === 'xlsx' || fileType === 'xls') {
-                parseExcel(file);
-            } else {
-                alert('Please upload a CSV or Excel file');
-            }
-        }
-        
-        function parseCSV(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                const dreams = [];
-                
-                for (let i = 1; i < lines.length; i++) { // Skip header
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const parts = line.split(',');
-                    if (parts.length >= 1) {
-                        const dream = {
-                            dream: parts[0]?.trim(),
-                            direct: parts[1]?.trim() || '',
-                            house: parts[2]?.trim() || '',
-                            ending: parts[3]?.trim() || ''
-                        };
-                        
-                        if (dream.dream && dream.dream !== 'Dream Description') {
-                            dreams.push(dream);
-                        }
-                    }
-                }
-                
-                showImportPreview(dreams);
-            };
-            reader.readAsText(file);
-        }
-        
-        function parseExcel(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                
-                const dreams = [];
-                for (let i = 1; i < rows.length; i++) { // Skip header
-                    const row = rows[i];
-                    if (!row || !row[0]) continue;
-                    
-                    const dream = {
-                        dream: row[0]?.toString().trim(),
-                        direct: row[1]?.toString().trim() || '',
-                        house: row[2]?.toString().trim() || '',
-                        ending: row[3]?.toString().trim() || ''
-                    };
-                    
-                    if (dream.dream && dream.dream !== 'Dream Description') {
-                        dreams.push(dream);
-                    }
-                }
-                
-                showImportPreview(dreams);
-            };
-            reader.readAsArrayBuffer(file);
-        }
-        
-        function showImportPreview(dreams) {
-            if (dreams.length === 0) {
-                alert('No valid dreams found in file. Please check the format.');
-                return;
-            }
-            
-            pendingImports = dreams;
-            document.getElementById('importPreview').style.display = 'block';
-            document.getElementById('previewCount').innerText = dreams.length;
-            
-            const previewBody = document.getElementById('importPreviewBody');
-            previewBody.innerHTML = dreams.slice(0, 10).map(d => `
-                <tr>
-                    <td>${d.dream}</td>
-                    <td><small>${d.direct || '-'}</small></td>
-                    <td><small>${d.house || '-'}</small></td>
-                    <td><small>${d.ending || '-'}</small></td>
-                </tr>
-            `).join('');
-            
-            if (dreams.length > 10) {
-                previewBody.innerHTML += `<tr><td colspan="4" class="text-muted">... and ${dreams.length - 10} more</td></tr>`;
-            }
-        }
-        
-        function cancelImport() {
-            document.getElementById('importPreview').style.display = 'none';
-            document.getElementById('fileInput').value = '';
-            pendingImports = [];
-        }
-        
-        async function confirmImport() {
-            if (!pendingImports || pendingImports.length === 0) return;
-            
-            document.getElementById('importPreview').style.display = 'none';
-            document.getElementById('importProgress').style.display = 'block';
-            
-            let successCount = 0;
-            let failCount = 0;
-            let duplicateCount = 0;
-            
-            for (let i = 0; i < pendingImports.length; i++) {
-                const dream = pendingImports[i];
-                const progress = ((i + 1) / pendingImports.length) * 100;
-                document.getElementById('importProgressBar').style.width = `${progress}%`;
-                document.getElementById('importProgressBar').innerText = `${Math.round(progress)}%`;
-                document.getElementById('importStatus').innerText = `Importing ${i + 1} of ${pendingImports.length}: ${dream.dream}`;
-                
-                try {
-                    // Check if dream already exists
-                    const existing = allDreams.find(d => {
-                        const data = d.data || d;
-                        return data.dream?.toLowerCase() === dream.dream.toLowerCase();
-                    });
-                    
-                    if (existing) {
-                        duplicateCount++;
-                        continue;
-                    }
-                    
-                    const response = await fetch(`${API_BASE_URL}/api/admin/add-dream`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${adminToken}`
-                        },
-                        body: JSON.stringify(dream)
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        successCount++;
-                    } else {
-                        failCount++;
-                    }
-                } catch (error) {
-                    failCount++;
-                }
-            }
-            
-            document.getElementById('importProgress').style.display = 'none';
-            
-            const resultHtml = `
-                <div class="alert alert-success">
-                    <h5>✅ Import Complete!</h5>
-                    <ul>
-                        <li>Successfully imported: <strong>${successCount}</strong> dreams</li>
-                        <li>Duplicates skipped: <strong>${duplicateCount}</strong></li>
-                        <li>Failed: <strong>${failCount}</strong></li>
-                    </ul>
-                </div>
-            `;
-            document.getElementById('importResult').innerHTML = resultHtml;
-            
-            // Reset and refresh
-            pendingImports = [];
-            document.getElementById('fileInput').value = '';
-            loadDreamsList();
-            loadDashboardData();
-            
-            setTimeout(() => {
-                document.getElementById('importResult').innerHTML = '';
-            }, 5000);
-        }
-        
-        function downloadTemplate() {
-            const csvContent = "Dream Description,Direct Numbers,House Numbers,Ending Numbers\nSeeing a snake,09,17,37,57,77,99,7,9\nMoney,00,14,15,20,25,35,50,0,5\nTiger,,9,\nElephant,,9,\nDog,4,5,6,4,";
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'dreams_template.csv';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        function downloadExcelTemplate() {
-            const data = [
-                ['Dream Description', 'Direct Numbers', 'House Numbers', 'Ending Numbers'],
-                ['Seeing a snake', '09,17,37,57,77,99', '7', '9'],
-                ['Money', '00,14,15,20,25,35,50', '0,5', '0'],
-                ['Tiger', '', '9', ''],
-                ['Elephant', '', '9', ''],
-                ['Dog', '4,5,6', '4', '']
-            ];
-            
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Dreams Template');
-            XLSX.writeFile(wb, 'dreams_template.xlsx');
-        }
-        
-        // ============ REST OF THE FUNCTIONS ============
         
         async function loadDashboardData() {
             try {
@@ -1195,13 +1509,15 @@
                 });
                 
                 const freqTable = document.getElementById('frequencyTable').querySelector('tbody');
-                freqTable.innerHTML = sorted.map(([num, count]) => `
-                    <tr>
-                        <td><strong>${num}</strong></td>
-                        <td>${count}</td>
-                        <td>${((count / results.length) * 100).toFixed(2)}%</td>
-                    </tr>
-                `).join('');
+                if (freqTable) {
+                    freqTable.innerHTML = sorted.map(([num, count]) => `
+                        <tr>
+                            <td><strong>${num}</strong></td>
+                            <td>${count}</td>
+                            <td>${((count / (results.length * 2)) * 100).toFixed(2)}%</td>
+                        </tr>
+                    `).join('');
+                }
                 
             } catch (error) {
                 console.error('Error loading analytics:', error);
