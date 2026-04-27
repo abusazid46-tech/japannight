@@ -194,36 +194,28 @@ app.get('/api/common-numbers', async (req, res) => {
     }
 });
 
-// Get all previous results (with pagination)
 app.get('/api/results', async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 50;
-        const skip = (page - 1) * limit;
-        
         if (mongoose.connection.readyState !== 1) {
             return res.json({
                 success: false,
-                message: 'Database not connected. Please run seed.js first.',
+                message: 'Database not connected',
                 data: [],
                 count: 0
             });
         }
         
+        // Get ALL results without limit for the public page
         const results = await TeerData.find({ type: 'result' })
-            .sort({ date: -1 })
-            .skip(skip)
-            .limit(limit)
+            .sort({ date: -1 })  // Sort by date descending on server side
             .lean();
         
-        const total = await TeerData.countDocuments({ type: 'result' });
+        const total = results.length;
         
         res.json({
             success: true,
-            count: results.length,
+            count: total,
             total: total,
-            page: page,
-            totalPages: Math.ceil(total / limit),
             data: results
         });
     } catch (error) {
@@ -235,7 +227,6 @@ app.get('/api/results', async (req, res) => {
         });
     }
 });
-
 // Search dream numbers
 app.get('/api/search-dream', async (req, res) => {
     try {
@@ -603,7 +594,8 @@ app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) =>
 app.get('/api/admin/all-results', authenticateAdmin, async (req, res) => {
     try {
         const results = await TeerData.find({ type: 'result' })
-            .sort({ date: -1 });
+            .sort({ date: -1 })  // Sort descending on server
+            .lean();
         
         console.log(`✅ Retrieved ${results.length} results for admin`);
         res.json({
@@ -619,7 +611,6 @@ app.get('/api/admin/all-results', authenticateAdmin, async (req, res) => {
         });
     }
 });
-
 // Delete result (requires authentication)
 app.delete('/api/admin/delete-result/:id', authenticateAdmin, async (req, res) => {
     try {
