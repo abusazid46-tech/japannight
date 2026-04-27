@@ -1084,7 +1084,7 @@
         }
         
         // ============ RESULT UPDATE FUNCTIONS - SEPARATE ============
-        // Update First Round Only - Fixed
+        // Update First Round Only - Using new endpoint
 async function updateFirstRoundOnly() {
     const firstRound = document.getElementById('firstRoundOnly').value;
     
@@ -1101,30 +1101,20 @@ async function updateFirstRoundOnly() {
     
     const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
     
-    // Get current second round from the displayed value
-    let currentSR = document.getElementById('currentSR').innerText;
-    if (currentSR === '--' || !currentSR) {
-        currentSR = '00';
-    }
-    const formattedSR = currentSR.toString().padStart(2, '0');
-    
     try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/update-first-round`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${adminToken}`
             },
-            body: JSON.stringify({ 
-                firstRound: formattedFR, 
-                secondRound: formattedSR 
-            })
+            body: JSON.stringify({ firstRound: formattedFR })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showMessage('frMsg', `✅ First Round updated to ${formattedFR}! Second Round remains ${formattedSR}`, 'success');
+            showMessage('frMsg', `✅ First Round updated to ${formattedFR}!`, 'success');
             document.getElementById('firstRoundOnly').value = '';
             document.getElementById('currentFR').innerText = formattedFR;
             document.getElementById('firstRoundBoth').value = formattedFR;
@@ -1139,7 +1129,7 @@ async function updateFirstRoundOnly() {
     }
 }
 
-// Update Second Round Only - Fixed
+// Update Second Round Only - Using new endpoint
 async function updateSecondRoundOnly() {
     const secondRound = document.getElementById('secondRoundOnly').value;
     
@@ -1155,30 +1145,20 @@ async function updateSecondRoundOnly() {
     
     const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
     
-    // Get current first round from the displayed value
-    let currentFR = document.getElementById('currentFR').innerText;
-    if (currentFR === '--' || !currentFR) {
-        currentFR = '00';
-    }
-    const formattedFR = currentFR.toString().padStart(2, '0');
-    
     try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/update-second-round`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${adminToken}`
             },
-            body: JSON.stringify({ 
-                firstRound: formattedFR, 
-                secondRound: formattedSR 
-            })
+            body: JSON.stringify({ secondRound: formattedSR })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showMessage('srMsg', `✅ Second Round updated to ${formattedSR}! First Round remains ${formattedFR}`, 'success');
+            showMessage('srMsg', `✅ Second Round updated to ${formattedSR}!`, 'success');
             document.getElementById('secondRoundOnly').value = '';
             document.getElementById('currentSR').innerText = formattedSR;
             document.getElementById('secondRoundBoth').value = formattedSR;
@@ -1192,8 +1172,7 @@ async function updateSecondRoundOnly() {
         showMessage('srMsg', 'Error connecting to server: ' + error.message, 'error');
     }
 }
-
-// Update Both Rounds Together - Fixed
+        // Update Both Rounds Together - Fixed
 async function updateBothRounds() {
     const firstRound = document.getElementById('firstRoundBoth').value;
     const secondRound = document.getElementById('secondRoundBoth').value;
