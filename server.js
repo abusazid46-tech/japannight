@@ -366,6 +366,7 @@ app.post('/api/admin/login', (req, res) => {
     });
 });
 // Update ONLY First Round (keeps existing Second Round)
+// Update ONLY First Round (keeps existing Second Round, or 'XX' if none)
 app.post('/api/admin/update-first-round', authenticateAdmin, async (req, res) => {
     try {
         const { firstRound } = req.body;
@@ -388,9 +389,9 @@ app.post('/api/admin/update-first-round', authenticateAdmin, async (req, res) =>
         
         // Get existing result to preserve Second Round
         const existingResult = await TeerData.findOne({ type: 'result', date: today });
-        let secondRound = '00';
+        let secondRound = 'XX'; // Default to 'XX' instead of '00'
         
-        if (existingResult && existingResult.data && existingResult.data.secondRound) {
+        if (existingResult && existingResult.data && existingResult.data.secondRound && existingResult.data.secondRound !== 'XX') {
             secondRound = existingResult.data.secondRound;
         }
         
@@ -419,7 +420,7 @@ app.post('/api/admin/update-first-round', authenticateAdmin, async (req, res) =>
     }
 });
 
-// Update ONLY Second Round (keeps existing First Round)
+// Update ONLY Second Round (keeps existing First Round, or 'XX' if none)
 app.post('/api/admin/update-second-round', authenticateAdmin, async (req, res) => {
     try {
         const { secondRound } = req.body;
@@ -442,9 +443,9 @@ app.post('/api/admin/update-second-round', authenticateAdmin, async (req, res) =
         
         // Get existing result to preserve First Round
         const existingResult = await TeerData.findOne({ type: 'result', date: today });
-        let firstRound = '00';
+        let firstRound = 'XX'; // Default to 'XX' instead of '00'
         
-        if (existingResult && existingResult.data && existingResult.data.firstRound) {
+        if (existingResult && existingResult.data && existingResult.data.firstRound && existingResult.data.firstRound !== 'XX') {
             firstRound = existingResult.data.firstRound;
         }
         
@@ -466,6 +467,69 @@ app.post('/api/admin/update-second-round', authenticateAdmin, async (req, res) =
         });
     } catch (error) {
         console.error('Error updating second round:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// Update Both Rounds - Modified to handle 'XX'
+app.post('/api/admin/update-result', authenticateAdmin, async (req, res) => {
+    try {
+        let { firstRound, secondRound } = req.body;
+        const today = new Date().toLocaleDateString('en-GB');
+        
+        if (!firstRound || !secondRound) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Both rounds are required' 
+            });
+        }
+        
+        // Handle 'XX' as a special value (not a number)
+        let formattedFR, formattedSR;
+        
+        if (firstRound === 'XX' || firstRound === '--') {
+            formattedFR = 'XX';
+        } else if (/^\d{1,2}$/.test(firstRound)) {
+            formattedFR = parseInt(firstRound).toString().padStart(2, '0');
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'First Round must be a number (0-99) or XX' 
+            });
+        }
+        
+        if (secondRound === 'XX' || secondRound === '--') {
+            formattedSR = 'XX';
+        } else if (/^\d{1,2}$/.test(secondRound)) {
+            formattedSR = parseInt(secondRound).toString().padStart(2, '0');
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Second Round must be a number (0-99) or XX' 
+            });
+        }
+        
+        const result = await TeerData.findOneAndUpdate(
+            { type: 'result', date: today },
+            { 
+                type: 'result', 
+                date: today, 
+                data: { firstRound: formattedFR, secondRound: formattedSR } 
+            },
+            { upsert: true, new: true }
+        );
+        
+        console.log(`✅ Results updated for ${today}: ${formattedFR} / ${formattedSR}`);
+        res.json({ 
+            success: true, 
+            message: 'Results updated successfully',
+            data: result
+        });
+    } catch (error) {
+        console.error('Error updating result:', error);
         res.status(500).json({ 
             success: false, 
             error: error.message 
