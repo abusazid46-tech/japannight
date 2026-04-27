@@ -139,7 +139,7 @@ app.get('/api/today-result', async (req, res) => {
             res.json({
                 success: false,
                 message: 'No result declared for today',
-                data: { firstRound: 'Pending', secondRound: 'Pending' }
+                data: { firstRound: 'XX', secondRound: 'XX' }
             });
         }
     } catch (error) {
