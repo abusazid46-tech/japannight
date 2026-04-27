@@ -634,27 +634,40 @@ app.post('/api/admin/update-result-by-date', authenticateAdmin, async (req, res)
         });
     }
 });
-// Update common numbers (requires authentication)
+// Update common numbers - Supports separate F/R and S/R
 app.post('/api/admin/update-common', authenticateAdmin, async (req, res) => {
     try {
-        const { direct, house, ending } = req.body;
+        const { fr, sr } = req.body;
         const today = new Date().toLocaleDateString('en-GB');
+        
+        // Structure to store both F/R and S/R common numbers
+        const commonData = {
+            fr: {
+                direct: fr?.direct || [],
+                house: fr?.house || [],
+                ending: fr?.ending || []
+            },
+            sr: {
+                direct: sr?.direct || [],
+                house: sr?.house || [],
+                ending: sr?.ending || []
+            }
+        };
         
         const common = await TeerData.findOneAndUpdate(
             { type: 'common', date: today },
             { 
                 type: 'common', 
                 date: today, 
-                data: { 
-                    direct: direct || [], 
-                    house: house || [], 
-                    ending: ending || [] 
-                } 
+                data: commonData
             },
             { upsert: true, new: true }
         );
         
         console.log(`✅ Common numbers updated for ${today}`);
+        console.log(`   F/R - Direct: ${commonData.fr.direct.join(', ')}`);
+        console.log(`   S/R - Direct: ${commonData.sr.direct.join(', ')}`);
+        
         res.json({ 
             success: true, 
             message: 'Common numbers updated successfully',
@@ -669,6 +682,68 @@ app.post('/api/admin/update-common', authenticateAdmin, async (req, res) => {
     }
 });
 
+// Get common numbers - Returns separate F/R and S/R
+app.get('/api/common-numbers', async (req, res) => {
+    try {
+        const today = new Date().toLocaleDateString('en-GB');
+        console.log(`[${new Date().toISOString()}] Fetching common numbers for date: ${today}`);
+        
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({
+                success: false,
+                message: 'Database not connected',
+                data: { fr: { direct: [], house: [], ending: [] }, sr: { direct: [], house: [], ending: [] } }
+            });
+        }
+        
+        const common = await TeerData.findOne({ 
+            type: 'common', 
+            date: today 
+        }).lean();
+        
+        if (common && common.data) {
+            // Check if data has the new structure
+            if (common.data.fr && common.data.sr) {
+                res.json({
+                    success: true,
+                    date: common.date,
+                    data: common.data
+                });
+            } else {
+                // Convert old structure to new structure
+                res.json({
+                    success: true,
+                    date: common.date,
+                    data: {
+                        fr: {
+                            direct: common.data.direct || [],
+                            house: common.data.house || [],
+                            ending: common.data.ending || []
+                        },
+                        sr: {
+                            direct: [],
+                            house: [],
+                            ending: []
+                        }
+                    }
+                });
+            }
+        } else {
+            res.json({
+                success: false,
+                message: 'No common numbers generated for today',
+                data: { fr: { direct: [], house: [], ending: [] }, sr: { direct: [], house: [], ending: [] } }
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching common numbers:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Internal server error',
+            data: { fr: { direct: [], house: [], ending: [] }, sr: { direct: [], house: [], ending: [] } }
+        });
+    }
+});
 // Add dream number (requires authentication)
 app.post('/api/admin/add-dream', authenticateAdmin, async (req, res) => {
     try {
