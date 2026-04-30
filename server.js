@@ -82,6 +82,12 @@ teerDataSchema.index({ 'data.slNo': 1 });
 
 const TeerData = mongoose.model('TeerData', teerDataSchema);
 
+// ============ CACHE CONFIGURATION ============
+// Dream: 5 hours = 18000 seconds
+// Common Numbers: 5 minutes = 300 seconds  
+// Previous Results: 10 minutes = 600 seconds
+// Today's Result: 5 minutes = 300 seconds
+
 // ============ HEALTH CHECK ============
 app.get('/api/health', (req, res) => {
     const dbState = mongoose.connection.readyState;
@@ -103,11 +109,14 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// ============ PUBLIC API ROUTES ============
+// ============ PUBLIC API ROUTES WITH CACHING ============
 
-// Get today's result
+// Get today's result (CACHE: 5 minutes)
 app.get('/api/today-result', async (req, res) => {
     try {
+        // Cache for 5 minutes (300 seconds)
+        res.set('Cache-Control', 'public, max-age=300');
+        
         const today = new Date().toLocaleDateString('en-GB');
         console.log(`[${new Date().toISOString()}] Fetching result for date: ${today}`);
         
@@ -147,9 +156,12 @@ app.get('/api/today-result', async (req, res) => {
     }
 });
 
-// Get common numbers for today
+// Get common numbers (CACHE: 5 minutes)
 app.get('/api/common-numbers', async (req, res) => {
     try {
+        // Cache for 5 minutes (300 seconds)
+        res.set('Cache-Control', 'public, max-age=300');
+        
         const today = new Date().toLocaleDateString('en-GB');
         console.log(`[${new Date().toISOString()}] Fetching common numbers for date: ${today}`);
         
@@ -208,9 +220,12 @@ app.get('/api/common-numbers', async (req, res) => {
     }
 });
 
-// Get all previous results
+// Get all previous results (CACHE: 10 minutes)
 app.get('/api/results', async (req, res) => {
     try {
+        // Cache for 10 minutes (600 seconds)
+        res.set('Cache-Control', 'public, max-age=600');
+        
         if (mongoose.connection.readyState !== 1) {
             return res.json({
                 success: false,
@@ -240,9 +255,12 @@ app.get('/api/results', async (req, res) => {
     }
 });
 
-// Search dream numbers
+// Search dream numbers (CACHE: 5 hours)
 app.get('/api/search-dream', async (req, res) => {
     try {
+        // Cache for 5 hours (18000 seconds)
+        res.set('Cache-Control', 'public, max-age=18000');
+        
         const keyword = req.query.q;
         
         if (mongoose.connection.readyState !== 1) {
@@ -282,9 +300,12 @@ app.get('/api/search-dream', async (req, res) => {
     }
 });
 
-// Get all dreams
+// Get all dreams (CACHE: 5 hours)
 app.get('/api/dreams', async (req, res) => {
     try {
+        // Cache for 5 hours (18000 seconds)
+        res.set('Cache-Control', 'public, max-age=18000');
+        
         const limit = parseInt(req.query.limit) || 100;
         
         if (mongoose.connection.readyState !== 1) {
@@ -355,7 +376,7 @@ const authenticateAdmin = (req, res, next) => {
     }
 };
 
-// ============ ADMIN API ROUTES ============
+// ============ ADMIN API ROUTES (NO CACHE - ALWAYS FRESH) ============
 
 // Admin login
 app.post('/api/admin/login', (req, res) => {
@@ -604,9 +625,12 @@ app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) =>
     }
 });
 
-// Get all results for admin
+// Get all results for admin (NO CACHE - always fresh)
 app.get('/api/admin/all-results', authenticateAdmin, async (req, res) => {
     try {
+        // No cache for admin - always get fresh data
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        
         const results = await TeerData.find({ type: 'result' }).sort({ date: -1 }).lean();
         console.log(`✅ Retrieved ${results.length} results for admin`);
         res.json({ success: true, count: results.length, data: results });
@@ -693,19 +717,26 @@ const server = app.listen(PORT, () => {
     console.log(`🔑 Admin Panel: http://localhost:${PORT}/admin.html`);
     console.log(`📝 Admin Password: ${process.env.ADMIN_PASSWORD || 'admin123'}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('\n✅ CACHE CONFIGURATION:');
+    console.log(`   📊 Today's Result: 5 minutes`);
+    console.log(`   📊 Common Numbers: 5 minutes`);
+    console.log(`   📊 Previous Results: 10 minutes`);
+    console.log(`   📊 Dreams: 5 hours`);
+    console.log(`   🔒 Admin APIs: No cache (always fresh)`);
     console.log('\n✅ API Endpoints:');
     console.log(`   GET  /api/health`);
-    console.log(`   GET  /api/today-result`);
-    console.log(`   GET  /api/common-numbers`);
-    console.log(`   GET  /api/results`);
-    console.log(`   GET  /api/dreams`);
+    console.log(`   GET  /api/today-result (Cache: 5min)`);
+    console.log(`   GET  /api/common-numbers (Cache: 5min)`);
+    console.log(`   GET  /api/results (Cache: 10min)`);
+    console.log(`   GET  /api/dreams (Cache: 5hrs)`);
+    console.log(`   GET  /api/search-dream (Cache: 5hrs)`);
     console.log(`   POST /api/admin/login`);
     console.log(`   POST /api/admin/update-first-round`);
     console.log(`   POST /api/admin/update-second-round`);
     console.log(`   POST /api/admin/update-result`);
     console.log(`   POST /api/admin/update-common`);
     console.log(`   POST /api/admin/add-dream`);
-    console.log(`   GET  /api/admin/all-results`);
+    console.log(`   GET  /api/admin/all-results (No cache)`);
     console.log(`   DELETE /api/admin/delete-result/:id`);
     console.log(`   DELETE /api/admin/delete-dream/:id`);
     console.log('='.repeat(50) + '\n');
