@@ -83,7 +83,6 @@ teerDataSchema.index({ 'data.slNo': 1 });
 const TeerData = mongoose.model('TeerData', teerDataSchema);
 
 // ============ CACHE VERSION TRACKING ============
-// ============ CACHE VERSION TRACKING ============
 let lastUpdateTimestamp = Date.now();
 
 function refreshCacheVersion() {
@@ -93,6 +92,7 @@ function refreshCacheVersion() {
     // Send real-time update to all connected clients
     sendUpdateToAllClients('cache-update', { version: lastUpdateTimestamp });
 }
+
 // ============ HEALTH CHECK ============
 app.get('/api/health', (req, res) => {
     const dbState = mongoose.connection.readyState;
@@ -113,6 +113,7 @@ app.get('/api/health', (req, res) => {
         environment: process.env.NODE_ENV || 'development'
     });
 });
+
 // ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
 // Store all connected clients
 const sseClients = [];
@@ -153,7 +154,7 @@ function sendUpdateToAllClients(updateType, data = null) {
     }
     
     const message = JSON.stringify({
-        type: updateType,  // 'cache-update', 'result-update', 'common-update', 'dream-update'
+        type: updateType,
         data: data,
         timestamp: Date.now()
     });
@@ -168,6 +169,7 @@ function sendUpdateToAllClients(updateType, data = null) {
     
     console.log(`📡 Broadcasted '${updateType}' to ${sseClients.length} clients`);
 }
+
 // Get current cache version
 app.get('/api/cache-version', (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -536,7 +538,8 @@ app.post('/api/admin/update-first-round', authenticateAdmin, async (req, res) =>
         );
     
         refreshCacheVersion();
-sendUpdateToAllClients('result-update', { type: 'firstRound', value: firstRound });  // ← ADD THIS
+        sendUpdateToAllClients('result-update', { type: 'firstRound', value: firstRound });
+        
         console.log(`✅ First Round updated for ${today}: ${firstRound} (Second Round: ${secondRound})`);
         res.json({ success: true, message: 'First Round updated successfully', data: result });
     } catch (error) {
@@ -573,7 +576,8 @@ app.post('/api/admin/update-second-round', authenticateAdmin, async (req, res) =
         );
         
         refreshCacheVersion();
-        sendUpdateToAllClients('result-update', { type: 'secondRound', value: secondRound }); 
+        sendUpdateToAllClients('result-update', { type: 'secondRound', value: secondRound });
+        
         console.log(`✅ Second Round updated for ${today}: ${secondRound} (First Round: ${firstRound})`);
         res.json({ success: true, message: 'Second Round updated successfully', data: result });
     } catch (error) {
@@ -618,6 +622,7 @@ app.post('/api/admin/update-result', authenticateAdmin, async (req, res) => {
         
         refreshCacheVersion();
         sendUpdateToAllClients('result-update', { type: 'both', firstRound: formattedFR, secondRound: formattedSR });
+        
         console.log(`✅ Results updated for ${today}: ${formattedFR} / ${formattedSR}`);
         res.json({ success: true, message: 'Results updated successfully', data: result });
     } catch (error) {
@@ -651,7 +656,7 @@ app.post('/api/admin/update-result-by-date', authenticateAdmin, async (req, res)
         );
         
         refreshCacheVersion();
-sendUpdateToAllClients('result-update', { action: 'bulk-import', count: successCount });  // ← ADD THIS
+        sendUpdateToAllClients('result-update', { action: 'bulk-import', date: date, firstRound: firstRound, secondRound: secondRound });
         
         console.log(`✅ Result updated for ${date}: ${firstRound}, ${secondRound}`);
         res.json({ success: true, message: 'Result updated successfully', data: result });
@@ -687,6 +692,7 @@ app.post('/api/admin/update-common', authenticateAdmin, async (req, res) => {
         );
         
         refreshCacheVersion();
+        sendUpdateToAllClients('common-update', { fr: commonData.fr, sr: commonData.sr });
         
         console.log(`✅ Common numbers updated for ${today}`);
         res.json({ success: true, message: 'Common numbers updated successfully', data: common });
@@ -724,6 +730,7 @@ app.post('/api/admin/add-dream', authenticateAdmin, async (req, res) => {
         
         refreshCacheVersion();
         sendUpdateToAllClients('dream-update', { dream: dream, action: 'added' });
+        
         console.log(`✅ Dream added: ${dream} (ID: ${newSlNo})`);
         res.json({ success: true, message: 'Dream added successfully', data: newDream });
     } catch (error) {
@@ -749,6 +756,7 @@ app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) =>
         
         refreshCacheVersion();
         sendUpdateToAllClients('dream-update', { action: 'deleted', id: id });
+        
         console.log(`✅ Dream deleted: ${deleted.data.dream}`);
         res.json({ success: true, message: 'Dream deleted successfully' });
     } catch (error) {
@@ -787,7 +795,7 @@ app.delete('/api/admin/delete-result/:id', authenticateAdmin, async (req, res) =
         }
         
         refreshCacheVersion();
-sendUpdateToAllClients('result-update', { action: 'deleted', date: deleted.date });  // ← ADD THIS
+        sendUpdateToAllClients('result-update', { action: 'deleted', date: deleted.date });
         
         console.log(`✅ Result deleted for date: ${deleted.date}`);
         res.json({ success: true, message: 'Result deleted successfully' });
@@ -858,9 +866,11 @@ const server = app.listen(PORT, () => {
     console.log(`   📊 Dreams: 5 hours (with auto-reset on update)`);
     console.log(`   🔒 Admin APIs: No cache (always fresh)`);
     console.log(`   🔄 Cache auto-resets when admin makes changes`);
+    console.log(`   📡 SSE Real-time updates enabled`);
     console.log('\n✅ API Endpoints:');
     console.log(`   GET  /api/health`);
     console.log(`   GET  /api/cache-version`);
+    console.log(`   GET  /api/events (SSE - Real-time updates)`);
     console.log(`   GET  /api/today-result (Cache: 5min, auto-reset)`);
     console.log(`   GET  /api/common-numbers (Cache: 5min, auto-reset)`);
     console.log(`   GET  /api/results (Cache: 10min, auto-reset)`);
