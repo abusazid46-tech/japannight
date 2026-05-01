@@ -912,1559 +912,1044 @@
     <footer>
         <p>&copy; 2024 Teer Results Admin Panel | Separate F/R & S/R Updates | Complete Management</p>
     </footer>
-
-    <script>
-        // API Configuration
-        const API_BASE_URL = 'https://teer-website.onrender.com'; // Change to your Render URL
-        let adminToken = null;
-        let allDreams = [];
-        let allResults = [];
-        let pendingDreamImports = [];
-        let pendingResultImports = [];
-        let todayResultData = null;
-        let frCommonData = { direct: [], house: [], ending: [] };
-        let srCommonData = { direct: [], house: [], ending: [] };
-        // Initialize dates
-const todayStr = new Date().toLocaleDateString('en-GB');
-const todayDateFRElem = document.getElementById('todayDateFR');
-if (todayDateFRElem) todayDateFRElem.innerText = todayStr;
-const todayDateSRElem = document.getElementById('todayDateSR');
-if (todayDateSRElem) todayDateSRElem.innerText = todayStr;
-const todayDateFRCommonElem = document.getElementById('todayDateFRCommon');
-if (todayDateFRCommonElem) todayDateFRCommonElem.innerText = todayStr;
-const todayDateSRCommonElem = document.getElementById('todayDateSRCommon');
-if (todayDateSRCommonElem) todayDateSRCommonElem.innerText = todayStr;
-        // Function to load today's result for display
-       async function loadTodayResultForDisplay() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/today-result`);
-        const data = await response.json();
-        if (data && data.data) {
-            todayResultData = data.data;
-            const fr = data.data.firstRound || '--';
-            const sr = data.data.secondRound || '--';
-            document.getElementById('currentFR').innerText = fr;
-            document.getElementById('currentSR').innerText = sr;
-            
-            // Populate the both rounds fields
-            if (fr !== '--') document.getElementById('firstRoundBoth').value = fr;
-            if (sr !== '--') document.getElementById('secondRoundBoth').value = sr;
-        } else {
+<script>
+    // API Configuration
+    const API_BASE_URL = 'https://teer-website.onrender.com';
+    let adminToken = null;
+    let allDreams = [];
+    let allResults = [];
+    let pendingDreamImports = [];
+    let pendingResultImports = [];
+    let todayResultData = null;
+    let frCommonData = { direct: [], house: [], ending: [] };
+    let srCommonData = { direct: [], house: [], ending: [] };
+    
+    // Initialize dates
+    const todayStr = new Date().toLocaleDateString('en-GB');
+    const todayDateFRElem = document.getElementById('todayDateFR');
+    if (todayDateFRElem) todayDateFRElem.innerText = todayStr;
+    const todayDateSRElem = document.getElementById('todayDateSR');
+    if (todayDateSRElem) todayDateSRElem.innerText = todayStr;
+    const todayDateFRCommonElem = document.getElementById('todayDateFRCommon');
+    if (todayDateFRCommonElem) todayDateFRCommonElem.innerText = todayStr;
+    const todayDateSRCommonElem = document.getElementById('todayDateSRCommon');
+    if (todayDateSRCommonElem) todayDateSRCommonElem.innerText = todayStr;
+    
+    // Function to load today's result for display
+    async function loadTodayResultForDisplay() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/today-result`);
+            const data = await response.json();
+            if (data && data.data) {
+                todayResultData = data.data;
+                const fr = data.data.firstRound || '--';
+                const sr = data.data.secondRound || '--';
+                document.getElementById('currentFR').innerText = fr;
+                document.getElementById('currentSR').innerText = sr;
+                
+                if (fr !== '--') document.getElementById('firstRoundBoth').value = fr;
+                if (sr !== '--') document.getElementById('secondRoundBoth').value = sr;
+            } else {
+                document.getElementById('currentFR').innerText = '--';
+                document.getElementById('currentSR').innerText = '--';
+            }
+        } catch (error) {
+            console.error('Error loading today result:', error);
             document.getElementById('currentFR').innerText = '--';
             document.getElementById('currentSR').innerText = '--';
         }
-    } catch (error) {
-        console.error('Error loading today result:', error);
-        document.getElementById('currentFR').innerText = '--';
-        document.getElementById('currentSR').innerText = '--';
     }
-}        
-        // Load Common Numbers for both F/R and S/R
-async function loadCommonNumbersForDisplay() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/common-numbers`);
-        const data = await response.json();
-        
-        if (data && data.data) {
-            // Check if data has separate F/R and S/R structure
-            if (data.data.fr && data.data.sr) {
-                // New structure with separate F/R and S/R
-                frCommonData = data.data.fr;
-                srCommonData = data.data.sr;
-            } else {
-                // Old structure - assume it's for F/R, leave S/R empty
-                frCommonData = {
-                    direct: data.data.direct || [],
-                    house: data.data.house || [],
-                    ending: data.data.ending || []
-                };
-                srCommonData = { direct: [], house: [], ending: [] };
-            }
+    
+    // Load Common Numbers for both F/R and S/R
+    async function loadCommonNumbersForDisplay() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/common-numbers`);
+            const data = await response.json();
             
-            // Display F/R Common Numbers
-            document.getElementById('currentFRDirect').innerText = frCommonData.direct?.join(', ') || '--';
-            document.getElementById('currentFRHouse').innerText = frCommonData.house?.join(', ') || '--';
-            document.getElementById('currentFREnding').innerText = frCommonData.ending?.join(', ') || '--';
-            
-            // Display S/R Common Numbers
-            document.getElementById('currentSRDirect').innerText = srCommonData.direct?.join(', ') || '--';
-            document.getElementById('currentSRHouse').innerText = srCommonData.house?.join(', ') || '--';
-            document.getElementById('currentSREnding').innerText = srCommonData.ending?.join(', ') || '--';
-            
-            // Populate input fields
-            document.getElementById('frDirect').value = frCommonData.direct?.join(', ') || '';
-            document.getElementById('frHouse').value = frCommonData.house?.join(', ') || '';
-            document.getElementById('frEnding').value = frCommonData.ending?.join(', ') || '';
-            
-            document.getElementById('srDirect').value = srCommonData.direct?.join(', ') || '';
-            document.getElementById('srHouse').value = srCommonData.house?.join(', ') || '';
-            document.getElementById('srEnding').value = srCommonData.ending?.join(', ') || '';
-        }
-    } catch (error) {
-        console.error('Error loading common numbers:', error);
-    }
-}
-
-// Update First Round Common Numbers
-async function updateFRCommon() {
-    const direct = document.getElementById('frDirect').value;
-    const house = document.getElementById('frHouse').value;
-    const ending = document.getElementById('frEnding').value;
-    
-    const directArray = direct.trim() ? direct.split(',').map(s => s.trim()) : [];
-    const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
-    const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
-    
-    // Get current S/R common numbers
-    const srDirect = document.getElementById('srDirect').value;
-    const srHouse = document.getElementById('srHouse').value;
-    const srEnding = document.getElementById('srEnding').value;
-    
-    const srDirectArray = srDirect.trim() ? srDirect.split(',').map(s => s.trim()) : [];
-    const srHouseArray = srHouse.trim() ? srHouse.split(',').map(s => s.trim()) : [];
-    const srEndingArray = srEnding.trim() ? srEnding.split(',').map(s => s.trim()) : [];
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${adminToken}`
-            },
-            body: JSON.stringify({ 
-                fr: { direct: directArray, house: houseArray, ending: endingArray },
-                sr: { direct: srDirectArray, house: srHouseArray, ending: srEndingArray }
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showMessage('frCommonMsg', '✅ First Round Common Numbers updated successfully!', 'success');
-            // Update displayed values
-            document.getElementById('currentFRDirect').innerText = directArray.join(', ') || '--';
-            document.getElementById('currentFRHouse').innerText = houseArray.join(', ') || '--';
-            document.getElementById('currentFREnding').innerText = endingArray.join(', ') || '--';
-        } else {
-            showMessage('frCommonMsg', data.error || 'Error updating First Round Common Numbers', 'error');
-        }
-    } catch (error) {
-        console.error('Update error:', error);
-        showMessage('frCommonMsg', 'Error connecting to server: ' + error.message, 'error');
-    }
-}
-
-// Update Second Round Common Numbers
-async function updateSRCommon() {
-    const direct = document.getElementById('srDirect').value;
-    const house = document.getElementById('srHouse').value;
-    const ending = document.getElementById('srEnding').value;
-    
-    const directArray = direct.trim() ? direct.split(',').map(s => s.trim()) : [];
-    const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
-    const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
-    
-    // Get current F/R common numbers
-    const frDirect = document.getElementById('frDirect').value;
-    const frHouse = document.getElementById('frHouse').value;
-    const frEnding = document.getElementById('frEnding').value;
-    
-    const frDirectArray = frDirect.trim() ? frDirect.split(',').map(s => s.trim()) : [];
-    const frHouseArray = frHouse.trim() ? frHouse.split(',').map(s => s.trim()) : [];
-    const frEndingArray = frEnding.trim() ? frEnding.split(',').map(s => s.trim()) : [];
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${adminToken}`
-            },
-            body: JSON.stringify({ 
-                fr: { direct: frDirectArray, house: frHouseArray, ending: frEndingArray },
-                sr: { direct: directArray, house: houseArray, ending: endingArray }
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showMessage('srCommonMsg', '✅ Second Round Common Numbers updated successfully!', 'success');
-            // Update displayed values
-            document.getElementById('currentSRDirect').innerText = directArray.join(', ') || '--';
-            document.getElementById('currentSRHouse').innerText = houseArray.join(', ') || '--';
-            document.getElementById('currentSREnding').innerText = endingArray.join(', ') || '--';
-        } else {
-            showMessage('srCommonMsg', data.error || 'Error updating Second Round Common Numbers', 'error');
-        }
-    } catch (error) {
-        console.error('Update error:', error);
-        showMessage('srCommonMsg', 'Error connecting to server: ' + error.message, 'error');
-    }
-}
-        // Drag & Drop setup
-        const dreamDropZone = document.getElementById('dreamDropZone');
-        if (dreamDropZone) {
-            dreamDropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dreamDropZone.classList.add('drag-over');
-            });
-            dreamDropZone.addEventListener('dragleave', () => {
-                dreamDropZone.classList.remove('drag-over');
-            });
-            dreamDropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dreamDropZone.classList.remove('drag-over');
-                const file = e.dataTransfer.files[0];
-                if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-                    handleDreamFileUpload(file);
+            if (data && data.data) {
+                if (data.data.fr && data.data.sr) {
+                    frCommonData = data.data.fr;
+                    srCommonData = data.data.sr;
                 } else {
-                    alert('Please upload a CSV or Excel file');
-                }
-            });
-        }
-        
-        const resultDropZone = document.getElementById('resultDropZone');
-        if (resultDropZone) {
-            resultDropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                resultDropZone.classList.add('drag-over');
-            });
-            resultDropZone.addEventListener('dragleave', () => {
-                resultDropZone.classList.remove('drag-over');
-            });
-            resultDropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                resultDropZone.classList.remove('drag-over');
-                const file = e.dataTransfer.files[0];
-                if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-                    handleResultFileUpload(file);
-                } else {
-                    alert('Please upload a CSV or Excel file');
-                }
-            });
-        }
-        
-        function showSection(section) {
-            document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            
-            const sections = {
-                'dashboard': 'dashboardSection',
-                'results': 'resultsSection',
-                'common': 'commonSection',
-                'dreams': 'dreamsSection',
-                'importDreams': 'importDreamsSection',
-                'importResults': 'importResultsSection',
-                'analytics': 'analyticsSection',
-                'manage': 'manageSection',
-                'backup': 'backupSection'
-            };
-            
-            if (sections[section]) {
-                document.getElementById(sections[section]).style.display = 'block';
-                const clickedLink = Array.from(document.querySelectorAll('.nav-link')).find(
-                    link => link.innerText.toLowerCase().includes(section.toLowerCase())
-                );
-                if (clickedLink) clickedLink.classList.add('active');
-                
-                if (section === 'analytics') loadAnalytics();
-                if (section === 'manage') loadManageData();
-                if (section === 'dreams') loadDreamsList();
-                if (section === 'results') {
-                    loadTodayResultForDisplay();
-                    loadCommonNumbersForDisplay();
-                }
-                if (section === 'common') {
-                    loadCommonNumbersForDisplay();
-                }
-            }
-        }
-        
-        // ============ RESULT UPDATE FUNCTIONS - SEPARATE ============
-        // Update First Round Only - Using new endpoint
-async function updateFirstRoundOnly() {
-    const firstRound = document.getElementById('firstRoundOnly').value;
-    
-    if (!firstRound) {
-        showMessage('frMsg', 'Please enter First Round number', 'error');
-        return;
-    }
-    
-    // Validate number
-    if (!/^\d{1,2}$/.test(firstRound)) {
-        showMessage('frMsg', 'Please enter a valid number (0-99)', 'error');
-        return;
-    }
-    
-    const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/update-first-round`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${adminToken}`
-            },
-            body: JSON.stringify({ firstRound: formattedFR })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showMessage('frMsg', `✅ First Round updated to ${formattedFR}!`, 'success');
-            document.getElementById('firstRoundOnly').value = '';
-            document.getElementById('currentFR').innerText = formattedFR;
-            document.getElementById('firstRoundBoth').value = formattedFR;
-            loadDashboardData();
-            loadManageData();
-        } else {
-            showMessage('frMsg', data.error || 'Error updating First Round', 'error');
-        }
-    } catch (error) {
-        console.error('Update error:', error);
-        showMessage('frMsg', 'Error connecting to server: ' + error.message, 'error');
-    }
-}
-
-// Update Second Round Only - Using new endpoint
-async function updateSecondRoundOnly() {
-    const secondRound = document.getElementById('secondRoundOnly').value;
-    
-    if (!secondRound) {
-        showMessage('srMsg', 'Please enter Second Round number', 'error');
-        return;
-    }
-    
-    if (!/^\d{1,2}$/.test(secondRound)) {
-        showMessage('srMsg', 'Please enter a valid number (0-99)', 'error');
-        return;
-    }
-    
-    const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/update-second-round`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${adminToken}`
-            },
-            body: JSON.stringify({ secondRound: formattedSR })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showMessage('srMsg', `✅ Second Round updated to ${formattedSR}!`, 'success');
-            document.getElementById('secondRoundOnly').value = '';
-            document.getElementById('currentSR').innerText = formattedSR;
-            document.getElementById('secondRoundBoth').value = formattedSR;
-            loadDashboardData();
-            loadManageData();
-        } else {
-            showMessage('srMsg', data.error || 'Error updating Second Round', 'error');
-        }
-    } catch (error) {
-        console.error('Update error:', error);
-        showMessage('srMsg', 'Error connecting to server: ' + error.message, 'error');
-    }
-}
-        // Update Both Rounds Together - Fixed
-async function updateBothRounds() {
-    const firstRound = document.getElementById('firstRoundBoth').value;
-    const secondRound = document.getElementById('secondRoundBoth').value;
-    
-    if (!firstRound || !secondRound) {
-        showMessage('bothMsg', 'Please fill both rounds', 'error');
-        return;
-    }
-    
-    if (!/^\d{1,2}$/.test(firstRound) || !/^\d{1,2}$/.test(secondRound)) {
-        showMessage('bothMsg', 'Please enter valid numbers (0-99)', 'error');
-        return;
-    }
-    
-    const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
-    const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${adminToken}`
-            },
-            body: JSON.stringify({ firstRound: formattedFR, secondRound: formattedSR })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showMessage('bothMsg', `✅ Results updated to ${formattedFR} / ${formattedSR}!`, 'success');
-            document.getElementById('currentFR').innerText = formattedFR;
-            document.getElementById('currentSR').innerText = formattedSR;
-            document.getElementById('firstRoundBoth').value = '';
-            document.getElementById('secondRoundBoth').value = '';
-            document.getElementById('firstRoundOnly').value = '';
-            document.getElementById('secondRoundOnly').value = '';
-            loadDashboardData();
-            loadManageData();
-        } else {
-            showMessage('bothMsg', data.error || 'Error updating results', 'error');
-        }
-    } catch (error) {
-        console.error('Update error:', error);
-        showMessage('bothMsg', 'Error connecting to server: ' + error.message, 'error');
-    }
-}
-                // ============ COMMON NUMBERS UPDATE FUNCTIONS - SEPARATE ============
-        
-        // Update Direct Numbers Only
-        async function updateDirectOnly() {
-            const direct = document.getElementById('directOnly').value;
-            
-            if (!direct.trim()) {
-                showMessage('directMsg', 'Please enter Direct Numbers', 'error');
-                return;
-            }
-            
-            const directArray = direct.split(',').map(s => s.trim());
-            const currentHouse = document.getElementById('currentHouse').innerText;
-            const currentEnding = document.getElementById('currentEnding').innerText;
-            
-            const houseArray = currentHouse !== '--' ? currentHouse.split(',').map(s => s.trim()) : [];
-            const endingArray = currentEnding !== '--' ? currentEnding.split(',').map(s => s.trim()) : [];
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ direct: directArray, house: houseArray, ending: endingArray })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('directMsg', '✅ Direct Numbers updated successfully!', 'success');
-                    document.getElementById('currentDirect').innerText = direct;
-                    document.getElementById('directAll').value = direct;
-                    document.getElementById('directOnly').value = '';
-                } else {
-                    showMessage('directMsg', data.error || 'Error updating Direct Numbers', 'error');
-                }
-            } catch (error) {
-                showMessage('directMsg', 'Error connecting to server', 'error');
-            }
-        }
-        
-        // Update House Numbers Only
-        async function updateHouseOnly() {
-            const house = document.getElementById('houseOnly').value;
-            
-            const currentDirect = document.getElementById('currentDirect').innerText;
-            const currentEnding = document.getElementById('currentEnding').innerText;
-            
-            const directArray = currentDirect !== '--' ? currentDirect.split(',').map(s => s.trim()) : [];
-            const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
-            const endingArray = currentEnding !== '--' ? currentEnding.split(',').map(s => s.trim()) : [];
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ direct: directArray, house: houseArray, ending: endingArray })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('houseMsg', '✅ House Numbers updated successfully!', 'success');
-                    document.getElementById('currentHouse').innerText = house || '--';
-                    document.getElementById('houseAll').value = house;
-                    document.getElementById('houseOnly').value = '';
-                } else {
-                    showMessage('houseMsg', data.error || 'Error updating House Numbers', 'error');
-                }
-            } catch (error) {
-                showMessage('houseMsg', 'Error connecting to server', 'error');
-            }
-        }
-        
-        // Update Ending Numbers Only
-        async function updateEndingOnly() {
-            const ending = document.getElementById('endingOnly').value;
-            
-            const currentDirect = document.getElementById('currentDirect').innerText;
-            const currentHouse = document.getElementById('currentHouse').innerText;
-            
-            const directArray = currentDirect !== '--' ? currentDirect.split(',').map(s => s.trim()) : [];
-            const houseArray = currentHouse !== '--' ? currentHouse.split(',').map(s => s.trim()) : [];
-            const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ direct: directArray, house: houseArray, ending: endingArray })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('endingMsg', '✅ Ending Numbers updated successfully!', 'success');
-                    document.getElementById('currentEnding').innerText = ending || '--';
-                    document.getElementById('endingAll').value = ending;
-                    document.getElementById('endingOnly').value = '';
-                } else {
-                    showMessage('endingMsg', data.error || 'Error updating Ending Numbers', 'error');
-                }
-            } catch (error) {
-                showMessage('endingMsg', 'Error connecting to server', 'error');
-            }
-        }
-        
-        // Update All Common Numbers Together
-        async function updateAllCommon() {
-            const direct = document.getElementById('directAll').value;
-            const house = document.getElementById('houseAll').value;
-            const ending = document.getElementById('endingAll').value;
-            
-            const directArray = direct.trim() ? direct.split(',').map(s => s.trim()) : [];
-            const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
-            const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ direct: directArray, house: houseArray, ending: endingArray })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('allCommonMsg', '✅ All Common Numbers updated successfully!', 'success');
-                    document.getElementById('currentDirect').innerText = direct || '--';
-                    document.getElementById('currentHouse').innerText = house || '--';
-                    document.getElementById('currentEnding').innerText = ending || '--';
-                    document.getElementById('directOnly').value = direct;
-                    document.getElementById('houseOnly').value = house;
-                    document.getElementById('endingOnly').value = ending;
-                } else {
-                    showMessage('allCommonMsg', data.error || 'Error updating Common Numbers', 'error');
-                }
-            } catch (error) {
-                showMessage('allCommonMsg', 'Error connecting to server', 'error');
-            }
-        }
-        
-        // ============ DREAM IMPORT FUNCTIONS ============
-        
-        function handleDreamFileUpload(file) {
-            if (!file) return;
-            
-            const fileType = file.name.split('.').pop().toLowerCase();
-            
-            if (fileType === 'csv') {
-                parseDreamCSV(file);
-            } else if (fileType === 'xlsx' || fileType === 'xls') {
-                parseDreamExcel(file);
-            } else {
-                alert('Please upload a CSV or Excel file');
-            }
-        }
-        
-        function parseDreamCSV(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                const dreams = [];
-                
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const parts = line.split(',');
-                    if (parts.length >= 1) {
-                        const dream = {
-                            dream: parts[0]?.trim(),
-                            direct: parts[1]?.trim() || '',
-                            house: parts[2]?.trim() || '',
-                            ending: parts[3]?.trim() || ''
-                        };
-                        
-                        if (dream.dream && dream.dream !== 'Dream Description') {
-                            dreams.push(dream);
-                        }
-                    }
-                }
-                
-                showDreamImportPreview(dreams);
-            };
-            reader.readAsText(file);
-        }
-        
-        function parseDreamExcel(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                
-                const dreams = [];
-                for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i];
-                    if (!row || !row[0]) continue;
-                    
-                    const dream = {
-                        dream: row[0]?.toString().trim(),
-                        direct: row[1]?.toString().trim() || '',
-                        house: row[2]?.toString().trim() || '',
-                        ending: row[3]?.toString().trim() || ''
+                    frCommonData = {
+                        direct: data.data.direct || [],
+                        house: data.data.house || [],
+                        ending: data.data.ending || []
                     };
-                    
-                    if (dream.dream && dream.dream !== 'Dream Description') {
-                        dreams.push(dream);
-                    }
+                    srCommonData = { direct: [], house: [], ending: [] };
                 }
                 
-                showDreamImportPreview(dreams);
-            };
-            reader.readAsArrayBuffer(file);
-        }
-        
-        function showDreamImportPreview(dreams) {
-            if (dreams.length === 0) {
-                alert('No valid dreams found in file. Please check the format.');
-                return;
-            }
-            
-            pendingDreamImports = dreams;
-            document.getElementById('dreamImportPreview').style.display = 'block';
-            document.getElementById('dreamPreviewCount').innerText = dreams.length;
-            
-            const previewBody = document.getElementById('dreamImportPreviewBody');
-            previewBody.innerHTML = dreams.slice(0, 10).map(d => `
-                <tr>
-                    <td>${d.dream}</td>
-                    <td><small>${d.direct || '-'}</small></td>
-                    <td><small>${d.house || '-'}</small></td>
-                    <td><small>${d.ending || '-'}</small></td>
-                </tr>
-            `).join('');
-            
-            if (dreams.length > 10) {
-                previewBody.innerHTML += `<tr><td colspan="4" class="text-muted">... and ${dreams.length - 10} more</td></tr>`;
-            }
-        }
-        
-        function cancelDreamImport() {
-            document.getElementById('dreamImportPreview').style.display = 'none';
-            document.getElementById('dreamFileInput').value = '';
-            pendingDreamImports = [];
-        }
-        
-        async function confirmDreamImport() {
-            if (!pendingDreamImports || pendingDreamImports.length === 0) return;
-            
-            document.getElementById('dreamImportPreview').style.display = 'none';
-            document.getElementById('dreamImportProgress').style.display = 'block';
-            
-            let successCount = 0;
-            let failCount = 0;
-            let duplicateCount = 0;
-            
-            for (let i = 0; i < pendingDreamImports.length; i++) {
-                const dream = pendingDreamImports[i];
-                const progress = ((i + 1) / pendingDreamImports.length) * 100;
-                document.getElementById('dreamImportProgressBar').style.width = `${progress}%`;
-                document.getElementById('dreamImportProgressBar').innerText = `${Math.round(progress)}%`;
-                document.getElementById('dreamImportStatus').innerText = `Importing ${i + 1} of ${pendingDreamImports.length}: ${dream.dream}`;
+                document.getElementById('currentFRDirect').innerText = frCommonData.direct?.join(', ') || '--';
+                document.getElementById('currentFRHouse').innerText = frCommonData.house?.join(', ') || '--';
+                document.getElementById('currentFREnding').innerText = frCommonData.ending?.join(', ') || '--';
                 
-                try {
-                    const existing = allDreams.find(d => {
-                        const data = d.data || d;
-                        return data.dream?.toLowerCase() === dream.dream.toLowerCase();
-                    });
-                    
-                    if (existing) {
-                        duplicateCount++;
-                        continue;
-                    }
-                    
-                    const response = await fetch(`${API_BASE_URL}/api/admin/add-dream`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${adminToken}`
-                        },
-                        body: JSON.stringify(dream)
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        successCount++;
-                    } else {
-                        failCount++;
-                    }
-                } catch (error) {
-                    failCount++;
-                }
+                document.getElementById('currentSRDirect').innerText = srCommonData.direct?.join(', ') || '--';
+                document.getElementById('currentSRHouse').innerText = srCommonData.house?.join(', ') || '--';
+                document.getElementById('currentSREnding').innerText = srCommonData.ending?.join(', ') || '--';
+                
+                document.getElementById('frDirect').value = frCommonData.direct?.join(', ') || '';
+                document.getElementById('frHouse').value = frCommonData.house?.join(', ') || '';
+                document.getElementById('frEnding').value = frCommonData.ending?.join(', ') || '';
+                
+                document.getElementById('srDirect').value = srCommonData.direct?.join(', ') || '';
+                document.getElementById('srHouse').value = srCommonData.house?.join(', ') || '';
+                document.getElementById('srEnding').value = srCommonData.ending?.join(', ') || '';
             }
-            
-            document.getElementById('dreamImportProgress').style.display = 'none';
-            
-            const resultHtml = `
-                <div class="alert alert-success">
-                    <h5>✅ Dream Import Complete!</h5>
-                    <ul>
-                        <li>Successfully imported: <strong>${successCount}</strong> dreams</li>
-                        <li>Duplicates skipped: <strong>${duplicateCount}</strong></li>
-                        <li>Failed: <strong>${failCount}</strong></li>
-                    </ul>
-                </div>
-            `;
-            document.getElementById('dreamImportResult').innerHTML = resultHtml;
-            
-            pendingDreamImports = [];
-            document.getElementById('dreamFileInput').value = '';
-            loadDreamsList();
-            loadDashboardData();
-            
-            setTimeout(() => {
-                document.getElementById('dreamImportResult').innerHTML = '';
-            }, 5000);
+        } catch (error) {
+            console.error('Error loading common numbers:', error);
         }
+    }
+    
+    // Update First Round Common Numbers
+    async function updateFRCommon() {
+        const direct = document.getElementById('frDirect').value;
+        const house = document.getElementById('frHouse').value;
+        const ending = document.getElementById('frEnding').value;
         
-        // ============ RESULT IMPORT FUNCTIONS ============
+        const directArray = direct.trim() ? direct.split(',').map(s => s.trim()) : [];
+        const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
+        const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
         
-        function convertToStandardDateFormat(dateStr) {
-            if (!dateStr) return null;
-            dateStr = dateStr.toString().trim();
+        const srDirect = document.getElementById('srDirect').value;
+        const srHouse = document.getElementById('srHouse').value;
+        const srEnding = document.getElementById('srEnding').value;
+        
+        const srDirectArray = srDirect.trim() ? srDirect.split(',').map(s => s.trim()) : [];
+        const srHouseArray = srHouse.trim() ? srHouse.split(',').map(s => s.trim()) : [];
+        const srEndingArray = srEnding.trim() ? srEnding.split(',').map(s => s.trim()) : [];
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`
+                },
+                body: JSON.stringify({ 
+                    fr: { direct: directArray, house: houseArray, ending: endingArray },
+                    sr: { direct: srDirectArray, house: srHouseArray, ending: srEndingArray }
+                })
+            });
             
-            if (dateStr.includes('-')) {
-                const parts = dateStr.split('-');
-                if (parts.length === 3) {
-                    const day = parts[0].padStart(2, '0');
-                    const month = parts[1].padStart(2, '0');
-                    const year = parts[2];
-                    if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) {
-                        return `${day}/${month}/${year}`;
-                    }
-                }
+            const data = await response.json();
+            
+            if (data.success) {
+                showMessage('frCommonMsg', '✅ First Round Common Numbers updated successfully!', 'success');
+                document.getElementById('currentFRDirect').innerText = directArray.join(', ') || '--';
+                document.getElementById('currentFRHouse').innerText = houseArray.join(', ') || '--';
+                document.getElementById('currentFREnding').innerText = endingArray.join(', ') || '--';
+            } else {
+                showMessage('frCommonMsg', data.error || 'Error updating First Round Common Numbers', 'error');
             }
-            
-            if (dateStr.includes('/')) {
-                const parts = dateStr.split('/');
-                if (parts.length === 3) {
-                    const day = parts[0].padStart(2, '0');
-                    const month = parts[1].padStart(2, '0');
-                    const year = parts[2];
-                    if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) {
-                        return `${day}/${month}/${year}`;
-                    }
-                }
-            }
-            
-            const parsedDate = new Date(dateStr);
-            if (!isNaN(parsedDate.getTime())) {
-                const day = parsedDate.getDate().toString().padStart(2, '0');
-                const month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
-                const year = parsedDate.getFullYear();
-                return `${day}/${month}/${year}`;
-            }
-            
-            return null;
+        } catch (error) {
+            console.error('Update error:', error);
+            showMessage('frCommonMsg', 'Error connecting to server: ' + error.message, 'error');
         }
+    }
+    
+    // Update Second Round Common Numbers
+    async function updateSRCommon() {
+        const direct = document.getElementById('srDirect').value;
+        const house = document.getElementById('srHouse').value;
+        const ending = document.getElementById('srEnding').value;
         
-        function handleResultFileUpload(file) {
-            if (!file) return;
+        const directArray = direct.trim() ? direct.split(',').map(s => s.trim()) : [];
+        const houseArray = house.trim() ? house.split(',').map(s => s.trim()) : [];
+        const endingArray = ending.trim() ? ending.split(',').map(s => s.trim()) : [];
+        
+        const frDirect = document.getElementById('frDirect').value;
+        const frHouse = document.getElementById('frHouse').value;
+        const frEnding = document.getElementById('frEnding').value;
+        
+        const frDirectArray = frDirect.trim() ? frDirect.split(',').map(s => s.trim()) : [];
+        const frHouseArray = frHouse.trim() ? frHouse.split(',').map(s => s.trim()) : [];
+        const frEndingArray = frEnding.trim() ? frEnding.split(',').map(s => s.trim()) : [];
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/update-common`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`
+                },
+                body: JSON.stringify({ 
+                    fr: { direct: frDirectArray, house: frHouseArray, ending: frEndingArray },
+                    sr: { direct: directArray, house: houseArray, ending: endingArray }
+                })
+            });
             
-            const fileType = file.name.split('.').pop().toLowerCase();
+            const data = await response.json();
             
-            if (fileType === 'csv') {
-                parseResultCSV(file);
-            } else if (fileType === 'xlsx' || fileType === 'xls') {
-                parseResultExcel(file);
+            if (data.success) {
+                showMessage('srCommonMsg', '✅ Second Round Common Numbers updated successfully!', 'success');
+                document.getElementById('currentSRDirect').innerText = directArray.join(', ') || '--';
+                document.getElementById('currentSRHouse').innerText = houseArray.join(', ') || '--';
+                document.getElementById('currentSREnding').innerText = endingArray.join(', ') || '--';
+            } else {
+                showMessage('srCommonMsg', data.error || 'Error updating Second Round Common Numbers', 'error');
+            }
+        } catch (error) {
+            console.error('Update error:', error);
+            showMessage('srCommonMsg', 'Error connecting to server: ' + error.message, 'error');
+        }
+    }
+    
+    // Drag & Drop setup
+    const dreamDropZone = document.getElementById('dreamDropZone');
+    if (dreamDropZone) {
+        dreamDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dreamDropZone.classList.add('drag-over');
+        });
+        dreamDropZone.addEventListener('dragleave', () => {
+            dreamDropZone.classList.remove('drag-over');
+        });
+        dreamDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dreamDropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                handleDreamFileUpload(file);
             } else {
                 alert('Please upload a CSV or Excel file');
             }
-        }
-        
-        function parseResultCSV(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n');
-                const results = [];
-                const errors = [];
-                let skippedHeader = false;
-                
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    if (!skippedHeader && (line.toLowerCase().includes('date') || 
-                        line.toLowerCase().includes('first') || 
-                        line.toLowerCase().includes('second'))) {
-                        skippedHeader = true;
-                        continue;
-                    }
-                    
-                    const parts = line.split(',');
-                    if (parts.length >= 3) {
-                        let rawDate = parts[0]?.trim();
-                        let firstRound = parts[1]?.trim();
-                        let secondRound = parts[2]?.trim();
-                        
-                        const date = convertToStandardDateFormat(rawDate);
-                        
-                        if (firstRound && !isNaN(firstRound)) {
-                            firstRound = parseInt(firstRound).toString().padStart(2, '0');
-                        }
-                        if (secondRound && !isNaN(secondRound)) {
-                            secondRound = parseInt(secondRound).toString().padStart(2, '0');
-                        }
-                        
-                        const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-                        const numberRegex = /^\d{2}$/;
-                        
-                        if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
-                            results.push({ date, firstRound, secondRound });
-                        } else {
-                            errors.push(`Line ${i + 1}: Invalid - Date: ${rawDate} → ${date}, FR: ${firstRound}, SR: ${secondRound}`);
-                        }
-                    }
-                }
-                
-                if (errors.length > 0) {
-                    console.warn('Import errors:', errors);
-                }
-                
-                showResultImportPreview(results);
-            };
-            reader.readAsText(file);
-        }
-        
-        function parseResultExcel(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                
-                const results = [];
-                const errors = [];
-                let skippedHeader = false;
-                
-                for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i];
-                    if (!row || row.length < 3) continue;
-                    
-                    if (!skippedHeader && row[0] && typeof row[0] === 'string' && 
-                        (row[0].toLowerCase().includes('date') || row[0].toLowerCase().includes('दिनांक'))) {
-                        skippedHeader = true;
-                        continue;
-                    }
-                    
-                    let rawDate = row[0]?.toString().trim();
-                    let firstRound = row[1]?.toString().trim();
-                    let secondRound = row[2]?.toString().trim();
-                    
-                    if (rawDate && !isNaN(rawDate) && rawDate.length < 6) {
-                        const excelDate = parseInt(rawDate);
-                        const dateObj = new Date((excelDate - 25569) * 86400000);
-                        rawDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
-                    }
-                    
-                    const date = convertToStandardDateFormat(rawDate);
-                    
-                    if (firstRound && !isNaN(firstRound)) {
-                        firstRound = parseInt(firstRound).toString().padStart(2, '0');
-                    }
-                    if (secondRound && !isNaN(secondRound)) {
-                        secondRound = parseInt(secondRound).toString().padStart(2, '0');
-                    }
-                    
-                    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-                    const numberRegex = /^\d{2}$/;
-                    
-                    if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
-                        results.push({ date, firstRound, secondRound });
-                    } else if (rawDate && rawDate !== 'Date' && rawDate !== 'date') {
-                        errors.push(`Row ${i + 1}: Invalid - Date: ${rawDate} → ${date}, FR: ${firstRound}, SR: ${secondRound}`);
-                    }
-                }
-                
-                if (errors.length > 0) {
-                    console.warn('Import errors:', errors);
-                }
-                
-                showResultImportPreview(results);
-            };
-            reader.readAsArrayBuffer(file);
-        }
-        
-        function showResultImportPreview(results) {
-            if (results.length === 0) {
-                alert('No valid results found. Please check your file format.');
-                return;
+        });
+    }
+    
+    const resultDropZone = document.getElementById('resultDropZone');
+    if (resultDropZone) {
+        resultDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            resultDropZone.classList.add('drag-over');
+        });
+        resultDropZone.addEventListener('dragleave', () => {
+            resultDropZone.classList.remove('drag-over');
+        });
+        resultDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            resultDropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                handleResultFileUpload(file);
+            } else {
+                alert('Please upload a CSV or Excel file');
             }
+        });
+    }
+    
+    function showSection(section) {
+        document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        
+        const sections = {
+            'dashboard': 'dashboardSection',
+            'results': 'resultsSection',
+            'common': 'commonSection',
+            'dreams': 'dreamsSection',
+            'importDreams': 'importDreamsSection',
+            'importResults': 'importResultsSection',
+            'analytics': 'analyticsSection',
+            'manage': 'manageSection',
+            'backup': 'backupSection'
+        };
+        
+        if (sections[section]) {
+            document.getElementById(sections[section]).style.display = 'block';
+            const clickedLink = Array.from(document.querySelectorAll('.nav-link')).find(
+                link => link.innerText.toLowerCase().includes(section.toLowerCase())
+            );
+            if (clickedLink) clickedLink.classList.add('active');
             
-            pendingResultImports = results;
-            document.getElementById('resultImportPreview').style.display = 'block';
-            document.getElementById('resultPreviewCount').innerText = results.length;
-            
-            const previewBody = document.getElementById('resultImportPreviewBody');
-            previewBody.innerHTML = results.slice(0, 10).map(r => `
-                <tr>
-                    <td>${r.date}</td>
-                    <td><span class="badge bg-primary">${r.firstRound}</span></td>
-                    <td><span class="badge bg-success">${r.secondRound}</span></td>
-                </tr>
-            `).join('');
-            
-            if (results.length > 10) {
-                previewBody.innerHTML += `<tr><td colspan="3" class="text-muted">... and ${results.length - 10} more</td></tr>`;
+            if (section === 'analytics') loadAnalytics();
+            if (section === 'manage') loadManageData();
+            if (section === 'dreams') loadDreamsList();
+            if (section === 'results') {
+                loadTodayResultForDisplay();
+                loadCommonNumbersForDisplay();
+            }
+            if (section === 'common') {
+                loadCommonNumbersForDisplay();
             }
         }
+    }
+    
+    // Update First Round Only
+    async function updateFirstRoundOnly() {
+        const firstRound = document.getElementById('firstRoundOnly').value;
         
-        function cancelResultImport() {
-            document.getElementById('resultImportPreview').style.display = 'none';
-            document.getElementById('resultFileInput').value = '';
-            pendingResultImports = [];
+        if (!firstRound) {
+            showMessage('frMsg', 'Please enter First Round number', 'error');
+            return;
         }
         
-        async function confirmResultImport() {
-            if (!pendingResultImports || pendingResultImports.length === 0) return;
+        if (!/^\d{1,2}$/.test(firstRound)) {
+            showMessage('frMsg', 'Please enter a valid number (0-99)', 'error');
+            return;
+        }
+        
+        const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/update-first-round`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`
+                },
+                body: JSON.stringify({ firstRound: formattedFR })
+            });
             
-            document.getElementById('resultImportPreview').style.display = 'none';
-            document.getElementById('resultImportProgress').style.display = 'block';
+            const data = await response.json();
             
-            let successCount = 0;
-            let failCount = 0;
-            let updateCount = 0;
-            
-            for (let i = 0; i < pendingResultImports.length; i++) {
-                const result = pendingResultImports[i];
-                const progress = ((i + 1) / pendingResultImports.length) * 100;
-                document.getElementById('resultImportProgressBar').style.width = `${progress}%`;
-                document.getElementById('resultImportProgressBar').innerText = `${Math.round(progress)}%`;
-                document.getElementById('resultImportStatus').innerText = `Importing ${i + 1} of ${pendingResultImports.length}: ${result.date}`;
-                
-                try {
-                    const existing = allResults.find(r => r.date === result.date);
-                    
-                    const response = await fetch(`${API_BASE_URL}/api/admin/update-result-by-date`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${adminToken}`
-                        },
-                        body: JSON.stringify({ 
-                            date: result.date,
-                            firstRound: result.firstRound, 
-                            secondRound: result.secondRound 
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        successCount++;
-                        if (existing) updateCount++;
-                    } else {
-                        failCount++;
-                    }
-                } catch (error) {
-                    failCount++;
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 50));
+            if (data.success) {
+                showMessage('frMsg', `✅ First Round updated to ${formattedFR}!`, 'success');
+                document.getElementById('firstRoundOnly').value = '';
+                document.getElementById('currentFR').innerText = formattedFR;
+                document.getElementById('firstRoundBoth').value = formattedFR;
+                loadDashboardData();
+                loadManageData();
+            } else {
+                showMessage('frMsg', data.error || 'Error updating First Round', 'error');
             }
-            
-            document.getElementById('resultImportProgress').style.display = 'none';
-            
-            const resultHtml = `
-                <div class="alert alert-success">
-                    <h5>✅ Result Import Complete!</h5>
-                    <ul>
-                        <li>Successfully imported: <strong>${successCount}</strong> results</li>
-                        <li>Updated existing: <strong>${updateCount}</strong></li>
-                        <li>Failed: <strong>${failCount}</strong></li>
-                    </ul>
-                </div>
-            `;
-            document.getElementById('resultImportResult').innerHTML = resultHtml;
-            
-            pendingResultImports = [];
-            document.getElementById('resultFileInput').value = '';
-            loadManageData();
-            loadDashboardData();
-            
-            setTimeout(() => {
-                document.getElementById('resultImportResult').innerHTML = '';
-            }, 5000);
+        } catch (error) {
+            console.error('Update error:', error);
+            showMessage('frMsg', 'Error connecting to server: ' + error.message, 'error');
+        }
+    }
+    
+    // Update Second Round Only
+    async function updateSecondRoundOnly() {
+        const secondRound = document.getElementById('secondRoundOnly').value;
+        
+        if (!secondRound) {
+            showMessage('srMsg', 'Please enter Second Round number', 'error');
+            return;
         }
         
-        // ============ TEMPLATE DOWNLOADS ============
-        
-        function downloadDreamTemplate() {
-            const csvContent = "Dream Description,Direct Numbers,House Numbers,Ending Numbers\nSeeing a snake,09,17,37,57,77,99,7,9\nMoney,00,14,15,20,25,35,50,0,5\nTiger,,9,\nElephant,,9,";
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'dreams_template.csv';
-            a.click();
-            URL.revokeObjectURL(url);
+        if (!/^\d{1,2}$/.test(secondRound)) {
+            showMessage('srMsg', 'Please enter a valid number (0-99)', 'error');
+            return;
         }
         
-        function downloadDreamExcelTemplate() {
-            const data = [
-                ['Dream Description', 'Direct Numbers', 'House Numbers', 'Ending Numbers'],
-                ['Seeing a snake', '09,17,37,57,77,99', '7', '9'],
-                ['Money', '00,14,15,20,25,35,50', '0,5', '0'],
-                ['Tiger', '', '9', ''],
-                ['Elephant', '', '9', '']
-            ];
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Dreams Template');
-            XLSX.writeFile(wb, 'dreams_template.xlsx');
-        }
+        const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
         
-        function downloadResultTemplate() {
-            const csvContent = `Date,First Round,Second Round\n25/04/2026,08,51\n24-06-2022,76,47\n23/04/2026,6,94\n22-05-2022,91,19`;
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'results_template.csv';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        function downloadResultExcelTemplate() {
-            const data = [
-                ['Date', 'First Round', 'Second Round'],
-                ['25/04/2026', '08', '51'],
-                ['24-06-2022', '76', '47'],
-                ['23/04/2026', '6', '94'],
-                ['22-05-2022', '91', '19']
-            ];
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Results Template');
-            XLSX.writeFile(wb, 'results_template.xlsx');
-        }
-        
-        // ============ CORE FUNCTIONS ============
-        
-        async function login() {
-            const password = document.getElementById('adminPassword').value;
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/update-second-round`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`
+                },
+                body: JSON.stringify({ secondRound: formattedSR })
+            });
             
+            const data = await response.json();
+            
+            if (data.success) {
+                showMessage('srMsg', `✅ Second Round updated to ${formattedSR}!`, 'success');
+                document.getElementById('secondRoundOnly').value = '';
+                document.getElementById('currentSR').innerText = formattedSR;
+                document.getElementById('secondRoundBoth').value = formattedSR;
+                loadDashboardData();
+                loadManageData();
+            } else {
+                showMessage('srMsg', data.error || 'Error updating Second Round', 'error');
+            }
+        } catch (error) {
+            console.error('Update error:', error);
+            showMessage('srMsg', 'Error connecting to server: ' + error.message, 'error');
+        }
+    }
+    
+    // Update Both Rounds Together
+    async function updateBothRounds() {
+        const firstRound = document.getElementById('firstRoundBoth').value;
+        const secondRound = document.getElementById('secondRoundBoth').value;
+        
+        if (!firstRound || !secondRound) {
+            showMessage('bothMsg', 'Please fill both rounds', 'error');
+            return;
+        }
+        
+        if (!/^\d{1,2}$/.test(firstRound) || !/^\d{1,2}$/.test(secondRound)) {
+            showMessage('bothMsg', 'Please enter valid numbers (0-99)', 'error');
+            return;
+        }
+        
+        const formattedFR = parseInt(firstRound).toString().padStart(2, '0');
+        const formattedSR = parseInt(secondRound).toString().padStart(2, '0');
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/update-result`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`
+                },
+                body: JSON.stringify({ firstRound: formattedFR, secondRound: formattedSR })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showMessage('bothMsg', `✅ Results updated to ${formattedFR} / ${formattedSR}!`, 'success');
+                document.getElementById('currentFR').innerText = formattedFR;
+                document.getElementById('currentSR').innerText = formattedSR;
+                document.getElementById('firstRoundBoth').value = '';
+                document.getElementById('secondRoundBoth').value = '';
+                document.getElementById('firstRoundOnly').value = '';
+                document.getElementById('secondRoundOnly').value = '';
+                loadDashboardData();
+                loadManageData();
+            } else {
+                showMessage('bothMsg', data.error || 'Error updating results', 'error');
+            }
+        } catch (error) {
+            console.error('Update error:', error);
+            showMessage('bothMsg', 'Error connecting to server: ' + error.message, 'error');
+        }
+    }
+    
+    // ============ DREAM IMPORT FUNCTIONS ============
+    
+    function handleDreamFileUpload(file) {
+        if (!file) return;
+        const fileType = file.name.split('.').pop().toLowerCase();
+        if (fileType === 'csv') {
+            parseDreamCSV(file);
+        } else if (fileType === 'xlsx' || fileType === 'xls') {
+            parseDreamExcel(file);
+        } else {
+            alert('Please upload a CSV or Excel file');
+        }
+    }
+    
+    function parseDreamCSV(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            const dreams = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const parts = line.split(',');
+                if (parts.length >= 1) {
+                    const dream = {
+                        dream: parts[0]?.trim(),
+                        direct: parts[1]?.trim() || '',
+                        house: parts[2]?.trim() || '',
+                        ending: parts[3]?.trim() || ''
+                    };
+                    if (dream.dream && dream.dream !== 'Dream Description') dreams.push(dream);
+                }
+            }
+            showDreamImportPreview(dreams);
+        };
+        reader.readAsText(file);
+    }
+    
+    function parseDreamExcel(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            const dreams = [];
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || !row[0]) continue;
+                const dream = {
+                    dream: row[0]?.toString().trim(),
+                    direct: row[1]?.toString().trim() || '',
+                    house: row[2]?.toString().trim() || '',
+                    ending: row[3]?.toString().trim() || ''
+                };
+                if (dream.dream && dream.dream !== 'Dream Description') dreams.push(dream);
+            }
+            showDreamImportPreview(dreams);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    
+    function showDreamImportPreview(dreams) {
+        if (dreams.length === 0) {
+            alert('No valid dreams found in file. Please check the format.');
+            return;
+        }
+        pendingDreamImports = dreams;
+        document.getElementById('dreamImportPreview').style.display = 'block';
+        document.getElementById('dreamPreviewCount').innerText = dreams.length;
+        const previewBody = document.getElementById('dreamImportPreviewBody');
+        previewBody.innerHTML = dreams.slice(0, 10).map(d => `
+            <tr><td>${d.dream}</td><td><small>${d.direct || '-'}</small></td><td><small>${d.house || '-'}</small></td><td><small>${d.ending || '-'}</small></td></tr>
+        `).join('');
+        if (dreams.length > 10) {
+            previewBody.innerHTML += `<tr><td colspan="4" class="text-muted">... and ${dreams.length - 10} more</td></tr>`;
+        }
+    }
+    
+    function cancelDreamImport() {
+        document.getElementById('dreamImportPreview').style.display = 'none';
+        document.getElementById('dreamFileInput').value = '';
+        pendingDreamImports = [];
+    }
+    
+    async function confirmDreamImport() {
+        if (!pendingDreamImports || pendingDreamImports.length === 0) return;
+        document.getElementById('dreamImportPreview').style.display = 'none';
+        document.getElementById('dreamImportProgress').style.display = 'block';
+        let successCount = 0, failCount = 0, duplicateCount = 0;
+        for (let i = 0; i < pendingDreamImports.length; i++) {
+            const dream = pendingDreamImports[i];
+            const progress = ((i + 1) / pendingDreamImports.length) * 100;
+            document.getElementById('dreamImportProgressBar').style.width = `${progress}%`;
+            document.getElementById('dreamImportProgressBar').innerText = `${Math.round(progress)}%`;
+            document.getElementById('dreamImportStatus').innerText = `Importing ${i + 1} of ${pendingDreamImports.length}: ${dream.dream}`;
             try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
+                const existing = allDreams.find(d => {
+                    const data = d.data || d;
+                    return data.dream?.toLowerCase() === dream.dream.toLowerCase();
                 });
-                
+                if (existing) { duplicateCount++; continue; }
+                const response = await fetch(`${API_BASE_URL}/api/admin/add-dream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    body: JSON.stringify(dream)
+                });
                 const data = await response.json();
-                
-                if (data.success) {
-                    adminToken = password;
-                    document.getElementById('loginForm').style.display = 'none';
-                    document.getElementById('adminDashboard').style.display = 'block';
-                    loadDashboardData();
-                    loadDreamsList();
-                    loadManageData();
-                    loadTodayResultForDisplay();
-                    loadCommonNumbersForDisplay();
-                } else {
-                    document.getElementById('loginError').innerText = 'Wrong password!';
-                }
-            } catch (error) {
-                document.getElementById('loginError').innerHTML = `
-                    <div class="alert alert-danger">
-                        ❌ Cannot connect to backend: ${API_BASE_URL}
-                    </div>
-                `;
-                console.error('Login error:', error);
+                if (data.success) successCount++; else failCount++;
+            } catch (error) { failCount++; }
+        }
+        document.getElementById('dreamImportProgress').style.display = 'none';
+        document.getElementById('dreamImportResult').innerHTML = `
+            <div class="alert alert-success">
+                <h5>✅ Dream Import Complete!</h5>
+                <ul><li>Successfully imported: <strong>${successCount}</strong> dreams</li><li>Duplicates skipped: <strong>${duplicateCount}</strong></li><li>Failed: <strong>${failCount}</strong></li></ul>
+            </div>`;
+        pendingDreamImports = [];
+        document.getElementById('dreamFileInput').value = '';
+        loadDreamsList();
+        loadDashboardData();
+        setTimeout(() => { document.getElementById('dreamImportResult').innerHTML = ''; }, 5000);
+    }
+    
+    // ============ RESULT IMPORT FUNCTIONS ============
+    
+    function convertToStandardDateFormat(dateStr) {
+        if (!dateStr) return null;
+        dateStr = dateStr.toString().trim();
+        if (dateStr.includes('-')) {
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                const day = parts[0].padStart(2, '0'), month = parts[1].padStart(2, '0'), year = parts[2];
+                if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) return `${day}/${month}/${year}`;
             }
         }
-        
-        function logout() {
-            adminToken = null;
-            document.getElementById('loginForm').style.display = 'flex';
-            document.getElementById('adminDashboard').style.display = 'none';
-            document.getElementById('adminPassword').value = '';
-        }
-        
-        function parseDateToTimestamp(dateStr) {
-            if (!dateStr) return 0;
+        if (dateStr.includes('/')) {
             const parts = dateStr.split('/');
             if (parts.length === 3) {
-                return new Date(parts[2], parseInt(parts[1]) - 1, parts[0]).getTime();
+                const day = parts[0].padStart(2, '0'), month = parts[1].padStart(2, '0'), year = parts[2];
+                if (year && year.length === 4 && !isNaN(day) && !isNaN(month) && !isNaN(year)) return `${day}/${month}/${year}`;
             }
-            return 0;
         }
-        
-        async function loadDashboardData() {
-            try {
-                const resultsRes = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
-                });
-                const resultsData = await resultsRes.json();
-                const results = resultsData.data || [];
-                allResults = results;
-                document.getElementById('totalResults').innerText = results.length;
-                
-                const dreamsRes = await fetch(`${API_BASE_URL}/api/dreams`);
-                const dreamsData = await dreamsRes.json();
-                const dreams = dreamsData.data || dreamsData || [];
-                document.getElementById('totalDreams').innerText = dreams.length;
-                
-                const todayRes = await fetch(`${API_BASE_URL}/api/today-result`);
-                const todayData = await todayRes.json();
-                if (todayData && todayData.data) {
-                    document.getElementById('todayResult').innerHTML = `${todayData.data.firstRound}/${todayData.data.secondRound}`;
-                } else {
-                    document.getElementById('todayResult').innerHTML = '--/--';
+        const parsedDate = new Date(dateStr);
+        if (!isNaN(parsedDate.getTime())) {
+            const day = parsedDate.getDate().toString().padStart(2, '0');
+            const month = (parsedDate.getMonth() + 1).toString().padStart(2, '0');
+            const year = parsedDate.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+        return null;
+    }
+    
+    function handleResultFileUpload(file) {
+        if (!file) return;
+        const fileType = file.name.split('.').pop().toLowerCase();
+        if (fileType === 'csv') parseResultCSV(file);
+        else if (fileType === 'xlsx' || fileType === 'xls') parseResultExcel(file);
+        else alert('Please upload a CSV or Excel file');
+    }
+    
+    function parseResultCSV(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            const results = [];
+            let skippedHeader = false;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                if (!skippedHeader && (line.toLowerCase().includes('date') || line.toLowerCase().includes('first') || line.toLowerCase().includes('second'))) {
+                    skippedHeader = true;
+                    continue;
                 }
-                
-                document.getElementById('winRate').innerHTML = 'Live';
-                
-                const sortedResults = [...results].sort((a, b) => {
-                    const dateA = parseDateToTimestamp(a.date);
-                    const dateB = parseDateToTimestamp(b.date);
-                    return dateB - dateA;
-                });
-                
-                const recentHtml = sortedResults.slice(0, 10).map(r => `
-                    <div class="alert alert-secondary">
-                        <strong>${r.date}</strong>: ${r.data?.firstRound || '--'} | ${r.data?.secondRound || '--'}
-                    </div>
-                `).join('');
-                document.getElementById('recentResults').innerHTML = recentHtml || '<p>No results yet. Add your first result!</p>';
-                
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
+                const parts = line.split(',');
+                if (parts.length >= 3) {
+                    let rawDate = parts[0]?.trim();
+                    let firstRound = parts[1]?.trim();
+                    let secondRound = parts[2]?.trim();
+                    const date = convertToStandardDateFormat(rawDate);
+                    if (firstRound && !isNaN(firstRound)) firstRound = parseInt(firstRound).toString().padStart(2, '0');
+                    if (secondRound && !isNaN(secondRound)) secondRound = parseInt(secondRound).toString().padStart(2, '0');
+                    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+                    const numberRegex = /^\d{2}$/;
+                    if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
+                        results.push({ date, firstRound, secondRound });
+                    }
+                }
             }
+            showResultImportPreview(results);
+        };
+        reader.readAsText(file);
+    }
+    
+    function parseResultExcel(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            const results = [];
+            let skippedHeader = false;
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length < 3) continue;
+                if (!skippedHeader && row[0] && typeof row[0] === 'string' && (row[0].toLowerCase().includes('date') || row[0].toLowerCase().includes('दिनांक'))) {
+                    skippedHeader = true;
+                    continue;
+                }
+                let rawDate = row[0]?.toString().trim();
+                let firstRound = row[1]?.toString().trim();
+                let secondRound = row[2]?.toString().trim();
+                if (rawDate && !isNaN(rawDate) && rawDate.length < 6) {
+                    const excelDate = parseInt(rawDate);
+                    const dateObj = new Date((excelDate - 25569) * 86400000);
+                    rawDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+                }
+                const date = convertToStandardDateFormat(rawDate);
+                if (firstRound && !isNaN(firstRound)) firstRound = parseInt(firstRound).toString().padStart(2, '0');
+                if (secondRound && !isNaN(secondRound)) secondRound = parseInt(secondRound).toString().padStart(2, '0');
+                const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+                const numberRegex = /^\d{2}$/;
+                if (date && dateRegex.test(date) && firstRound && numberRegex.test(firstRound) && secondRound && numberRegex.test(secondRound)) {
+                    results.push({ date, firstRound, secondRound });
+                }
+            }
+            showResultImportPreview(results);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    
+    function showResultImportPreview(results) {
+        if (results.length === 0) {
+            alert('No valid results found. Please check your file format.');
+            return;
         }
-        
-        async function loadDreamsList() {
+        pendingResultImports = results;
+        document.getElementById('resultImportPreview').style.display = 'block';
+        document.getElementById('resultPreviewCount').innerText = results.length;
+        const previewBody = document.getElementById('resultImportPreviewBody');
+        previewBody.innerHTML = results.slice(0, 10).map(r => `
+            <tr><td>${r.date}</td><td><span class="badge bg-primary">${r.firstRound}</span></td><td><span class="badge bg-success">${r.secondRound}</span></td></tr>
+        `).join('');
+        if (results.length > 10) previewBody.innerHTML += `<tr><td colspan="3" class="text-muted">... and ${results.length - 10} more</td></tr>`;
+    }
+    
+    function cancelResultImport() {
+        document.getElementById('resultImportPreview').style.display = 'none';
+        document.getElementById('resultFileInput').value = '';
+        pendingResultImports = [];
+    }
+    
+    async function confirmResultImport() {
+        if (!pendingResultImports || pendingResultImports.length === 0) return;
+        document.getElementById('resultImportPreview').style.display = 'none';
+        document.getElementById('resultImportProgress').style.display = 'block';
+        let successCount = 0, failCount = 0, updateCount = 0;
+        for (let i = 0; i < pendingResultImports.length; i++) {
+            const result = pendingResultImports[i];
+            const progress = ((i + 1) / pendingResultImports.length) * 100;
+            document.getElementById('resultImportProgressBar').style.width = `${progress}%`;
+            document.getElementById('resultImportProgressBar').innerText = `${Math.round(progress)}%`;
+            document.getElementById('resultImportStatus').innerText = `Importing ${i + 1} of ${pendingResultImports.length}: ${result.date}`;
             try {
-                const response = await fetch(`${API_BASE_URL}/api/dreams`);
-                const data = await response.json();
-                allDreams = data.data || data || [];
-                renderDreamsTable(allDreams);
-            } catch (error) {
-                console.error('Error loading dreams:', error);
-            }
-        }
-        
-        function renderDreamsTable(dreams) {
-            const tableBody = document.getElementById('dreamsTable');
-            if (!dreams || dreams.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No dreams found</td></tr>';
-                return;
-            }
-            
-            tableBody.innerHTML = dreams.map(dream => {
-                const dreamData = dream.data || dream;
-                const dreamId = dream._id;
-                const numbers = [dreamData.direct, dreamData.house, dreamData.ending].filter(n => n && n !== '').join(', ');
-                return `
-                    <tr>
-                        <td>${dreamData.slNo || '?'}</td>
-                        <td><strong>${dreamData.dream}</strong></td>
-                        <td><small>${numbers || 'N/A'}</small></td>
-                        <td>
-                            <button class="btn btn-danger btn-sm btn-action" onclick="deleteDream('${dreamId}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-        
-        function filterDreams() {
-            const searchTerm = document.getElementById('searchDreams').value.toLowerCase();
-            const filterHouse = document.getElementById('filterHouse').value;
-            
-            const filtered = allDreams.filter(dream => {
-                const dreamData = dream.data || dream;
-                const matchesSearch = dreamData.dream.toLowerCase().includes(searchTerm);
-                const matchesHouse = !filterHouse || (dreamData.house && dreamData.house.includes(filterHouse));
-                return matchesSearch && matchesHouse;
-            });
-            renderDreamsTable(filtered);
-        }
-        
-        async function loadManageData() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                const existing = allResults.find(r => r.date === result.date);
+                const response = await fetch(`${API_BASE_URL}/api/admin/update-result-by-date`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    body: JSON.stringify({ date: result.date, firstRound: result.firstRound, secondRound: result.secondRound })
                 });
-                const data = await response.json();
-                allResults = data.data || [];
-                
-                const sortedResults = [...allResults].sort((a, b) => {
-                    const dateA = parseDateToTimestamp(a.date);
-                    const dateB = parseDateToTimestamp(b.date);
-                    return dateB - dateA;
-                });
-                
-                renderResultsTable(sortedResults);
-            } catch (error) {
-                console.error('Error loading manage data:', error);
-            }
+                if (response.ok) { successCount++; if (existing) updateCount++; } else { failCount++; }
+            } catch (error) { failCount++; }
+            await new Promise(resolve => setTimeout(resolve, 50));
         }
-        
-        function renderResultsTable(results) {
-            const tableBody = document.getElementById('manageResultsTable');
-            if (!results || results.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No results found</td></tr>';
-                return;
-            }
-            
-            tableBody.innerHTML = results.map(result => `
-                <tr>
-                    <td><strong>${result.date}</strong></td>
-                    <td><span class="badge bg-primary">${result.data?.firstRound || '--'}</span></td>
-                    <td><span class="badge bg-success">${result.data?.secondRound || '--'}</span></td>
-                    <td>
-                        <button class="btn btn-danger btn-sm" onclick="deleteResult('${result._id}')">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        function filterResults() {
-            const searchTerm = document.getElementById('searchResults').value.toLowerCase();
-            const filterMonth = document.getElementById('filterMonth').value;
-            
-            let filtered = allResults.filter(result => {
-                const matchesSearch = result.date.toLowerCase().includes(searchTerm);
-                const matchesMonth = !filterMonth || result.date.includes(`/${filterMonth}/`);
-                return matchesSearch && matchesMonth;
+        document.getElementById('resultImportProgress').style.display = 'none';
+        document.getElementById('resultImportResult').innerHTML = `
+            <div class="alert alert-success">
+                <h5>✅ Result Import Complete!</h5>
+                <ul><li>Successfully imported: <strong>${successCount}</strong> results</li><li>Updated existing: <strong>${updateCount}</strong></li><li>Failed: <strong>${failCount}</strong></li></ul>
+            </div>`;
+        pendingResultImports = [];
+        document.getElementById('resultFileInput').value = '';
+        loadManageData();
+        loadDashboardData();
+        setTimeout(() => { document.getElementById('resultImportResult').innerHTML = ''; }, 5000);
+    }
+    
+    // ============ TEMPLATE DOWNLOADS ============
+    
+    function downloadDreamTemplate() {
+        const csvContent = "Dream Description,Direct Numbers,House Numbers,Ending Numbers\nSeeing a snake,09,17,37,57,77,99,7,9\nMoney,00,14,15,20,25,35,50,0,5\nTiger,,9,\nElephant,,9,";
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'dreams_template.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+    
+    function downloadDreamExcelTemplate() {
+        const data = [
+            ['Dream Description', 'Direct Numbers', 'House Numbers', 'Ending Numbers'],
+            ['Seeing a snake', '09,17,37,57,77,99', '7', '9'],
+            ['Money', '00,14,15,20,25,35,50', '0,5', '0'],
+            ['Tiger', '', '9', ''],
+            ['Elephant', '', '9', '']
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Dreams Template');
+        XLSX.writeFile(wb, 'dreams_template.xlsx');
+    }
+    
+    function downloadResultTemplate() {
+        const csvContent = `Date,First Round,Second Round\n25/04/2026,08,51\n24-06-2022,76,47\n23/04/2026,6,94\n22-05-2022,91,19`;
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'results_template.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+    
+    function downloadResultExcelTemplate() {
+        const data = [
+            ['Date', 'First Round', 'Second Round'],
+            ['25/04/2026', '08', '51'],
+            ['24-06-2022', '76', '47'],
+            ['23/04/2026', '6', '94'],
+            ['22-05-2022', '91', '19']
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Results Template');
+        XLSX.writeFile(wb, 'results_template.xlsx');
+    }
+    
+    // ============ CORE FUNCTIONS ============
+    
+    async function login() {
+        const password = document.getElementById('adminPassword').value;
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
             });
+            const data = await response.json();
+            if (data.success) {
+                adminToken = password;
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+                loadDashboardData();
+                loadDreamsList();
+                loadManageData();
+                loadTodayResultForDisplay();
+                loadCommonNumbersForDisplay();
+            } else {
+                document.getElementById('loginError').innerText = 'Wrong password!';
+            }
+        } catch (error) {
+            document.getElementById('loginError').innerHTML = `<div class="alert alert-danger">❌ Cannot connect to backend: ${API_BASE_URL}</div>`;
+            console.error('Login error:', error);
+        }
+    }
+    
+    function logout() {
+        adminToken = null;
+        document.getElementById('loginForm').style.display = 'flex';
+        document.getElementById('adminDashboard').style.display = 'none';
+        document.getElementById('adminPassword').value = '';
+    }
+    
+    function parseDateToTimestamp(dateStr) {
+        if (!dateStr) return 0;
+        const parts = dateStr.split('/');
+        if (parts.length === 3) return new Date(parts[2], parseInt(parts[1]) - 1, parts[0]).getTime();
+        return 0;
+    }
+    
+    async function loadDashboardData() {
+        try {
+            const resultsRes = await fetch(`${API_BASE_URL}/api/admin/all-results`, { headers: { 'Authorization': `Bearer ${adminToken}` } });
+            const resultsData = await resultsRes.json();
+            const results = resultsData.data || [];
+            allResults = results;
+            document.getElementById('totalResults').innerText = results.length;
             
-            filtered = filtered.sort((a, b) => {
+            const dreamsRes = await fetch(`${API_BASE_URL}/api/dreams`);
+            const dreamsData = await dreamsRes.json();
+            const dreams = dreamsData.data || dreamsData || [];
+            document.getElementById('totalDreams').innerText = dreams.length;
+            
+            const todayRes = await fetch(`${API_BASE_URL}/api/today-result`);
+            const todayData = await todayRes.json();
+            if (todayData && todayData.data) document.getElementById('todayResult').innerHTML = `${todayData.data.firstRound}/${todayData.data.secondRound}`;
+            else document.getElementById('todayResult').innerHTML = '--/--';
+            
+            document.getElementById('winRate').innerHTML = 'Live';
+            const sortedResults = [...results].sort((a, b) => {
                 const dateA = parseDateToTimestamp(a.date);
                 const dateB = parseDateToTimestamp(b.date);
                 return dateB - dateA;
             });
-            
-            renderResultsTable(filtered);
-        }
-        
-        async function loadAnalytics() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, {
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
-                });
-                const data = await response.json();
-                const results = data.data || [];
-                
-                const frequency = {};
-                results.forEach(result => {
-                    if (result.data) {
-                        const fr = result.data.firstRound;
-                        const sr = result.data.secondRound;
-                        if (fr) frequency[fr] = (frequency[fr] || 0) + 1;
-                        if (sr) frequency[sr] = (frequency[sr] || 0) + 1;
-                    }
-                });
-                
-                const sorted = Object.entries(frequency).sort((a,b) => b[1] - a[1]).slice(0, 10);
-                
-                const ctx = document.getElementById('hotNumbersChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: sorted.map(s => s[0]),
-                        datasets: [{
-                            label: 'Frequency',
-                            data: sorted.map(s => s[1]),
-                            backgroundColor: 'rgba(102, 126, 234, 0.5)',
-                            borderColor: 'rgba(102, 126, 234, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: { y: { beginAtZero: true } }
-                    }
-                });
-                
-                const freqTable = document.getElementById('frequencyTable').querySelector('tbody');
-                if (freqTable) {
-                    freqTable.innerHTML = sorted.map(([num, count]) => `
-                        <tr>
-                            <td><strong>${num}</strong></td>
-                            <td>${count}</td>
-                            <td>${((count / (results.length * 2)) * 100).toFixed(2)}%</td>
-                        </tr>
-                    `).join('');
-                }
-                
-            } catch (error) {
-                console.error('Error loading analytics:', error);
-            }
-        }
-        
-        async function addDream() {
-            const dreamName = document.getElementById('dreamName').value;
-            const direct = document.getElementById('dreamDirect').value;
-            const house = document.getElementById('dreamHouse').value;
-            const ending = document.getElementById('dreamEnding').value;
-            
-            if (!dreamName) {
-                showMessage('dreamMsg', 'Please enter dream description', 'error');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/add-dream`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify({ dream: dreamName, direct, house, ending })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    showMessage('dreamMsg', '✅ Dream added successfully!', 'success');
-                    document.getElementById('dreamName').value = '';
-                    document.getElementById('dreamDirect').value = '';
-                    document.getElementById('dreamHouse').value = '';
-                    document.getElementById('dreamEnding').value = '';
-                    loadDreamsList();
-                } else {
-                    showMessage('dreamMsg', data.error || 'Error adding dream', 'error');
-                }
-            } catch (error) {
-                showMessage('dreamMsg', 'Error connecting to server', 'error');
-            }
-        }
-        
-        async function deleteDream(id) {
-            if (confirm('Are you sure you want to delete this dream?')) {
-                try {
-                    await fetch(`${API_BASE_URL}/api/admin/delete-dream/${id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${adminToken}` }
-                    });
-                    loadDreamsList();
-                    showMessage('dreamMsg', '✅ Dream deleted successfully!', 'success');
-                } catch (error) {
-                    alert('Error deleting dream');
-                }
-            }
-        }
-        
-        async function deleteResult(id) {
-            if (confirm('Are you sure you want to delete this result?')) {
-                try {
-                    await fetch(`${API_BASE_URL}/api/admin/delete-result/${id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${adminToken}` }
-                    });
-                    loadManageData();
-                    loadDashboardData();
-                    showMessage('resultMsg', '✅ Result deleted successfully!', 'success');
-                } catch (error) {
-                    alert('Error deleting result');
-                }
-            }
-        }
-        
-        function exportAllData() {
-            const data = {
-                results: allResults,
-                dreams: allDreams,
-                exportDate: new Date().toISOString()
-            };
-            downloadJSON(data, `teer-full-backup-${new Date().toISOString().split('T')[0]}.json`);
-        }
-        
-        function exportResultsCSV() {
-            const headers = ['Date', 'First Round', 'Second Round'];
-            const rows = allResults.map(r => [r.date, r.data?.firstRound || '--', r.data?.secondRound || '--']);
-            downloadCSV([headers, ...rows], `teer-results-${new Date().toISOString().split('T')[0]}.csv`);
-        }
-        
-        function exportDreamsCSV() {
-            const headers = ['Sl No', 'Dream', 'Direct', 'House', 'Ending'];
-            const rows = allDreams.map(d => {
-                const data = d.data || d;
-                return [data.slNo, data.dream, data.direct, data.house, data.ending];
+            const recentHtml = sortedResults.slice(0, 10).map(r => `<div class="alert alert-secondary"><strong>${r.date}</strong>: ${r.data?.firstRound || '--'} | ${r.data?.secondRound || '--'}</div>`).join('');
+            document.getElementById('recentResults').innerHTML = recentHtml || '<p>No results yet. Add your first result!</p>';
+        } catch (error) { console.error('Error loading dashboard:', error); }
+    }
+    
+    async function loadDreamsList() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/dreams`);
+            const data = await response.json();
+            allDreams = data.data || data || [];
+            renderDreamsTable(allDreams);
+        } catch (error) { console.error('Error loading dreams:', error); }
+    }
+    
+    function renderDreamsTable(dreams) {
+        const tableBody = document.getElementById('dreamsTable');
+        if (!dreams || dreams.length === 0) { tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No dreams found</td></table>'; return; }
+        tableBody.innerHTML = dreams.map(dream => {
+            const dreamData = dream.data || dream;
+            const dreamId = dream._id;
+            const numbers = [dreamData.direct, dreamData.house, dreamData.ending].filter(n => n && n !== '').join(', ');
+            return `<tr><td>${dreamData.slNo || '?'}</td><td><strong>${dreamData.dream}</strong></td><td><small>${numbers || 'N/A'}</small></td><td><button class="btn btn-danger btn-sm btn-action" onclick="deleteDream('${dreamId}')"><i class="bi bi-trash"></i></button></td></tr>`;
+        }).join('');
+    }
+    
+    function filterDreams() {
+        const searchTerm = document.getElementById('searchDreams').value.toLowerCase();
+        const filterHouse = document.getElementById('filterHouse').value;
+        const filtered = allDreams.filter(dream => {
+            const dreamData = dream.data || dream;
+            const matchesSearch = dreamData.dream.toLowerCase().includes(searchTerm);
+            const matchesHouse = !filterHouse || (dreamData.house && dreamData.house.includes(filterHouse));
+            return matchesSearch && matchesHouse;
+        });
+        renderDreamsTable(filtered);
+    }
+    
+    async function loadManageData() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, { headers: { 'Authorization': `Bearer ${adminToken}` } });
+            const data = await response.json();
+            allResults = data.data || [];
+            const sortedResults = [...allResults].sort((a, b) => {
+                const dateA = parseDateToTimestamp(a.date);
+                const dateB = parseDateToTimestamp(b.date);
+                return dateB - dateA;
             });
-            downloadCSV([headers, ...rows], `teer-dreams-${new Date().toISOString().split('T')[0]}.csv`);
-        }
-        
-        function exportResults() {
-            exportResultsCSV();
-        }
-        
-        function exportDreams() {
-            exportDreamsCSV();
-        }
-        
-        function downloadCSV(data, filename) {
-            const csvContent = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        function downloadJSON(data, filename) {
-            const jsonStr = JSON.stringify(data, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        function printDreams() {
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>Teer Dreams List</title>
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                </head>
-                <body>
-                    <div class="container mt-5">
-                        <h1>Dream Numbers - Complete List</h1>
-                        <p>Generated on: ${new Date().toLocaleString()}</p>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr><th>#</th><th>Dream</th><th>Direct</th><th>House</th><th>Ending</th></tr>
-                            </thead>
-                            <tbody>
-                                ${allDreams.map(d => {
-                                    const data = d.data || d;
-                                    return `<tr>
-                                        <td>${data.slNo}</td>
-                                        <td>${data.dream}</td>
-                                        <td>${data.direct || '-'}</td>
-                                        <td>${data.house || '-'}</td>
-                                        <td>${data.ending || '-'}</td>
-                                    </tr>`;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
-        }
-        
-        function clearAllCache() {
-            if (confirm('Clear browser cache? This will reload the page.')) {
-                localStorage.clear();
-                sessionStorage.clear();
-                location.reload();
-            }
-        }
-        
-        function showDeleteAllConfirm() {
-            if (confirm('⚠️ DANGER: This will delete ALL data from database! Are you ABSOLUTELY sure?')) {
-                alert('Bulk delete requires backend implementation. Contact developer.');
-            }
-        }
-        
-        function syncData() {
-            loadDashboardData();
-            loadDreamsList();
-            loadManageData();
-            loadTodayResultForDisplay();
-            loadCommonNumbersForDisplay();
-            showMessage('commonMsg', '🔄 Data refreshed successfully!', 'success');
-        }
-        
-        function showMessage(elementId, message, type) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>`;
-                setTimeout(() => element.innerHTML = '', 3000);
-            }
-        }
-      // ============ CACHE MANAGEMENT (Error Free) ============
-let currentCacheVersion = null;
-let cacheCheckInterval = null;
-
-async function checkCacheVersion() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/cache-version`);
-        const data = await response.json();
-        
-        if (currentCacheVersion !== null && currentCacheVersion !== data.version) {
-            console.log('🔄 Cache version changed, refreshing page data...');
-            // Only call functions that exist
-            if (typeof loadDashboardData === 'function') loadDashboardData();
-            if (typeof loadDreamsList === 'function') loadDreamsList();
-            if (typeof loadManageData === 'function') loadManageData();
-            if (typeof loadTodayResultForDisplay === 'function') loadTodayResultForDisplay();
-            if (typeof loadCommonNumbersForDisplay === 'function') loadCommonNumbersForDisplay();
-        }
-        
-        currentCacheVersion = data.version;
-    } catch (error) {
-        // Silently fail - don't show errors to user
-        console.log('Cache check failed:', error.message);
+            renderResultsTable(sortedResults);
+        } catch (error) { console.error('Error loading manage data:', error); }
     }
-}
-
-function startCacheChecking() {
-    if (cacheCheckInterval) clearInterval(cacheCheckInterval);
-    checkCacheVersion();
-    cacheCheckInterval = setInterval(checkCacheVersion, 30000);
-}
-
-function stopCacheChecking() {
-    if (cacheCheckInterval) {
-        clearInterval(cacheCheckInterval);
-        cacheCheckInterval = null;
+    
+    function renderResultsTable(results) {
+        const tableBody = document.getElementById('manageResultsTable');
+        if (!results || results.length === 0) { tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No results found</td></tr>'; return; }
+        tableBody.innerHTML = results.map(result => `
+            <tr><td><strong>${result.date}</strong></td><td><span class="badge bg-primary">${result.data?.firstRound || '--'}</span></td><td><span class="badge bg-success">${result.data?.secondRound || '--'}</span></td><td><button class="btn btn-danger btn-sm" onclick="deleteResult('${result._id}')"><i class="bi bi-trash"></i> Delete</button></td></tr>
+        `).join('');
     }
-}
-    </script>
+    
+    function filterResults() {
+        const searchTerm = document.getElementById('searchResults').value.toLowerCase();
+        const filterMonth = document.getElementById('filterMonth').value;
+        let filtered = allResults.filter(result => {
+            const matchesSearch = result.date.toLowerCase().includes(searchTerm);
+            const matchesMonth = !filterMonth || result.date.includes(`/${filterMonth}/`);
+            return matchesSearch && matchesMonth;
+        });
+        filtered = filtered.sort((a, b) => {
+            const dateA = parseDateToTimestamp(a.date);
+            const dateB = parseDateToTimestamp(b.date);
+            return dateB - dateA;
+        });
+        renderResultsTable(filtered);
+    }
+    
+    async function loadAnalytics() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/all-results`, { headers: { 'Authorization': `Bearer ${adminToken}` } });
+            const data = await response.json();
+            const results = data.data || [];
+            const frequency = {};
+            results.forEach(result => {
+                if (result.data) {
+                    const fr = result.data.firstRound;
+                    const sr = result.data.secondRound;
+                    if (fr) frequency[fr] = (frequency[fr] || 0) + 1;
+                    if (sr) frequency[sr] = (frequency[sr] || 0) + 1;
+                }
+            });
+            const sorted = Object.entries(frequency).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            const ctx = document.getElementById('hotNumbersChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: { labels: sorted.map(s => s[0]), datasets: [{ label: 'Frequency', data: sorted.map(s => s[1]), backgroundColor: 'rgba(102, 126, 234, 0.5)', borderColor: 'rgba(102, 126, 234, 1)', borderWidth: 1 }] },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+            const freqTable = document.getElementById('frequencyTable').querySelector('tbody');
+            if (freqTable) freqTable.innerHTML = sorted.map(([num, count]) => `<tr><td><strong>${num}</strong></td><td>${count}</td><td>${((count / (results.length * 2)) * 100).toFixed(2)}%</td></tr>`).join('');
+        } catch (error) { console.error('Error loading analytics:', error); }
+    }
+    
+    async function addDream() {
+        const dreamName = document.getElementById('dreamName').value;
+        const direct = document.getElementById('dreamDirect').value;
+        const house = document.getElementById('dreamHouse').value;
+        const ending = document.getElementById('dreamEnding').value;
+        if (!dreamName) { showMessage('dreamMsg', 'Please enter dream description', 'error'); return; }
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/add-dream`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                body: JSON.stringify({ dream: dreamName, direct, house, ending })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showMessage('dreamMsg', '✅ Dream added successfully!', 'success');
+                document.getElementById('dreamName').value = '';
+                document.getElementById('dreamDirect').value = '';
+                document.getElementById('dreamHouse').value = '';
+                document.getElementById('dreamEnding').value = '';
+                loadDreamsList();
+            } else { showMessage('dreamMsg', data.error || 'Error adding dream', 'error'); }
+        } catch (error) { showMessage('dreamMsg', 'Error connecting to server', 'error'); }
+    }
+    
+    async function deleteDream(id) {
+        if (confirm('Are you sure you want to delete this dream?')) {
+            try {
+                await fetch(`${API_BASE_URL}/api/admin/delete-dream/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${adminToken}` } });
+                loadDreamsList();
+                showMessage('dreamMsg', '✅ Dream deleted successfully!', 'success');
+            } catch (error) { alert('Error deleting dream'); }
+        }
+    }
+    
+    async function deleteResult(id) {
+        if (confirm('Are you sure you want to delete this result?')) {
+            try {
+                await fetch(`${API_BASE_URL}/api/admin/delete-result/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${adminToken}` } });
+                loadManageData();
+                loadDashboardData();
+                showMessage('resultMsg', '✅ Result deleted successfully!', 'success');
+            } catch (error) { alert('Error deleting result'); }
+        }
+    }
+    
+    function exportAllData() {
+        const data = { results: allResults, dreams: allDreams, exportDate: new Date().toISOString() };
+        downloadJSON(data, `teer-full-backup-${new Date().toISOString().split('T')[0]}.json`);
+    }
+    
+    function exportResultsCSV() {
+        const headers = ['Date', 'First Round', 'Second Round'];
+        const rows = allResults.map(r => [r.date, r.data?.firstRound || '--', r.data?.secondRound || '--']);
+        downloadCSV([headers, ...rows], `teer-results-${new Date().toISOString().split('T')[0]}.csv`);
+    }
+    
+    function exportDreamsCSV() {
+        const headers = ['Sl No', 'Dream', 'Direct', 'House', 'Ending'];
+        const rows = allDreams.map(d => { const data = d.data || d; return [data.slNo, data.dream, data.direct, data.house, data.ending]; });
+        downloadCSV([headers, ...rows], `teer-dreams-${new Date().toISOString().split('T')[0]}.csv`);
+    }
+    
+    function exportResults() { exportResultsCSV(); }
+    function exportDreams() { exportDreamsCSV(); }
+    
+    function downloadCSV(data, filename) {
+        const csvContent = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+    
+    function downloadJSON(data, filename) {
+        const jsonStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+    
+    function printDreams() {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html><head><title>Teer Dreams List</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
+            <body><div class="container mt-5"><h1>Dream Numbers - Complete List</h1><p>Generated on: ${new Date().toLocaleString()}</p>
+            <table class="table table-bordered"><thead><tr><th>#</th><th>Dream</th><th>Direct</th><th>House</th><th>Ending</th></tr></thead>
+            <tbody>${allDreams.map(d => { const data = d.data || d; return `<tr><td>${data.slNo}</td><td>${data.dream}</td><td>${data.direct || '-'}</td><td>${data.house || '-'}</td><td>${data.ending || '-'}</td></tr>`; }).join('')}</tbody></table></div></body></html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
+    
+    function clearAllCache() {
+        if (confirm('Clear browser cache? This will reload the page.')) {
+            localStorage.clear();
+            sessionStorage.clear();
+            location.reload();
+        }
+    }
+    
+    function showDeleteAllConfirm() {
+        if (confirm('⚠️ DANGER: This will delete ALL data from database! Are you ABSOLUTELY sure?')) {
+            alert('Bulk delete requires backend implementation. Contact developer.');
+        }
+    }
+    
+    function syncData() {
+        loadDashboardData();
+        loadDreamsList();
+        loadManageData();
+        loadTodayResultForDisplay();
+        loadCommonNumbersForDisplay();
+        showMessage('commonMsg', '🔄 Data refreshed successfully!', 'success');
+    }
+    
+    function showMessage(elementId, message, type) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+            setTimeout(() => element.innerHTML = '', 3000);
+        }
+    }
+</script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
