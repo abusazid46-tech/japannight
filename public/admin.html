@@ -2425,39 +2425,7 @@ async function updateBothRounds() {
                 setTimeout(() => element.innerHTML = '', 3000);
             }
         }
-      // ============ CACHE MANAGEMENT (Simplified - No UI elements) ============
-let currentCacheVersion = null;
-
-async function checkCacheVersion() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/cache-version`);
-        const data = await response.json();
-        
-        if (currentCacheVersion !== null && currentCacheVersion !== data.version) {
-            console.log('🔄 Cache updated, refreshing data...');
-            // Refresh all data functions (only if they exist)
-            if (typeof loadDashboardData === 'function') loadDashboardData();
-            if (typeof loadDreamsList === 'function') loadDreamsList();
-            if (typeof loadManageData === 'function') loadManageData();
-            if (typeof loadTodayResultForDisplay === 'function') loadTodayResultForDisplay();
-            if (typeof loadCommonNumbersForDisplay === 'function') loadCommonNumbersForDisplay();
-        }
-        
-        currentCacheVersion = data.version;
-    } catch (error) {
-        console.error('Error checking cache:', error);
-    }
-}
-
-// Start cache checking only after login
-function startCacheChecking() {
-    checkCacheVersion();
-    setInterval(checkCacheVersion, 30000);
-}
-
-// Call this after successful login
-// Add this line inside your login() function after adminToken is set:
-// startCacheChecking();
+      
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
