@@ -273,224 +273,181 @@
     </footer>
 
     <script>
-        const API_BASE_URL = 'https://teer-website.onrender.com';
+    const API_BASE_URL = 'https://teer-website.onrender.com';
 
-        const today = new Date();
-        const dd = String(today.getDate()).padStart(2, '0');
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const yyyy = today.getFullYear();
-        document.getElementById('currentDate').innerText = dd + '/' + mm + '/' + yyyy;
-
-        // Set spacer height = computed button square size
-        function setSpacers() {
-            const gridSection = document.getElementById('gridSection');
-            const gap = window.innerWidth >= 600 ? 14 : 10;
-            const totalGap = gap * 2; // 2 gaps for 3 columns
-            const sectionPad = window.innerWidth >= 600 ? 48 : 24; // left+right padding
-            const availableWidth = Math.min(gridSection.offsetWidth, 960) - sectionPad;
-            const btnSize = (availableWidth - totalGap) / 3;
-            document.getElementById('spacer1').style.height = btnSize + 'px';
-            document.getElementById('spacer2').style.height = btnSize + 'px';
-        }
-
-        setSpacers();
-        window.addEventListener('resize', setSpacers);
-
-        // Function to get current Teer date based on cutoff time
-function getCurrentTeerDate() {
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    
-    // Convert to minutes since midnight
-    const currentTimeMinutes = (currentHour * 60) + currentMinute;
-    
-    // First round announcement at 10:30 AM (630 minutes)
-    // Show today's result only after 10:20 AM (620 minutes) - 10 minutes before
-    const cutoffMinutes = 620; // 10:20 AM
-    
-    if (currentTimeMinutes < cutoffMinutes) {
-        // Before cutoff - show previous day
-        const previousDay = new Date(now);
-        previousDay.setDate(now.getDate() - 1);
-        const dd = String(previousDay.getDate()).padStart(2, '0');
-        const mm = String(previousDay.getMonth() + 1).padStart(2, '0');
-        const yyyy = previousDay.getFullYear();
-        return `${dd}/${mm}/${yyyy}`;
-    } else {
-        // After cutoff - show today
-        const dd = String(now.getDate()).padStart(2, '0');
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const yyyy = now.getFullYear();
-        return `${dd}/${mm}/${yyyy}`;
-    }
-}
-
-async function loadTodayResult(retryCount = 0) {
-    const firstRoundEl = document.getElementById('firstRound');
-    const secondRoundEl = document.getElementById('secondRound');
-    
-    // Show loading state
-    if (retryCount === 0) {
-        firstRoundEl.innerHTML = '<small style="font-size:0.9rem">Loading...</small>';
-        secondRoundEl.innerHTML = '<small style="font-size:0.9rem">Loading...</small>';
-    }
-    
-    try {
-        // Get the correct Teer date based on cutoff time
-        const teerDate = getCurrentTeerDate();
-        console.log('Fetching result for date:', teerDate);
+    // Function to get current Teer date based on cutoff time (10:20 AM)
+    function getCurrentTeerDate() {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
         
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const currentTimeMinutes = (currentHour * 60) + currentMinute;
+        const cutoffMinutes = 620; // 10:20 AM
         
-        // Use the date parameter to fetch specific date's result
-        const response = await fetch(`${API_BASE_URL}/api/results-by-date?date=${encodeURIComponent(teerDate)}`, {
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        
-        if (data && data.data) {
-            firstRoundEl.innerText = data.data.firstRound || '--';
-            secondRoundEl.innerText = data.data.secondRound || '--';
+        if (currentTimeMinutes < cutoffMinutes) {
+            const previousDay = new Date(now);
+            previousDay.setDate(now.getDate() - 1);
+            const dd = String(previousDay.getDate()).padStart(2, '0');
+            const mm = String(previousDay.getMonth() + 1).padStart(2, '0');
+            const yyyy = previousDay.getFullYear();
+            return `${dd}/${mm}/${yyyy}`;
         } else {
-            firstRoundEl.innerHTML = '<small style="font-size:0.9rem">No result</small>';
-            secondRoundEl.innerHTML = '<small style="font-size:0.9rem">No result</small>';
-        }
-    } catch (e) {
-        console.log('Load failed:', e.message);
-        
-        // Retry up to 3 times with exponential backoff
-        if (retryCount < 3) {
-            const delay = Math.pow(2, retryCount) * 2000;
-            console.log(`Retrying in ${delay/1000}s... (Attempt ${retryCount + 1}/3)`);
-            setTimeout(() => loadTodayResult(retryCount + 1), delay);
-        } else {
-            firstRoundEl.innerHTML = '<small style="font-size:0.75rem;color:#c00">Backend starting...</small>';
-            secondRoundEl.innerHTML = '<small style="font-size:0.75rem;color:#c00">Please wait</small>';
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const yyyy = now.getFullYear();
+            return `${dd}/${mm}/${yyyy}`;
         }
     }
-}
-        loadTodayResult();
-        setInterval(loadTodayResult, 60000);
-        // ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
-let eventSource = null;
-let reconnectAttempts = 0;
-const maxReconnectAttempts = 10;
 
-function connectSSE() {
-    if (eventSource) {
-        eventSource.close();
+    // Set the date display
+    document.getElementById('currentDate').innerText = getCurrentTeerDate();
+
+    // Set spacer height = computed button square size
+    function setSpacers() {
+        const gridSection = document.getElementById('gridSection');
+        const gap = window.innerWidth >= 600 ? 14 : 10;
+        const totalGap = gap * 2;
+        const sectionPad = window.innerWidth >= 600 ? 48 : 24;
+        const availableWidth = Math.min(gridSection.offsetWidth, 960) - sectionPad;
+        const btnSize = (availableWidth - totalGap) / 3;
+        document.getElementById('spacer1').style.height = btnSize + 'px';
+        document.getElementById('spacer2').style.height = btnSize + 'px';
     }
-    
-    const backendUrl = 'https://teer-website.onrender.com';
-    console.log('🔄 Connecting to SSE at:', `${backendUrl}/api/events`);
-    
-    eventSource = new EventSource(`${backendUrl}/api/events`);
-    
-    eventSource.onopen = () => {
-        console.log('✅ SSE connection established!');
-        reconnectAttempts = 0; // Reset reconnect attempts on successful connection
-    };
-    
-    eventSource.onmessage = (event) => {
-        console.log('📡 RAW SSE message received:', event.data);
+
+    setSpacers();
+    window.addEventListener('resize', setSpacers);
+
+    async function loadTodayResult(retryCount = 0) {
+        const firstRoundEl = document.getElementById('firstRound');
+        const secondRoundEl = document.getElementById('secondRound');
+        
+        if (retryCount === 0) {
+            firstRoundEl.innerHTML = '<small style="font-size:0.9rem">Loading...</small>';
+            secondRoundEl.innerHTML = '<small style="font-size:0.9rem">Loading...</small>';
+        }
         
         try {
-            const data = JSON.parse(event.data);
-            console.log('📡 Parsed data:', data);
-            console.log('📡 Message type:', data.type);
+            const teerDate = getCurrentTeerDate();
+            console.log('Fetching result for date:', teerDate);
             
-            // Refresh on ANY update type (including common-update)
-            if (data.type === 'cache-update' || 
-                data.type === 'result-update' || 
-                data.type === 'common-update' || 
-                data.type === 'dream-update') {
-                console.log('🔥 UPDATE DETECTED! Refreshing page NOW...');
-                window.location.reload();
-            } else if (data.type === 'connected') {
-                console.log('✅ Connected to real-time updates');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            
+            const response = await fetch(`${API_BASE_URL}/api/results-by-date?date=${encodeURIComponent(teerDate)}`, {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const data = await response.json();
+            
+            if (data && data.data) {
+                firstRoundEl.innerText = data.data.firstRound || '--';
+                secondRoundEl.innerText = data.data.secondRound || '--';
             } else {
-                console.log('📡 Unknown message type:', data.type);
+                firstRoundEl.innerHTML = '<small style="font-size:0.9rem">No result</small>';
+                secondRoundEl.innerHTML = '<small style="font-size:0.9rem">No result</small>';
             }
         } catch (e) {
-            console.error('Error parsing SSE message:', e);
+            console.log('Load failed:', e.message);
+            
+            if (retryCount < 3) {
+                const delay = Math.pow(2, retryCount) * 2000;
+                console.log(`Retrying in ${delay/1000}s... (Attempt ${retryCount + 1}/3)`);
+                setTimeout(() => loadTodayResult(retryCount + 1), delay);
+            } else {
+                firstRoundEl.innerHTML = '<small style="font-size:0.75rem;color:#c00">Backend starting...</small>';
+                secondRoundEl.innerHTML = '<small style="font-size:0.75rem;color:#c00">Please wait</small>';
+            }
         }
-    };
-    
-    eventSource.onerror = (error) => {
-        console.error('⚠️ SSE error:', error);
-        
-        // Close the broken connection
+    }
+
+    loadTodayResult();
+    setInterval(loadTodayResult, 60000);
+
+    // ============ SSE FOR REAL-TIME UPDATES ============
+    let eventSource = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 10;
+
+    function connectSSE() {
         if (eventSource) {
             eventSource.close();
         }
         
-        // Attempt to reconnect with exponential backoff
-        if (reconnectAttempts < maxReconnectAttempts) {
-            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-            console.log(`🔄 Reconnecting in ${delay/1000} seconds... (Attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
-            reconnectAttempts++;
-            setTimeout(connectSSE, delay);
-        } else {
-            console.log('❌ Max reconnection attempts reached. Please refresh the page manually.');
-        }
-    };
-}
-
-// Start SSE connection when page loads
-connectSSE();
-
-// Also check cache version as fallback (every 10 seconds)
-let currentCacheVersion = null;
-function getCurrentTeerDate() {
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    
-    // Convert current time to minutes for easier comparison
-    const currentTimeMinutes = (currentHour * 60) + currentMinute;
-    
-    // First round announcement time: 10:30 AM = 630 minutes
-    // Show previous day until 10:20 AM (620 minutes) - 10 minutes before
-    const firstRoundTime = 630; // 10:30 AM
-    const cutoffTime = firstRoundTime - 10; // 10:20 AM = 620 minutes
-    
-    if (currentTimeMinutes < cutoffTime) {
-        // Before 10:20 AM - show previous day's results
-        const previousDay = new Date(now);
-        previousDay.setDate(now.getDate() - 1);
-        return previousDay.toLocaleDateString('en-GB');
-    } else {
-        // After 10:20 AM - show today's results
-        return now.toLocaleDateString('en-GB');
-    }
-}
-
-// Use this for the date display
-document.getElementById('currentDate').innerText = getCurrentTeerDate();
-async function checkCacheVersion() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/cache-version`);
-        const data = await response.json();
+        const backendUrl = 'https://teer-website.onrender.com';
+        console.log('🔄 Connecting to SSE at:', `${backendUrl}/api/events`);
         
-        if (currentCacheVersion !== null && currentCacheVersion !== data.version) {
-            console.log('🔄 Cache version changed (fallback), refreshing...');
-            window.location.reload();
-        }
-        currentCacheVersion = data.version;
-    } catch (error) {
-        console.log('Cache check failed:', error.message);
+        eventSource = new EventSource(`${backendUrl}/api/events`);
+        
+        eventSource.onopen = () => {
+            console.log('✅ SSE connection established!');
+            reconnectAttempts = 0;
+        };
+        
+        eventSource.onmessage = (event) => {
+            console.log('📡 RAW SSE message received:', event.data);
+            
+            try {
+                const data = JSON.parse(event.data);
+                console.log('📡 Parsed data:', data);
+                console.log('📡 Message type:', data.type);
+                
+                if (data.type === 'cache-update' || 
+                    data.type === 'result-update' || 
+                    data.type === 'common-update' || 
+                    data.type === 'dream-update') {
+                    console.log('🔥 UPDATE DETECTED! Refreshing page NOW...');
+                    window.location.reload();
+                } else if (data.type === 'connected') {
+                    console.log('✅ Connected to real-time updates');
+                }
+            } catch (e) {
+                console.error('Error parsing SSE message:', e);
+            }
+        };
+        
+        eventSource.onerror = (error) => {
+            console.error('⚠️ SSE error:', error);
+            
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            if (reconnectAttempts < maxReconnectAttempts) {
+                const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                console.log(`🔄 Reconnecting in ${delay/1000} seconds... (Attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+                reconnectAttempts++;
+                setTimeout(connectSSE, delay);
+            } else {
+                console.log('❌ Max reconnection attempts reached. Please refresh the page manually.');
+            }
+        };
     }
-}
 
-// Fallback: Check every 10 seconds (in case SSE fails)
-setInterval(checkCacheVersion, 10000);
-checkCacheVersion();
-    </script>
+    connectSSE();
+
+    // Fallback cache check
+    let currentCacheVersion = null;
+
+    async function checkCacheVersion() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/cache-version`);
+            const data = await response.json();
+            
+            if (currentCacheVersion !== null && currentCacheVersion !== data.version) {
+                console.log('🔄 Cache version changed (fallback), refreshing...');
+                window.location.reload();
+            }
+            currentCacheVersion = data.version;
+        } catch (error) {
+            console.log('Cache check failed:', error.message);
+        }
+    }
+
+    setInterval(checkCacheVersion, 10000);
+    checkCacheVersion();
+</script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
