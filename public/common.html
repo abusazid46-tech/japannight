@@ -244,9 +244,10 @@
 
         loadCommonNumbers();
         setInterval(loadCommonNumbers, 60000);
-
-        // ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
+       // ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
 let eventSource = null;
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 10;
 
 function connectSSE() {
     if (eventSource) {
@@ -260,9 +261,9 @@ function connectSSE() {
     
     eventSource.onopen = () => {
         console.log('✅ SSE connection established!');
+        reconnectAttempts = 0; // Reset reconnect attempts on successful connection
     };
     
-    // This will show ALL raw messages received
     eventSource.onmessage = (event) => {
         console.log('📡 RAW SSE message received:', event.data);
         
@@ -271,34 +272,68 @@ function connectSSE() {
             console.log('📡 Parsed data:', data);
             console.log('📡 Message type:', data.type);
             
-            // Refresh on ANY update type
+            // Refresh on ANY update type (including common-update)
             if (data.type === 'cache-update' || 
                 data.type === 'result-update' || 
                 data.type === 'common-update' || 
                 data.type === 'dream-update') {
                 console.log('🔥 UPDATE DETECTED! Refreshing page NOW...');
                 window.location.reload();
+            } else if (data.type === 'connected') {
+                console.log('✅ Connected to real-time updates');
             } else {
-                console.log('📡 Message type not recognized:', data.type);
+                console.log('📡 Unknown message type:', data.type);
             }
         } catch (e) {
             console.error('Error parsing SSE message:', e);
-            console.log('Raw message that failed:', event.data);
         }
     };
     
     eventSource.onerror = (error) => {
         console.error('⚠️ SSE error:', error);
-        console.log('Reconnecting in 5 seconds...');
+        
+        // Close the broken connection
         if (eventSource) {
             eventSource.close();
         }
-        setTimeout(connectSSE, 5000);
+        
+        // Attempt to reconnect with exponential backoff
+        if (reconnectAttempts < maxReconnectAttempts) {
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+            console.log(`🔄 Reconnecting in ${delay/1000} seconds... (Attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+            reconnectAttempts++;
+            setTimeout(connectSSE, delay);
+        } else {
+            console.log('❌ Max reconnection attempts reached. Please refresh the page manually.');
+        }
     };
 }
 
-// Start SSE connection
+// Start SSE connection when page loads
 connectSSE();
+
+// Also check cache version as fallback (every 10 seconds)
+let currentCacheVersion = null;
+
+async function checkCacheVersion() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/cache-version`);
+        const data = await response.json();
+        
+        if (currentCacheVersion !== null && currentCacheVersion !== data.version) {
+            console.log('🔄 Cache version changed (fallback), refreshing...');
+            window.location.reload();
+        }
+        currentCacheVersion = data.version;
+    } catch (error) {
+        console.log('Cache check failed:', error.message);
+    }
+}
+
+// Fallback: Check every 10 seconds (in case SSE fails)
+setInterval(checkCacheVersion, 10000);
+checkCacheVersion();
+        
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
