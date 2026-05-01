@@ -83,13 +83,16 @@ teerDataSchema.index({ 'data.slNo': 1 });
 const TeerData = mongoose.model('TeerData', teerDataSchema);
 
 // ============ CACHE VERSION TRACKING ============
+// ============ CACHE VERSION TRACKING ============
 let lastUpdateTimestamp = Date.now();
 
 function refreshCacheVersion() {
     lastUpdateTimestamp = Date.now();
     console.log(`🔄 Cache version updated: ${new Date(lastUpdateTimestamp).toISOString()}`);
+    
+    // Send real-time update to all connected clients
+    sendUpdateToAllClients('cache-update', { version: lastUpdateTimestamp });
 }
-
 // ============ HEALTH CHECK ============
 app.get('/api/health', (req, res) => {
     const dbState = mongoose.connection.readyState;
@@ -110,7 +113,61 @@ app.get('/api/health', (req, res) => {
         environment: process.env.NODE_ENV || 'development'
     });
 });
+// ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
+// Store all connected clients
+const sseClients = [];
 
+// SSE endpoint - keeps connection open for real-time updates
+app.get('/api/events', (req, res) => {
+    // Set headers for SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+    
+    const clientId = Date.now();
+    const newClient = { id: clientId, res };
+    sseClients.push(newClient);
+    
+    console.log(`🟢 SSE client connected: ${clientId} (Total: ${sseClients.length})`);
+    
+    // Send initial connection message
+    res.write(`data: ${JSON.stringify({ type: 'connected', message: 'Connected to real-time updates' })}\n\n`);
+    
+    // Remove client when connection closes
+    req.on('close', () => {
+        const index = sseClients.findIndex(c => c.id === clientId);
+        if (index !== -1) {
+            sseClients.splice(index, 1);
+            console.log(`🔴 SSE client disconnected: ${clientId} (Remaining: ${sseClients.length})`);
+        }
+    });
+});
+
+// Function to send update to all connected SSE clients
+function sendUpdateToAllClients(updateType, data = null) {
+    if (sseClients.length === 0) {
+        console.log(`📡 No SSE clients connected, skipping broadcast`);
+        return;
+    }
+    
+    const message = JSON.stringify({
+        type: updateType,  // 'cache-update', 'result-update', 'common-update', 'dream-update'
+        data: data,
+        timestamp: Date.now()
+    });
+    
+    sseClients.forEach(client => {
+        try {
+            client.res.write(`data: ${message}\n\n`);
+        } catch (error) {
+            console.error(`Error sending to client ${client.id}:`, error.message);
+        }
+    });
+    
+    console.log(`📡 Broadcasted '${updateType}' to ${sseClients.length} clients`);
+}
 // Get current cache version
 app.get('/api/cache-version', (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
