@@ -386,7 +386,32 @@ connectSSE();
 
 // Also check cache version as fallback (every 10 seconds)
 let currentCacheVersion = null;
+function getCurrentTeerDate() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Convert current time to minutes for easier comparison
+    const currentTimeMinutes = (currentHour * 60) + currentMinute;
+    
+    // First round announcement time: 10:30 AM = 630 minutes
+    // Show previous day until 10:20 AM (620 minutes) - 10 minutes before
+    const firstRoundTime = 630; // 10:30 AM
+    const cutoffTime = firstRoundTime - 10; // 10:20 AM = 620 minutes
+    
+    if (currentTimeMinutes < cutoffTime) {
+        // Before 10:20 AM - show previous day's results
+        const previousDay = new Date(now);
+        previousDay.setDate(now.getDate() - 1);
+        return previousDay.toLocaleDateString('en-GB');
+    } else {
+        // After 10:20 AM - show today's results
+        return now.toLocaleDateString('en-GB');
+    }
+}
 
+// Use this for the date display
+document.getElementById('currentDate').innerText = getCurrentTeerDate();
 async function checkCacheVersion() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/cache-version`);
