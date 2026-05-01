@@ -105,7 +105,19 @@ app.get('/api/health', (req, res) => {
         environment: process.env.NODE_ENV || 'development'
     });
 });
-
+// Get result by specific date
+app.get('/api/results-by-date', async (req, res) => {
+    try {
+        const date = req.query.date;
+        const result = await TeerData.findOne({ type: 'result', date: date }).lean();
+        res.json({
+            success: true,
+            data: result?.data || { firstRound: '--', secondRound: '--' }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 // ============ SSE ENDPOINT ============
 app.get('/api/events', (req, res) => {
     console.log('📡 New SSE connection request');
