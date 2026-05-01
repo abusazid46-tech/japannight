@@ -82,94 +82,8 @@ teerDataSchema.index({ 'data.slNo': 1 });
 
 const TeerData = mongoose.model('TeerData', teerDataSchema);
 
-// ============ CACHE VERSION TRACKING ============
-let lastUpdateTimestamp = Date.now();
-
-function refreshCacheVersion() {
-    lastUpdateTimestamp = Date.now();
-    console.log(`🔄 Cache version updated: ${new Date(lastUpdateTimestamp).toISOString()}`);
-    
-    // Send real-time update to all connected clients
-    sendUpdateToAllClients('cache-update', { version: lastUpdateTimestamp });
-}
-
-// ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
-// Store all connected clients
+// ============ SSE CLIENTS STORAGE ============
 let sseClients = [];
-
-// SSE endpoint - keeps connection open for real-time updates
-app.get('/api/events', (req, res) => {
-    console.log('📡 New SSE connection request');
-    
-    // Set headers for SSE
-    res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*'
-    });
-    
-    const clientId = Date.now();
-    const newClient = { id: clientId, res };
-    sseClients.push(newClient);
-    
-    console.log(`🟢 SSE client connected: ${clientId} (Total: ${sseClients.length})`);
-    
-    // Send initial connection message
-    res.write(`data: ${JSON.stringify({ type: 'connected', message: 'Connected to real-time updates' })}\n\n`);
-    
-    // Keep connection alive with periodic heartbeats
-    const keepAlive = setInterval(() => {
-        try {
-            res.write(`: heartbeat\n\n`);
-        } catch (e) {
-            clearInterval(keepAlive);
-        }
-    }, 30000);
-    
-    // Remove client when connection closes
-    req.on('close', () => {
-        clearInterval(keepAlive);
-        const index = sseClients.findIndex(c => c.id === clientId);
-        if (index !== -1) {
-            sseClients.splice(index, 1);
-            console.log(`🔴 SSE client disconnected: ${clientId} (Remaining: ${sseClients.length})`);
-        }
-    });
-});
-
-// Function to send update to all connected SSE clients
-function sendUpdateToAllClients(updateType, data = null) {
-    if (sseClients.length === 0) {
-        console.log(`📡 No SSE clients connected, skipping broadcast`);
-        return;
-    }
-    
-    const message = JSON.stringify({
-        type: updateType,
-        data: data,
-        timestamp: Date.now()
-    });
-    
-    console.log(`📡 Broadcasting '${updateType}' to ${sseClients.length} clients`);
-    
-    sseClients.forEach(client => {
-        try {
-            client.res.write(`data: ${message}\n\n`);
-        } catch (error) {
-            console.error(`Error sending to client ${client.id}:`, error.message);
-        }
-    });
-}
-
-// Get current cache version
-app.get('/api/cache-version', (req, res) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    res.json({ 
-        version: lastUpdateTimestamp,
-        lastUpdate: new Date(lastUpdateTimestamp).toISOString()
-    });
-});
 
 // ============ HEALTH CHECK ============
 app.get('/api/health', (req, res) => {
@@ -192,20 +106,98 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// ============ PUBLIC API ROUTES WITH CACHING ============
+// ============ SSE ENDPOINT ============
+app.get('/api/events', (req, res) => {
+    console.log('📡 New SSE connection request');
+    
+    // Set SSE headers
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+    });
+    
+    const clientId = Date.now();
+    const newClient = { id: clientId, res };
+    sseClients.push(newClient);
+    
+    console.log(`🟢 SSE client connected: ${clientId} (Total: ${sseClients.length})`);
+    
+    // Send initial connection message
+    res.write(`data: ${JSON.stringify({ type: 'connected', message: 'Connected to real-time updates' })}\n\n`);
+    
+    // Heartbeat every 30 seconds to keep connection alive
+    const heartbeat = setInterval(() => {
+        try {
+            res.write(`: heartbeat\n\n`);
+        } catch (e) {
+            clearInterval(heartbeat);
+        }
+    }, 30000);
+    
+    // Remove client on disconnect
+    req.on('close', () => {
+        clearInterval(heartbeat);
+        const index = sseClients.findIndex(c => c.id === clientId);
+        if (index !== -1) {
+            sseClients.splice(index, 1);
+            console.log(`🔴 SSE client disconnected: ${clientId} (Remaining: ${sseClients.length})`);
+        }
+    });
+});
 
-// Get today's result (CACHE: 5 minutes)
+// ============ BROADCAST FUNCTION ============
+function broadcastToAllClients(updateType, data = null) {
+    if (sseClients.length === 0) {
+        console.log(`📡 No SSE clients connected, skipping broadcast`);
+        return;
+    }
+    
+    const message = JSON.stringify({
+        type: updateType,
+        data: data,
+        timestamp: Date.now()
+    });
+    
+    console.log(`📡 Broadcasting '${updateType}' to ${sseClients.length} clients`);
+    
+    let activeClients = [];
+    sseClients.forEach(client => {
+        try {
+            client.res.write(`data: ${message}\n\n`);
+            activeClients.push(client);
+        } catch (error) {
+            console.error(`Error sending to client ${client.id}:`, error.message);
+        }
+    });
+    sseClients = activeClients;
+}
+
+// ============ CACHE VERSION ============
+let lastUpdateTimestamp = Date.now();
+
+function refreshCacheVersion() {
+    lastUpdateTimestamp = Date.now();
+    console.log(`🔄 Cache version updated: ${new Date(lastUpdateTimestamp).toISOString()}`);
+    broadcastToAllClients('cache-update', { version: lastUpdateTimestamp });
+}
+
+// Get current cache version
+app.get('/api/cache-version', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.json({ 
+        version: lastUpdateTimestamp,
+        lastUpdate: new Date(lastUpdateTimestamp).toISOString()
+    });
+});
+
+// ============ PUBLIC API ROUTES ============
+
+// Get today's result
 app.get('/api/today-result', async (req, res) => {
     try {
-        const clientVersion = req.query.v;
-        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
-            res.set('Cache-Control', 'no-cache, private');
-        } else {
-            res.set('Cache-Control', 'public, max-age=300, must-revalidate');
-        }
-        
         const today = new Date().toLocaleDateString('en-GB');
-        console.log(`[${new Date().toISOString()}] Fetching result for date: ${today}`);
         
         if (mongoose.connection.readyState !== 1) {
             return res.json({
@@ -220,21 +212,17 @@ app.get('/api/today-result', async (req, res) => {
             date: today 
         }).lean();
         
-        res.set('X-Cache-Version', lastUpdateTimestamp);
-        
         if (result && result.data) {
             res.json({
                 success: true,
                 date: result.date,
-                data: result.data,
-                cacheVersion: lastUpdateTimestamp
+                data: result.data
             });
         } else {
             res.json({
                 success: false,
                 message: 'No result declared for today',
-                data: { firstRound: 'XX', secondRound: 'XX' },
-                cacheVersion: lastUpdateTimestamp
+                data: { firstRound: 'XX', secondRound: 'XX' }
             });
         }
     } catch (error) {
@@ -247,18 +235,10 @@ app.get('/api/today-result', async (req, res) => {
     }
 });
 
-// Get common numbers (CACHE: 5 minutes)
+// Get common numbers
 app.get('/api/common-numbers', async (req, res) => {
     try {
-        const clientVersion = req.query.v;
-        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
-            res.set('Cache-Control', 'no-cache, private');
-        } else {
-            res.set('Cache-Control', 'public, max-age=300, must-revalidate');
-        }
-        
         const today = new Date().toLocaleDateString('en-GB');
-        console.log(`[${new Date().toISOString()}] Fetching common numbers for date: ${today}`);
         
         if (mongoose.connection.readyState !== 1) {
             return res.json({
@@ -273,15 +253,12 @@ app.get('/api/common-numbers', async (req, res) => {
             date: today 
         }).lean();
         
-        res.set('X-Cache-Version', lastUpdateTimestamp);
-        
         if (common && common.data) {
             if (common.data.fr && common.data.sr) {
                 res.json({
                     success: true,
                     date: common.date,
-                    data: common.data,
-                    cacheVersion: lastUpdateTimestamp
+                    data: common.data
                 });
             } else {
                 res.json({
@@ -298,16 +275,14 @@ app.get('/api/common-numbers', async (req, res) => {
                             house: [],
                             ending: []
                         }
-                    },
-                    cacheVersion: lastUpdateTimestamp
+                    }
                 });
             }
         } else {
             res.json({
                 success: false,
                 message: 'No common numbers generated for today',
-                data: { fr: { direct: [], house: [], ending: [] }, sr: { direct: [], house: [], ending: [] } },
-                cacheVersion: lastUpdateTimestamp
+                data: { fr: { direct: [], house: [], ending: [] }, sr: { direct: [], house: [], ending: [] } }
             });
         }
     } catch (error) {
@@ -320,16 +295,9 @@ app.get('/api/common-numbers', async (req, res) => {
     }
 });
 
-// Get all previous results (CACHE: 10 minutes)
+// Get all previous results
 app.get('/api/results', async (req, res) => {
     try {
-        const clientVersion = req.query.v;
-        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
-            res.set('Cache-Control', 'no-cache, private');
-        } else {
-            res.set('Cache-Control', 'public, max-age=600, must-revalidate');
-        }
-        
         if (mongoose.connection.readyState !== 1) {
             return res.json({
                 success: false,
@@ -343,14 +311,11 @@ app.get('/api/results', async (req, res) => {
             .sort({ date: -1 })
             .lean();
         
-        res.set('X-Cache-Version', lastUpdateTimestamp);
-        
         res.json({
             success: true,
             count: results.length,
             total: results.length,
-            data: results,
-            cacheVersion: lastUpdateTimestamp
+            data: results
         });
     } catch (error) {
         console.error('Error fetching results:', error);
@@ -362,16 +327,9 @@ app.get('/api/results', async (req, res) => {
     }
 });
 
-// Search dream numbers (CACHE: 5 hours)
+// Search dream numbers
 app.get('/api/search-dream', async (req, res) => {
     try {
-        const clientVersion = req.query.v;
-        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
-            res.set('Cache-Control', 'no-cache, private');
-        } else {
-            res.set('Cache-Control', 'public, max-age=18000, must-revalidate');
-        }
-        
         const keyword = req.query.q;
         
         if (mongoose.connection.readyState !== 1) {
@@ -395,14 +353,11 @@ app.get('/api/search-dream', async (req, res) => {
                 .lean();
         }
         
-        res.set('X-Cache-Version', lastUpdateTimestamp);
-        
         res.json({
             success: true,
             count: dreams.length,
             keyword: keyword || '',
-            data: dreams,
-            cacheVersion: lastUpdateTimestamp
+            data: dreams
         });
     } catch (error) {
         console.error('Error searching dreams:', error);
@@ -414,16 +369,9 @@ app.get('/api/search-dream', async (req, res) => {
     }
 });
 
-// Get all dreams (CACHE: 5 hours)
+// Get all dreams
 app.get('/api/dreams', async (req, res) => {
     try {
-        const clientVersion = req.query.v;
-        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
-            res.set('Cache-Control', 'no-cache, private');
-        } else {
-            res.set('Cache-Control', 'public, max-age=18000, must-revalidate');
-        }
-        
         const limit = parseInt(req.query.limit) || 100;
         
         if (mongoose.connection.readyState !== 1) {
@@ -440,14 +388,11 @@ app.get('/api/dreams', async (req, res) => {
             .limit(limit)
             .lean();
         
-        res.set('X-Cache-Version', lastUpdateTimestamp);
-        
         res.json({
             success: true,
             count: dreams.length,
             total: await TeerData.countDocuments({ type: 'dream' }),
-            data: dreams,
-            cacheVersion: lastUpdateTimestamp
+            data: dreams
         });
     } catch (error) {
         console.error('Error fetching dreams:', error);
@@ -468,21 +413,7 @@ const authenticateAdmin = (req, res, next) => {
         const parts = req.headers.authorization.split(' ');
         if (parts.length === 2 && parts[0] === 'Bearer') {
             providedPassword = parts[1];
-        } else if (parts.length === 1) {
-            providedPassword = parts[0];
         }
-    }
-    
-    if (!providedPassword && req.headers['x-admin-key']) {
-        providedPassword = req.headers['x-admin-key'];
-    }
-    
-    if (!providedPassword && req.query.adminKey) {
-        providedPassword = req.query.adminKey;
-    }
-    
-    if (!providedPassword && req.body && req.body.adminKey) {
-        providedPassword = req.body.adminKey;
     }
     
     if (providedPassword === adminPassword) {
@@ -512,17 +443,6 @@ app.post('/api/admin/login', (req, res) => {
     });
 });
 
-// Force cache refresh (admin only)
-app.post('/api/admin/refresh-cache', authenticateAdmin, (req, res) => {
-    refreshCacheVersion();
-    console.log('🔄 Admin manually refreshed cache version');
-    res.json({ 
-        success: true, 
-        message: 'Cache version updated. All users will get fresh data.',
-        newVersion: lastUpdateTimestamp
-    });
-});
-
 // Update ONLY First Round
 app.post('/api/admin/update-first-round', authenticateAdmin, async (req, res) => {
     try {
@@ -549,9 +469,9 @@ app.post('/api/admin/update-first-round', authenticateAdmin, async (req, res) =>
             { type: 'result', date: today, data: { firstRound, secondRound } },
             { upsert: true, new: true }
         );
-    
+        
         refreshCacheVersion();
-        sendUpdateToAllClients('result-update', { type: 'firstRound', value: firstRound });
+        broadcastToAllClients('result-update', { type: 'firstRound', value: firstRound });
         
         console.log(`✅ First Round updated for ${today}: ${firstRound} (Second Round: ${secondRound})`);
         res.json({ success: true, message: 'First Round updated successfully', data: result });
@@ -589,7 +509,7 @@ app.post('/api/admin/update-second-round', authenticateAdmin, async (req, res) =
         );
         
         refreshCacheVersion();
-        sendUpdateToAllClients('result-update', { type: 'secondRound', value: secondRound });
+        broadcastToAllClients('result-update', { type: 'secondRound', value: secondRound });
         
         console.log(`✅ Second Round updated for ${today}: ${secondRound} (First Round: ${firstRound})`);
         res.json({ success: true, message: 'Second Round updated successfully', data: result });
@@ -634,7 +554,7 @@ app.post('/api/admin/update-result', authenticateAdmin, async (req, res) => {
         );
         
         refreshCacheVersion();
-        sendUpdateToAllClients('result-update', { type: 'both', firstRound: formattedFR, secondRound: formattedSR });
+        broadcastToAllClients('result-update', { type: 'both', firstRound: formattedFR, secondRound: formattedSR });
         
         console.log(`✅ Results updated for ${today}: ${formattedFR} / ${formattedSR}`);
         res.json({ success: true, message: 'Results updated successfully', data: result });
@@ -669,7 +589,7 @@ app.post('/api/admin/update-result-by-date', authenticateAdmin, async (req, res)
         );
         
         refreshCacheVersion();
-        sendUpdateToAllClients('result-update', { action: 'bulk-import', date: date, firstRound: firstRound, secondRound: secondRound });
+        broadcastToAllClients('result-update', { action: 'bulk-import', date: date });
         
         console.log(`✅ Result updated for ${date}: ${firstRound}, ${secondRound}`);
         res.json({ success: true, message: 'Result updated successfully', data: result });
@@ -705,7 +625,7 @@ app.post('/api/admin/update-common', authenticateAdmin, async (req, res) => {
         );
         
         refreshCacheVersion();
-        sendUpdateToAllClients('common-update', { fr: commonData.fr, sr: commonData.sr });
+        broadcastToAllClients('common-update', { fr: commonData.fr, sr: commonData.sr });
         
         console.log(`✅ Common numbers updated for ${today}`);
         res.json({ success: true, message: 'Common numbers updated successfully', data: common });
@@ -742,7 +662,7 @@ app.post('/api/admin/add-dream', authenticateAdmin, async (req, res) => {
         });
         
         refreshCacheVersion();
-        sendUpdateToAllClients('dream-update', { dream: dream, action: 'added' });
+        broadcastToAllClients('dream-update', { dream: dream, action: 'added' });
         
         console.log(`✅ Dream added: ${dream} (ID: ${newSlNo})`);
         res.json({ success: true, message: 'Dream added successfully', data: newDream });
@@ -768,7 +688,7 @@ app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) =>
         }
         
         refreshCacheVersion();
-        sendUpdateToAllClients('dream-update', { action: 'deleted', id: id });
+        broadcastToAllClients('dream-update', { action: 'deleted', id: id });
         
         console.log(`✅ Dream deleted: ${deleted.data.dream}`);
         res.json({ success: true, message: 'Dream deleted successfully' });
@@ -778,11 +698,9 @@ app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) =>
     }
 });
 
-// Get all results for admin (NO CACHE - always fresh)
+// Get all results for admin
 app.get('/api/admin/all-results', authenticateAdmin, async (req, res) => {
     try {
-        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        
         const results = await TeerData.find({ type: 'result' }).sort({ date: -1 }).lean();
         console.log(`✅ Retrieved ${results.length} results for admin`);
         res.json({ success: true, count: results.length, data: results });
@@ -808,7 +726,7 @@ app.delete('/api/admin/delete-result/:id', authenticateAdmin, async (req, res) =
         }
         
         refreshCacheVersion();
-        sendUpdateToAllClients('result-update', { action: 'deleted', date: deleted.date });
+        broadcastToAllClients('result-update', { action: 'deleted', date: deleted.date });
         
         console.log(`✅ Result deleted for date: ${deleted.date}`);
         res.json({ success: true, message: 'Result deleted successfully' });
@@ -846,13 +764,7 @@ app.use('/api/*', (req, res) => {
 
 app.use((req, res) => {
     if (!req.path.startsWith('/api')) {
-        const fs = require('fs');
-        const notFoundPath = path.join(__dirname, 'public', '404.html');
-        if (fs.existsSync(notFoundPath)) {
-            res.status(404).sendFile(notFoundPath);
-        } else {
-            res.status(404).send('<h1>404 - Page Not Found</h1>');
-        }
+        res.status(404).send('<h1>404 - Page Not Found</h1>');
     }
 });
 
@@ -872,33 +784,9 @@ const server = app.listen(PORT, () => {
     console.log(`🔑 Admin Panel: http://localhost:${PORT}/admin.html`);
     console.log(`📝 Admin Password: ${process.env.ADMIN_PASSWORD || 'admin123'}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log('\n✅ CACHE CONFIGURATION:');
-    console.log(`   📊 Today's Result: 5 minutes (with auto-reset on update)`);
-    console.log(`   📊 Common Numbers: 5 minutes (with auto-reset on update)`);
-    console.log(`   📊 Previous Results: 10 minutes (with auto-reset on update)`);
-    console.log(`   📊 Dreams: 5 hours (with auto-reset on update)`);
-    console.log(`   🔒 Admin APIs: No cache (always fresh)`);
-    console.log(`   🔄 Cache auto-resets when admin makes changes`);
-    console.log(`   📡 SSE Real-time updates enabled`);
-    console.log('\n✅ API Endpoints:');
-    console.log(`   GET  /api/health`);
-    console.log(`   GET  /api/cache-version`);
-    console.log(`   GET  /api/events (SSE - Real-time updates)`);
-    console.log(`   GET  /api/today-result (Cache: 5min, auto-reset)`);
-    console.log(`   GET  /api/common-numbers (Cache: 5min, auto-reset)`);
-    console.log(`   GET  /api/results (Cache: 10min, auto-reset)`);
-    console.log(`   GET  /api/dreams (Cache: 5hrs, auto-reset)`);
-    console.log(`   GET  /api/search-dream (Cache: 5hrs, auto-reset)`);
-    console.log(`   POST /api/admin/login`);
-    console.log(`   POST /api/admin/refresh-cache`);
-    console.log(`   POST /api/admin/update-first-round`);
-    console.log(`   POST /api/admin/update-second-round`);
-    console.log(`   POST /api/admin/update-result`);
-    console.log(`   POST /api/admin/update-common`);
-    console.log(`   POST /api/admin/add-dream`);
-    console.log(`   GET  /api/admin/all-results (No cache)`);
-    console.log(`   DELETE /api/admin/delete-result/:id`);
-    console.log(`   DELETE /api/admin/delete-dream/:id`);
+    console.log('\n✅ SSE Real-time updates enabled');
+    console.log('   📡 /api/events - SSE endpoint');
+    console.log('   🔄 Broadcasts on all admin updates');
     console.log('='.repeat(50) + '\n');
 });
 
