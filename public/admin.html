@@ -925,14 +925,15 @@
         let frCommonData = { direct: [], house: [], ending: [] };
         let srCommonData = { direct: [], house: [], ending: [] };
         // Initialize dates
-        const todayStr = new Date().toLocaleDateString('en-GB');
-        document.getElementById('todayDateFR').innerText = todayStr;
-        document.getElementById('todayDateSR').innerText = todayStr;
-        document.getElementById('todayDateDirect').innerText = todayStr;
-        document.getElementById('todayDateHouse').innerText = todayStr;
-        document.getElementById('todayDateEnding').innerText = todayStr;
-        document.getElementById('todayDateFRCommon').innerText = new Date().toLocaleDateString('en-GB');
-        document.getElementById('todayDateSRCommon').innerText = new Date().toLocaleDateString('en-GB');
+const todayStr = new Date().toLocaleDateString('en-GB');
+const todayDateFRElem = document.getElementById('todayDateFR');
+if (todayDateFRElem) todayDateFRElem.innerText = todayStr;
+const todayDateSRElem = document.getElementById('todayDateSR');
+if (todayDateSRElem) todayDateSRElem.innerText = todayStr;
+const todayDateFRCommonElem = document.getElementById('todayDateFRCommon');
+if (todayDateFRCommonElem) todayDateFRCommonElem.innerText = todayStr;
+const todayDateSRCommonElem = document.getElementById('todayDateSRCommon');
+if (todayDateSRCommonElem) todayDateSRCommonElem.innerText = todayStr;
         // Function to load today's result for display
        async function loadTodayResultForDisplay() {
     try {
@@ -2425,7 +2426,44 @@ async function updateBothRounds() {
                 setTimeout(() => element.innerHTML = '', 3000);
             }
         }
-      
+      // ============ CACHE MANAGEMENT (Error Free) ============
+let currentCacheVersion = null;
+let cacheCheckInterval = null;
+
+async function checkCacheVersion() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/cache-version`);
+        const data = await response.json();
+        
+        if (currentCacheVersion !== null && currentCacheVersion !== data.version) {
+            console.log('🔄 Cache version changed, refreshing page data...');
+            // Only call functions that exist
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+            if (typeof loadDreamsList === 'function') loadDreamsList();
+            if (typeof loadManageData === 'function') loadManageData();
+            if (typeof loadTodayResultForDisplay === 'function') loadTodayResultForDisplay();
+            if (typeof loadCommonNumbersForDisplay === 'function') loadCommonNumbersForDisplay();
+        }
+        
+        currentCacheVersion = data.version;
+    } catch (error) {
+        // Silently fail - don't show errors to user
+        console.log('Cache check failed:', error.message);
+    }
+}
+
+function startCacheChecking() {
+    if (cacheCheckInterval) clearInterval(cacheCheckInterval);
+    checkCacheVersion();
+    cacheCheckInterval = setInterval(checkCacheVersion, 30000);
+}
+
+function stopCacheChecking() {
+    if (cacheCheckInterval) {
+        clearInterval(cacheCheckInterval);
+        cacheCheckInterval = null;
+    }
+}
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
