@@ -296,24 +296,84 @@
         setSpacers();
         window.addEventListener('resize', setSpacers);
 
-        async function loadTodayResult() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/today-result`);
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                const data = await response.json();
-                if (data && data.data) {
-                    document.getElementById('firstRound').innerText = data.data.firstRound || '--';
-                    document.getElementById('secondRound').innerText = data.data.secondRound || '--';
-                } else {
-                    document.getElementById('firstRound').innerHTML = '<small style="font-size:0.9rem">No result</small>';
-                    document.getElementById('secondRound').innerHTML = '<small style="font-size:0.9rem">No result</small>';
-                }
-            } catch (e) {
-                document.getElementById('firstRound').innerHTML = '<small style="font-size:0.75rem;color:#c00">Not connected</small>';
-                document.getElementById('secondRound').innerHTML = '<small style="font-size:0.75rem;color:#c00">Not connected</small>';
-            }
-        }
+        // Function to get current Teer date based on cutoff time
+function getCurrentTeerDate() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Convert to minutes since midnight
+    const currentTimeMinutes = (currentHour * 60) + currentMinute;
+    
+    // First round announcement at 10:30 AM (630 minutes)
+    // Show today's result only after 10:20 AM (620 minutes) - 10 minutes before
+    const cutoffMinutes = 620; // 10:20 AM
+    
+    if (currentTimeMinutes < cutoffMinutes) {
+        // Before cutoff - show previous day
+        const previousDay = new Date(now);
+        previousDay.setDate(now.getDate() - 1);
+        const dd = String(previousDay.getDate()).padStart(2, '0');
+        const mm = String(previousDay.getMonth() + 1).padStart(2, '0');
+        const yyyy = previousDay.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    } else {
+        // After cutoff - show today
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yyyy = now.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    }
+}
 
+async function loadTodayResult(retryCount = 0) {
+    const firstRoundEl = document.getElementById('firstRound');
+    const secondRoundEl = document.getElementById('secondRound');
+    
+    // Show loading state
+    if (retryCount === 0) {
+        firstRoundEl.innerHTML = '<small style="font-size:0.9rem">Loading...</small>';
+        secondRoundEl.innerHTML = '<small style="font-size:0.9rem">Loading...</small>';
+    }
+    
+    try {
+        // Get the correct Teer date based on cutoff time
+        const teerDate = getCurrentTeerDate();
+        console.log('Fetching result for date:', teerDate);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        // Use the date parameter to fetch specific date's result
+        const response = await fetch(`${API_BASE_URL}/api/results-by-date?date=${encodeURIComponent(teerDate)}`, {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        
+        if (data && data.data) {
+            firstRoundEl.innerText = data.data.firstRound || '--';
+            secondRoundEl.innerText = data.data.secondRound || '--';
+        } else {
+            firstRoundEl.innerHTML = '<small style="font-size:0.9rem">No result</small>';
+            secondRoundEl.innerHTML = '<small style="font-size:0.9rem">No result</small>';
+        }
+    } catch (e) {
+        console.log('Load failed:', e.message);
+        
+        // Retry up to 3 times with exponential backoff
+        if (retryCount < 3) {
+            const delay = Math.pow(2, retryCount) * 2000;
+            console.log(`Retrying in ${delay/1000}s... (Attempt ${retryCount + 1}/3)`);
+            setTimeout(() => loadTodayResult(retryCount + 1), delay);
+        } else {
+            firstRoundEl.innerHTML = '<small style="font-size:0.75rem;color:#c00">Backend starting...</small>';
+            secondRoundEl.innerHTML = '<small style="font-size:0.75rem;color:#c00">Please wait</small>';
+        }
+    }
+}
         loadTodayResult();
         setInterval(loadTodayResult, 60000);
         // ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
