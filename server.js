@@ -93,39 +93,21 @@ function refreshCacheVersion() {
     sendUpdateToAllClients('cache-update', { version: lastUpdateTimestamp });
 }
 
-// ============ HEALTH CHECK ============
-app.get('/api/health', (req, res) => {
-    const dbState = mongoose.connection.readyState;
-    const dbStatus = {
-        0: 'disconnected',
-        1: 'connected',
-        2: 'connecting',
-        3: 'disconnecting'
-    };
-    
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        database: {
-            state: dbStatus[dbState],
-            connected: dbState === 1
-        },
-        environment: process.env.NODE_ENV || 'development'
-    });
-});
-
 // ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
 // Store all connected clients
-const sseClients = [];
+let sseClients = [];
 
 // SSE endpoint - keeps connection open for real-time updates
 app.get('/api/events', (req, res) => {
+    console.log('📡 New SSE connection request');
+    
     // Set headers for SSE
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.flushHeaders();
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+    });
     
     const clientId = Date.now();
     const newClient = { id: clientId, res };
@@ -136,8 +118,18 @@ app.get('/api/events', (req, res) => {
     // Send initial connection message
     res.write(`data: ${JSON.stringify({ type: 'connected', message: 'Connected to real-time updates' })}\n\n`);
     
+    // Keep connection alive with periodic heartbeats
+    const keepAlive = setInterval(() => {
+        try {
+            res.write(`: heartbeat\n\n`);
+        } catch (e) {
+            clearInterval(keepAlive);
+        }
+    }, 30000);
+    
     // Remove client when connection closes
     req.on('close', () => {
+        clearInterval(keepAlive);
         const index = sseClients.findIndex(c => c.id === clientId);
         if (index !== -1) {
             sseClients.splice(index, 1);
@@ -159,6 +151,8 @@ function sendUpdateToAllClients(updateType, data = null) {
         timestamp: Date.now()
     });
     
+    console.log(`📡 Broadcasting '${updateType}' to ${sseClients.length} clients`);
+    
     sseClients.forEach(client => {
         try {
             client.res.write(`data: ${message}\n\n`);
@@ -166,8 +160,6 @@ function sendUpdateToAllClients(updateType, data = null) {
             console.error(`Error sending to client ${client.id}:`, error.message);
         }
     });
-    
-    console.log(`📡 Broadcasted '${updateType}' to ${sseClients.length} clients`);
 }
 
 // Get current cache version
@@ -176,6 +168,27 @@ app.get('/api/cache-version', (req, res) => {
     res.json({ 
         version: lastUpdateTimestamp,
         lastUpdate: new Date(lastUpdateTimestamp).toISOString()
+    });
+});
+
+// ============ HEALTH CHECK ============
+app.get('/api/health', (req, res) => {
+    const dbState = mongoose.connection.readyState;
+    const dbStatus = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting'
+    };
+    
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        database: {
+            state: dbStatus[dbState],
+            connected: dbState === 1
+        },
+        environment: process.env.NODE_ENV || 'development'
     });
 });
 
