@@ -262,21 +262,28 @@ function connectSSE() {
         console.log('✅ SSE connection established!');
     };
     
+    // This will show ALL raw messages received
     eventSource.onmessage = (event) => {
+        console.log('📡 RAW SSE message received:', event.data);
+        
         try {
             const data = JSON.parse(event.data);
-            console.log('📡 SSE message received:', data);
+            console.log('📡 Parsed data:', data);
+            console.log('📡 Message type:', data.type);
             
-            // Refresh page on any update type
+            // Refresh on ANY update type
             if (data.type === 'cache-update' || 
                 data.type === 'result-update' || 
                 data.type === 'common-update' || 
                 data.type === 'dream-update') {
-                console.log('🔄 Detected update! Reloading page...');
+                console.log('🔥 UPDATE DETECTED! Refreshing page NOW...');
                 window.location.reload();
+            } else {
+                console.log('📡 Message type not recognized:', data.type);
             }
         } catch (e) {
             console.error('Error parsing SSE message:', e);
+            console.log('Raw message that failed:', event.data);
         }
     };
     
