@@ -82,11 +82,13 @@ teerDataSchema.index({ 'data.slNo': 1 });
 
 const TeerData = mongoose.model('TeerData', teerDataSchema);
 
-// ============ CACHE CONFIGURATION ============
-// Dream: 5 hours = 18000 seconds
-// Common Numbers: 5 minutes = 300 seconds  
-// Previous Results: 10 minutes = 600 seconds
-// Today's Result: 5 minutes = 300 seconds
+// ============ CACHE VERSION TRACKING ============
+let lastUpdateTimestamp = Date.now();
+
+function refreshCacheVersion() {
+    lastUpdateTimestamp = Date.now();
+    console.log(`🔄 Cache version updated: ${new Date(lastUpdateTimestamp).toISOString()}`);
+}
 
 // ============ HEALTH CHECK ============
 app.get('/api/health', (req, res) => {
@@ -109,13 +111,26 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// Get current cache version
+app.get('/api/cache-version', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.json({ 
+        version: lastUpdateTimestamp,
+        lastUpdate: new Date(lastUpdateTimestamp).toISOString()
+    });
+});
+
 // ============ PUBLIC API ROUTES WITH CACHING ============
 
 // Get today's result (CACHE: 5 minutes)
 app.get('/api/today-result', async (req, res) => {
     try {
-        // Cache for 5 minutes (300 seconds)
-        res.set('Cache-Control', 'public, max-age=300');
+        const clientVersion = req.query.v;
+        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
+            res.set('Cache-Control', 'no-cache, private');
+        } else {
+            res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+        }
         
         const today = new Date().toLocaleDateString('en-GB');
         console.log(`[${new Date().toISOString()}] Fetching result for date: ${today}`);
@@ -133,17 +148,21 @@ app.get('/api/today-result', async (req, res) => {
             date: today 
         }).lean();
         
+        res.set('X-Cache-Version', lastUpdateTimestamp);
+        
         if (result && result.data) {
             res.json({
                 success: true,
                 date: result.date,
-                data: result.data
+                data: result.data,
+                cacheVersion: lastUpdateTimestamp
             });
         } else {
             res.json({
                 success: false,
                 message: 'No result declared for today',
-                data: { firstRound: 'XX', secondRound: 'XX' }
+                data: { firstRound: 'XX', secondRound: 'XX' },
+                cacheVersion: lastUpdateTimestamp
             });
         }
     } catch (error) {
@@ -159,8 +178,12 @@ app.get('/api/today-result', async (req, res) => {
 // Get common numbers (CACHE: 5 minutes)
 app.get('/api/common-numbers', async (req, res) => {
     try {
-        // Cache for 5 minutes (300 seconds)
-        res.set('Cache-Control', 'public, max-age=300');
+        const clientVersion = req.query.v;
+        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
+            res.set('Cache-Control', 'no-cache, private');
+        } else {
+            res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+        }
         
         const today = new Date().toLocaleDateString('en-GB');
         console.log(`[${new Date().toISOString()}] Fetching common numbers for date: ${today}`);
@@ -178,12 +201,15 @@ app.get('/api/common-numbers', async (req, res) => {
             date: today 
         }).lean();
         
+        res.set('X-Cache-Version', lastUpdateTimestamp);
+        
         if (common && common.data) {
             if (common.data.fr && common.data.sr) {
                 res.json({
                     success: true,
                     date: common.date,
-                    data: common.data
+                    data: common.data,
+                    cacheVersion: lastUpdateTimestamp
                 });
             } else {
                 res.json({
@@ -200,14 +226,16 @@ app.get('/api/common-numbers', async (req, res) => {
                             house: [],
                             ending: []
                         }
-                    }
+                    },
+                    cacheVersion: lastUpdateTimestamp
                 });
             }
         } else {
             res.json({
                 success: false,
                 message: 'No common numbers generated for today',
-                data: { fr: { direct: [], house: [], ending: [] }, sr: { direct: [], house: [], ending: [] } }
+                data: { fr: { direct: [], house: [], ending: [] }, sr: { direct: [], house: [], ending: [] } },
+                cacheVersion: lastUpdateTimestamp
             });
         }
     } catch (error) {
@@ -223,8 +251,12 @@ app.get('/api/common-numbers', async (req, res) => {
 // Get all previous results (CACHE: 10 minutes)
 app.get('/api/results', async (req, res) => {
     try {
-        // Cache for 10 minutes (600 seconds)
-        res.set('Cache-Control', 'public, max-age=600');
+        const clientVersion = req.query.v;
+        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
+            res.set('Cache-Control', 'no-cache, private');
+        } else {
+            res.set('Cache-Control', 'public, max-age=600, must-revalidate');
+        }
         
         if (mongoose.connection.readyState !== 1) {
             return res.json({
@@ -239,11 +271,14 @@ app.get('/api/results', async (req, res) => {
             .sort({ date: -1 })
             .lean();
         
+        res.set('X-Cache-Version', lastUpdateTimestamp);
+        
         res.json({
             success: true,
             count: results.length,
             total: results.length,
-            data: results
+            data: results,
+            cacheVersion: lastUpdateTimestamp
         });
     } catch (error) {
         console.error('Error fetching results:', error);
@@ -258,8 +293,12 @@ app.get('/api/results', async (req, res) => {
 // Search dream numbers (CACHE: 5 hours)
 app.get('/api/search-dream', async (req, res) => {
     try {
-        // Cache for 5 hours (18000 seconds)
-        res.set('Cache-Control', 'public, max-age=18000');
+        const clientVersion = req.query.v;
+        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
+            res.set('Cache-Control', 'no-cache, private');
+        } else {
+            res.set('Cache-Control', 'public, max-age=18000, must-revalidate');
+        }
         
         const keyword = req.query.q;
         
@@ -284,11 +323,14 @@ app.get('/api/search-dream', async (req, res) => {
                 .lean();
         }
         
+        res.set('X-Cache-Version', lastUpdateTimestamp);
+        
         res.json({
             success: true,
             count: dreams.length,
             keyword: keyword || '',
-            data: dreams
+            data: dreams,
+            cacheVersion: lastUpdateTimestamp
         });
     } catch (error) {
         console.error('Error searching dreams:', error);
@@ -303,8 +345,12 @@ app.get('/api/search-dream', async (req, res) => {
 // Get all dreams (CACHE: 5 hours)
 app.get('/api/dreams', async (req, res) => {
     try {
-        // Cache for 5 hours (18000 seconds)
-        res.set('Cache-Control', 'public, max-age=18000');
+        const clientVersion = req.query.v;
+        if (clientVersion && clientVersion !== lastUpdateTimestamp.toString()) {
+            res.set('Cache-Control', 'no-cache, private');
+        } else {
+            res.set('Cache-Control', 'public, max-age=18000, must-revalidate');
+        }
         
         const limit = parseInt(req.query.limit) || 100;
         
@@ -322,11 +368,14 @@ app.get('/api/dreams', async (req, res) => {
             .limit(limit)
             .lean();
         
+        res.set('X-Cache-Version', lastUpdateTimestamp);
+        
         res.json({
             success: true,
             count: dreams.length,
             total: await TeerData.countDocuments({ type: 'dream' }),
-            data: dreams
+            data: dreams,
+            cacheVersion: lastUpdateTimestamp
         });
     } catch (error) {
         console.error('Error fetching dreams:', error);
@@ -376,7 +425,7 @@ const authenticateAdmin = (req, res, next) => {
     }
 };
 
-// ============ ADMIN API ROUTES (NO CACHE - ALWAYS FRESH) ============
+// ============ ADMIN API ROUTES ============
 
 // Admin login
 app.post('/api/admin/login', (req, res) => {
@@ -388,6 +437,17 @@ app.post('/api/admin/login', (req, res) => {
     res.json({ 
         success: isValid,
         message: isValid ? 'Login successful' : 'Invalid password'
+    });
+});
+
+// Force cache refresh (admin only)
+app.post('/api/admin/refresh-cache', authenticateAdmin, (req, res) => {
+    refreshCacheVersion();
+    console.log('🔄 Admin manually refreshed cache version');
+    res.json({ 
+        success: true, 
+        message: 'Cache version updated. All users will get fresh data.',
+        newVersion: lastUpdateTimestamp
     });
 });
 
@@ -417,6 +477,8 @@ app.post('/api/admin/update-first-round', authenticateAdmin, async (req, res) =>
             { type: 'result', date: today, data: { firstRound, secondRound } },
             { upsert: true, new: true }
         );
+        
+        refreshCacheVersion();
         
         console.log(`✅ First Round updated for ${today}: ${firstRound} (Second Round: ${secondRound})`);
         res.json({ success: true, message: 'First Round updated successfully', data: result });
@@ -452,6 +514,8 @@ app.post('/api/admin/update-second-round', authenticateAdmin, async (req, res) =
             { type: 'result', date: today, data: { firstRound, secondRound } },
             { upsert: true, new: true }
         );
+        
+        refreshCacheVersion();
         
         console.log(`✅ Second Round updated for ${today}: ${secondRound} (First Round: ${firstRound})`);
         res.json({ success: true, message: 'Second Round updated successfully', data: result });
@@ -495,6 +559,8 @@ app.post('/api/admin/update-result', authenticateAdmin, async (req, res) => {
             { upsert: true, new: true }
         );
         
+        refreshCacheVersion();
+        
         console.log(`✅ Results updated for ${today}: ${formattedFR} / ${formattedSR}`);
         res.json({ success: true, message: 'Results updated successfully', data: result });
     } catch (error) {
@@ -526,6 +592,8 @@ app.post('/api/admin/update-result-by-date', authenticateAdmin, async (req, res)
             { type: 'result', date: date, data: { firstRound, secondRound } },
             { upsert: true, new: true }
         );
+        
+        refreshCacheVersion();
         
         console.log(`✅ Result updated for ${date}: ${firstRound}, ${secondRound}`);
         res.json({ success: true, message: 'Result updated successfully', data: result });
@@ -559,6 +627,8 @@ app.post('/api/admin/update-common', authenticateAdmin, async (req, res) => {
             { type: 'common', date: today, data: commonData },
             { upsert: true, new: true }
         );
+        
+        refreshCacheVersion();
         
         console.log(`✅ Common numbers updated for ${today}`);
         res.json({ success: true, message: 'Common numbers updated successfully', data: common });
@@ -594,6 +664,8 @@ app.post('/api/admin/add-dream', authenticateAdmin, async (req, res) => {
             data: { slNo: newSlNo, dream: dream, direct: direct || '', house: house || '', ending: ending || '' }
         });
         
+        refreshCacheVersion();
+        
         console.log(`✅ Dream added: ${dream} (ID: ${newSlNo})`);
         res.json({ success: true, message: 'Dream added successfully', data: newDream });
     } catch (error) {
@@ -617,6 +689,8 @@ app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) =>
             return res.status(404).json({ success: false, error: 'Dream not found' });
         }
         
+        refreshCacheVersion();
+        
         console.log(`✅ Dream deleted: ${deleted.data.dream}`);
         res.json({ success: true, message: 'Dream deleted successfully' });
     } catch (error) {
@@ -628,7 +702,6 @@ app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) =>
 // Get all results for admin (NO CACHE - always fresh)
 app.get('/api/admin/all-results', authenticateAdmin, async (req, res) => {
     try {
-        // No cache for admin - always get fresh data
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         
         const results = await TeerData.find({ type: 'result' }).sort({ date: -1 }).lean();
@@ -654,6 +727,8 @@ app.delete('/api/admin/delete-result/:id', authenticateAdmin, async (req, res) =
         if (!deleted) {
             return res.status(404).json({ success: false, error: 'Result not found' });
         }
+        
+        refreshCacheVersion();
         
         console.log(`✅ Result deleted for date: ${deleted.date}`);
         res.json({ success: true, message: 'Result deleted successfully' });
@@ -718,19 +793,22 @@ const server = app.listen(PORT, () => {
     console.log(`📝 Admin Password: ${process.env.ADMIN_PASSWORD || 'admin123'}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log('\n✅ CACHE CONFIGURATION:');
-    console.log(`   📊 Today's Result: 5 minutes`);
-    console.log(`   📊 Common Numbers: 5 minutes`);
-    console.log(`   📊 Previous Results: 10 minutes`);
-    console.log(`   📊 Dreams: 5 hours`);
+    console.log(`   📊 Today's Result: 5 minutes (with auto-reset on update)`);
+    console.log(`   📊 Common Numbers: 5 minutes (with auto-reset on update)`);
+    console.log(`   📊 Previous Results: 10 minutes (with auto-reset on update)`);
+    console.log(`   📊 Dreams: 5 hours (with auto-reset on update)`);
     console.log(`   🔒 Admin APIs: No cache (always fresh)`);
+    console.log(`   🔄 Cache auto-resets when admin makes changes`);
     console.log('\n✅ API Endpoints:');
     console.log(`   GET  /api/health`);
-    console.log(`   GET  /api/today-result (Cache: 5min)`);
-    console.log(`   GET  /api/common-numbers (Cache: 5min)`);
-    console.log(`   GET  /api/results (Cache: 10min)`);
-    console.log(`   GET  /api/dreams (Cache: 5hrs)`);
-    console.log(`   GET  /api/search-dream (Cache: 5hrs)`);
+    console.log(`   GET  /api/cache-version`);
+    console.log(`   GET  /api/today-result (Cache: 5min, auto-reset)`);
+    console.log(`   GET  /api/common-numbers (Cache: 5min, auto-reset)`);
+    console.log(`   GET  /api/results (Cache: 10min, auto-reset)`);
+    console.log(`   GET  /api/dreams (Cache: 5hrs, auto-reset)`);
+    console.log(`   GET  /api/search-dream (Cache: 5hrs, auto-reset)`);
     console.log(`   POST /api/admin/login`);
+    console.log(`   POST /api/admin/refresh-cache`);
     console.log(`   POST /api/admin/update-first-round`);
     console.log(`   POST /api/admin/update-second-round`);
     console.log(`   POST /api/admin/update-result`);
