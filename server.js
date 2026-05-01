@@ -534,9 +534,9 @@ app.post('/api/admin/update-first-round', authenticateAdmin, async (req, res) =>
             { type: 'result', date: today, data: { firstRound, secondRound } },
             { upsert: true, new: true }
         );
-        
+    
         refreshCacheVersion();
-        
+sendUpdateToAllClients('result-update', { type: 'firstRound', value: firstRound });  // ← ADD THIS
         console.log(`✅ First Round updated for ${today}: ${firstRound} (Second Round: ${secondRound})`);
         res.json({ success: true, message: 'First Round updated successfully', data: result });
     } catch (error) {
@@ -573,7 +573,7 @@ app.post('/api/admin/update-second-round', authenticateAdmin, async (req, res) =
         );
         
         refreshCacheVersion();
-        
+        sendUpdateToAllClients('result-update', { type: 'secondRound', value: secondRound }); 
         console.log(`✅ Second Round updated for ${today}: ${secondRound} (First Round: ${firstRound})`);
         res.json({ success: true, message: 'Second Round updated successfully', data: result });
     } catch (error) {
@@ -617,7 +617,7 @@ app.post('/api/admin/update-result', authenticateAdmin, async (req, res) => {
         );
         
         refreshCacheVersion();
-        
+        sendUpdateToAllClients('result-update', { type: 'both', firstRound: formattedFR, secondRound: formattedSR });
         console.log(`✅ Results updated for ${today}: ${formattedFR} / ${formattedSR}`);
         res.json({ success: true, message: 'Results updated successfully', data: result });
     } catch (error) {
@@ -651,6 +651,7 @@ app.post('/api/admin/update-result-by-date', authenticateAdmin, async (req, res)
         );
         
         refreshCacheVersion();
+sendUpdateToAllClients('result-update', { action: 'bulk-import', count: successCount });  // ← ADD THIS
         
         console.log(`✅ Result updated for ${date}: ${firstRound}, ${secondRound}`);
         res.json({ success: true, message: 'Result updated successfully', data: result });
@@ -722,7 +723,7 @@ app.post('/api/admin/add-dream', authenticateAdmin, async (req, res) => {
         });
         
         refreshCacheVersion();
-        
+        sendUpdateToAllClients('dream-update', { dream: dream, action: 'added' });
         console.log(`✅ Dream added: ${dream} (ID: ${newSlNo})`);
         res.json({ success: true, message: 'Dream added successfully', data: newDream });
     } catch (error) {
@@ -747,7 +748,7 @@ app.delete('/api/admin/delete-dream/:id', authenticateAdmin, async (req, res) =>
         }
         
         refreshCacheVersion();
-        
+        sendUpdateToAllClients('dream-update', { action: 'deleted', id: id });
         console.log(`✅ Dream deleted: ${deleted.data.dream}`);
         res.json({ success: true, message: 'Dream deleted successfully' });
     } catch (error) {
@@ -786,6 +787,7 @@ app.delete('/api/admin/delete-result/:id', authenticateAdmin, async (req, res) =
         }
         
         refreshCacheVersion();
+sendUpdateToAllClients('result-update', { action: 'deleted', date: deleted.date });  // ← ADD THIS
         
         console.log(`✅ Result deleted for date: ${deleted.date}`);
         res.json({ success: true, message: 'Result deleted successfully' });
