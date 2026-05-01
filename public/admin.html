@@ -1996,7 +1996,6 @@ async function updateBothRounds() {
                     loadManageData();
                     loadTodayResultForDisplay();
                     loadCommonNumbersForDisplay();
-                    startCacheChecking();
                 } else {
                     document.getElementById('loginError').innerText = 'Wrong password!';
                 }
@@ -2012,7 +2011,6 @@ async function updateBothRounds() {
         
         function logout() {
             adminToken = null;
-            stopCacheChecking();
             document.getElementById('loginForm').style.display = 'flex';
             document.getElementById('adminDashboard').style.display = 'none';
             document.getElementById('adminPassword').value = '';
