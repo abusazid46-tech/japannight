@@ -262,7 +262,7 @@
                 console.log('✅ SSE connection established!');
             };
             
-            ventSource.onmessage = (event) => {
+            eventSource.onmessage = (event) => {
     try {
         const data = JSON.parse(event.data);
         console.log('📡 SSE message received:', data);
