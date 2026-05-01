@@ -224,7 +224,29 @@
             if (Array.isArray(val)) return val.join(', ');
             return String(val);
         }
+// ============ AUTO REFRESH WHEN ADMIN UPDATES DATA ============
+let currentCacheVersion = null;
 
+async function checkAndRefreshData() {
+    try {
+        const response = await fetch('https://teer-website.onrender.com/api/cache-version');
+        const data = await response.json();
+        
+        if (currentCacheVersion !== null && currentCacheVersion !== data.version) {
+            console.log('🔄 New data available! Refreshing...');
+            // Reload the page to get fresh data
+            window.location.reload();
+        }
+        
+        currentCacheVersion = data.version;
+    } catch (error) {
+        console.log('Cache check failed:', error.message);
+    }
+}
+
+// Check every 30 seconds for updates
+setInterval(checkAndRefreshData, 30000);
+checkAndRefreshData();
         async function loadCommonNumbers() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/common-numbers`);
