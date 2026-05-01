@@ -262,23 +262,23 @@
                 console.log('✅ SSE connection established!');
             };
             
-            eventSource.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    console.log('📡 SSE message received:', data);
-                    
-                    // Refresh page on any update type
-                    if (data.type === 'cache-update' || 
-                        data.type === 'result-update' || 
-                        data.type === 'common-update' || 
-                        data.type === 'dream-update') {
-                        console.log('🔄 Detected update! Reloading page to show fresh data...');
-                        window.location.reload();
-                    }
-                } catch (e) {
-                    console.error('Error parsing SSE message:', e);
-                }
-            };
+            ventSource.onmessage = (event) => {
+    try {
+        const data = JSON.parse(event.data);
+        console.log('📡 SSE message received:', data);
+        
+        // Refresh page on ANY update type
+        if (data.type === 'cache-update' || 
+            data.type === 'result-update' || 
+            data.type === 'common-update' || 
+            data.type === 'dream-update') {
+            console.log('🔄 Detected update! Reloading page...');
+            window.location.reload();  // ← This should work!
+        }
+    } catch (e) {
+        console.error('Error parsing SSE message:', e);
+    }
+};
             
             eventSource.onerror = (error) => {
                 console.error('⚠️ SSE error:', error);
