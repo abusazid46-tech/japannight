@@ -17,7 +17,6 @@
             flex-direction: column;
         }
 
-        /* ── HEADER ── */
         .site-header {
             background: linear-gradient(90deg, #1a8fa0 0%, #16b0c8 100%);
             padding: 12px 16px;
@@ -43,7 +42,6 @@
         }
         .site-header a { text-decoration: none; }
 
-        /* ── PAGE CONTENT ── */
         .page-content {
             flex: 1;
             padding: 28px 16px 30px;
@@ -52,7 +50,6 @@
             width: 100%;
         }
 
-        /* ── DATE ── */
         .date-label {
             text-align: center;
             font-family: 'Oswald', sans-serif;
@@ -63,7 +60,6 @@
             letter-spacing: 1px;
         }
 
-        /* ── EXCEL TABLE ── */
         .common-table-wrapper {
             border: 2px solid #555;
             border-radius: 3px;
@@ -85,7 +81,6 @@
             vertical-align: middle;
         }
 
-        /* City row */
         .city-row td {
             background: #e8e8e8;
             font-family: 'Oswald', sans-serif;
@@ -97,7 +92,6 @@
             border-color: #888;
         }
 
-        /* Teal header rows (Direct | House | Ending) */
         .header-row td {
             background: #16b0c8;
             color: #fff;
@@ -109,7 +103,6 @@
             border-color: #0e8fa0;
         }
 
-        /* Number rows */
         .num-row td {
             font-family: 'Oswald', sans-serif;
             font-size: 1.4rem;
@@ -120,7 +113,6 @@
             background: #fff;
         }
 
-        /* ── DISCLAIMER ── */
         .disclaimer {
             margin-top: 18px;
             font-size: 0.85rem;
@@ -128,7 +120,6 @@
             line-height: 1.5;
         }
 
-        /* ── FOOTER ── */
         footer {
             background: #5baec8;
             color: #fff;
@@ -149,26 +140,20 @@
 </head>
 <body>
 
-    <!-- HEADER -->
     <header class="site-header">
         <a class="logo-icon" href="/">🎯</a>
         <a href="/"><h1>Khanapara Morning Teer Result</h1></a>
     </header>
 
-    <!-- CONTENT -->
     <div class="page-content">
 
         <div class="date-label" id="currentDate">--/--/----</div>
 
         <div class="common-table-wrapper">
             <table class="common-table">
-
-                <!-- City row -->
                 <tr class="city-row">
                     <td colspan="3">KHANAPARA</td>
                 </tr>
-
-                <!-- F/R header + numbers -->
                 <tr class="header-row">
                     <td>Direct</td>
                     <td>House</td>
@@ -179,8 +164,6 @@
                     <td id="frHouse">--</td>
                     <td id="frEnding">--</td>
                 </tr>
-
-                <!-- S/R header + numbers -->
                 <tr class="header-row">
                     <td>Direct</td>
                     <td>House</td>
@@ -191,7 +174,6 @@
                     <td id="srHouse">--</td>
                     <td id="srEnding">--</td>
                 </tr>
-
             </table>
         </div>
 
@@ -202,7 +184,6 @@
 
     </div>
 
-    <!-- FOOTER -->
     <footer>
         <p>All rights Reserved. Khanapara Morning Teer Result.</p>
         <p><a href="#">Terms</a> | <a href="#">Contact</a> | <a href="#">Privacy Policy</a></p>
@@ -224,72 +205,6 @@
             return String(val);
         }
 
-        // ============ CACHE CHECK (FALLBACK) ============
-        let currentCacheVersion = null;
-
-        async function checkAndRefreshData() {
-            try {
-                const response = await fetch('https://teer-website.onrender.com/api/cache-version');
-                const data = await response.json();
-                
-                if (currentCacheVersion !== null && currentCacheVersion !== data.version) {
-                    console.log('🔄 New data available! Refreshing...');
-                    window.location.reload();
-                }
-                
-                currentCacheVersion = data.version;
-            } catch (error) {
-                console.log('Cache check failed:', error.message);
-            }
-        }
-
-        // Fallback: Check every 10 seconds (if SSE fails)
-        setInterval(checkAndRefreshData, 10000);
-        checkAndRefreshData();
-
-        // ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
-        let eventSource = null;
-        
-        function connectSSE() {
-            if (eventSource) {
-                eventSource.close();
-            }
-            
-            const backendUrl = 'https://teer-website.onrender.com'; // Your Render URL
-            eventSource = new EventSource(`${backendUrl}/api/events`);
-            
-            eventSource.onopen = () => {
-                console.log('✅ Real-time connection established (SSE)');
-            };
-            
-            eventSource.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    console.log('🔄 Real-time update received:', data);
-                    
-                    // Refresh page on any update type
-                    if (data.type === 'cache-update' || 
-                        data.type === 'result-update' || 
-                        data.type === 'common-update' || 
-                        data.type === 'dream-update') {
-                        console.log('📡 Updates detected! Refreshing page...');
-                        window.location.reload();
-                    }
-                } catch (e) {
-                    console.error('Error parsing SSE message:', e);
-                }
-            };
-            
-            eventSource.onerror = (error) => {
-                console.log('⚠️ SSE connection error, reconnecting in 5 seconds...');
-                if (eventSource) eventSource.close();
-                setTimeout(connectSSE, 5000);
-            };
-        }
-        
-        // Start SSE connection when page loads
-        connectSSE();
-
         // ============ LOAD COMMON NUMBERS ============
         async function loadCommonNumbers() {
             try {
@@ -300,9 +215,6 @@
                 if (data && data.data) {
                     const d = data.data;
 
-                    // Support both flat and split FR/SR structures
-                    // Flat: { direct, house, ending }
-                    // Split: { fr: { direct, house, ending }, sr: { direct, house, ending } }
                     if (d.fr || d.sr) {
                         document.getElementById('frDirect').innerText  = parseField(d.fr?.direct);
                         document.getElementById('frHouse').innerText   = parseField(d.fr?.house);
@@ -311,7 +223,6 @@
                         document.getElementById('srHouse').innerText   = parseField(d.sr?.house);
                         document.getElementById('srEnding').innerText  = parseField(d.sr?.ending);
                     } else {
-                        // Flat — show same in both rows
                         const direct  = parseField(d.direct);
                         const house   = parseField(d.house);
                         const ending  = parseField(d.ending);
@@ -327,14 +238,58 @@
                         .forEach(id => document.getElementById(id).innerText = 'N/A');
                 }
             } catch (e) {
-                ['frDirect','frHouse','frEnding','srDirect','srHouse','srEnding']
-                    .forEach(id => document.getElementById(id).innerHTML = '<small style="font-size:0.7rem;color:#c00">Error</small>');
-                console.error('Error:', e);
+                console.error('Error loading common numbers:', e);
             }
         }
 
         loadCommonNumbers();
         setInterval(loadCommonNumbers, 60000);
+
+        // ============ SERVER-SENT EVENTS (SSE) FOR REAL-TIME UPDATES ============
+        let eventSource = null;
+        
+        function connectSSE() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            const backendUrl = 'https://teer-website.onrender.com';
+            console.log('🔄 Connecting to SSE at:', `${backendUrl}/api/events`);
+            
+            eventSource = new EventSource(`${backendUrl}/api/events`);
+            
+            eventSource.onopen = () => {
+                console.log('✅ SSE connection established!');
+            };
+            
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('📡 SSE message received:', data);
+                    
+                    // Refresh page on any update type
+                    if (data.type === 'cache-update' || 
+                        data.type === 'result-update' || 
+                        data.type === 'common-update' || 
+                        data.type === 'dream-update') {
+                        console.log('🔄 Detected update! Reloading page to show fresh data...');
+                        window.location.reload();
+                    }
+                } catch (e) {
+                    console.error('Error parsing SSE message:', e);
+                }
+            };
+            
+            eventSource.onerror = (error) => {
+                console.error('⚠️ SSE error:', error);
+                console.log('Reconnecting in 5 seconds...');
+                if (eventSource) eventSource.close();
+                setTimeout(connectSSE, 5000);
+            };
+        }
+        
+        // Start SSE connection
+        connectSSE();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
