@@ -176,7 +176,7 @@
     </footer>
 
     <script>
-        const API_BASE_URL = 'https://teer-website.onrender.com'; // Update to your Render backend URL
+        const API_BASE_URL = 'https://teer-website-1.onrender.com'; // Update to your Render backend URL
 
         let allResults = [];
         let filteredResults = [];
@@ -330,7 +330,7 @@ function connectSSE() {
         eventSource.close();
     }
     
-    const backendUrl = 'https://teer-website.onrender.com';
+    const backendUrl = 'https://teer-website-1.onrender.com';
     console.log('🔄 Connecting to SSE at:', `${backendUrl}/api/events`);
     
     eventSource = new EventSource(`${backendUrl}/api/events`);
