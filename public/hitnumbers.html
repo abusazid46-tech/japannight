@@ -142,21 +142,37 @@
         }
         .chip-row a:hover { background: #ddd; }
 
-        /* ── DISCLAIMER ── */
-        .disclaimer-wrap {
+        /* ── APP DOWNLOAD LINK ── */
+        .app-download-wrap {
             padding: 0 12px;
             max-width: 960px;
             margin: 16px auto 20px;
+            text-align: center;
         }
-        .disclaimer {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            border-radius: 6px;
-            padding: 12px 14px;
-            font-size: 0.82rem;
-            color: #555;
+
+        .app-download-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+            color: #fff !important;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            box-shadow: 0 3px 10px rgba(46, 125, 50, 0.25);
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
         }
-        .disclaimer strong { color: #333; }
+
+        .app-download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(46, 125, 50, 0.35);
+            background: linear-gradient(135deg, #1b5e20 0%, #388e3c 100%);
+            color: #fff !important;
+        }
 
         /* ── SOCIAL BAR ── */
         .social-bar-wrap {
@@ -264,13 +280,14 @@
         </div>
     </div>
 
-    <!-- DISCLAIMER -->
-    <div class="disclaimer-wrap">
-        <div class="disclaimer">
-            <strong>⚠️ Disclaimer:</strong> This website is for informational and entertainment purposes only.
-            The numbers displayed are based on calculations and dream interpretations.
-            There is no guarantee of accuracy.
-        </div>
+    <!-- APP DOWNLOAD LINK -->
+    <div class="app-download-wrap">
+        <a href="https://www.japanteer.com" target="_blank" rel="noopener noreferrer" class="app-download-btn">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.551 0 .9993.4482.9993.9993.0001.5511-.4483.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.996-3.4572c.1556-.2696.0633-.6137-.2063-.7693-.2692-.1555-.6133-.0634-.7689.2063l-2.0231 3.5042c-1.464-.666-3.111-1.037-4.8792-1.037-1.7681 0-3.4152.371-4.8792 1.037L5.0978 5.3012c-.1556-.2697-.4997-.3618-.7689-.2063-.2696.1556-.3619.4997-.2063.7693l1.996 3.4572C2.6884 11.2307.3432 15.2285 0 20h24c-.3432-4.7715-2.6884-8.7693-6.1185-10.6786"/>
+            </svg>
+            <span>'Download Teer's Jagat' | Visit Our Japan Teer at 5:00 PM</span>
+        </a>
     </div>
 
     <!-- SOCIAL MEDIA LINKS -->

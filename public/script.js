@@ -1,7 +1,7 @@
 // Central Teer Configuration
 const TEER_CONFIG = {
     firstRoundTime: '10:30 PM',
-    secondRoundTime: '11:00 PM',
+    secondRoundTime: '11:30 PM',
     cutoffHour: 22,    // 10 PM
     cutoffMinute: 20,  // 20 min -> 10:20 PM cutoff (1340 mins from midnight)
     cutoffMinutes: 1340 // (22 * 60) + 20
@@ -26,7 +26,7 @@ function formatDate(date) {
 /**
  * Calculates current active Teer date based on 10:20 PM cutoff time.
  * - Before 10:20 PM (22:20): Returns previous day's date (DD/MM/YYYY)
- * - At or after 10:20 PM (22:20): Returns current day's date (DD/MM/YYYY) for upcoming 10:30 PM & 11:00 PM rounds
+ * - At or after 10:20 PM (22:20): Returns current day's date (DD/MM/YYYY) for upcoming 10:30 PM & 11:30 PM rounds
  */
 function getCurrentTeerDate(dateObj = new Date()) {
     const now = dateObj;
